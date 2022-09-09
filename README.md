@@ -67,6 +67,14 @@ docker version
 ```sh
 $ brew install git make jq qemu
 ```
+<details><summary>M1 Macs</summary>
+
+`qemu` may also require `python3 nettle ninja` to install properly, that is:
+
+```sh
+$ brew install git make jq python3 nettle ninja qemu
+```
+</details>
 
 ##### On Ubuntu Linux
 
@@ -84,6 +92,16 @@ This step is required on **Linux** and is required to create eve bootable images
 ```sh
 $ docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 ```
+<details><summary>M1 Mac cross builds</summary>
+
+For docker to emulate a chip architecture different from the build host, perform this additional step:
+
+```sh
+$ docker run --privileged --rm tonistiigi/binfmt --install all
+```
+This provides the appropriate `binfmt-support` containers supporting cross execution.  See the [reddit article](https://www.reddit.com/r/docker/comments/ray2wc/running_linuxamd64_images_on_linuxarm64/), [docker hub](https://hub.docker.com/r/tonistiigi/binfmt), private project [page](http://binfmt-support.nongnu.org), or the [source](https://gitlab.com/cjwatson/binfmt-support).
+
+</details>
 
 #### Get Project EVE
 
