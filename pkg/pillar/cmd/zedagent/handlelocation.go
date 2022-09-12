@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 
 	"github.com/lf-edge/eve/api/go/info"
 	"github.com/lf-edge/eve/pkg/pillar/flextimer"
 	"github.com/lf-edge/eve/pkg/pillar/types"
 	"github.com/lf-edge/eve/pkg/pillar/zedcloud"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -206,7 +206,7 @@ func publishLocationToLocalServer(ctx *getconfigContext, locInfo *info.ZInfoLoca
 			case http.StatusNotFound:
 				ctx.lpsThrottledLocation = true
 				return
-			case http.StatusOK, http.StatusNoContent:
+			case http.StatusOK, http.StatusCreated, http.StatusNoContent:
 				ctx.lpsThrottledLocation = false
 				return
 			default:

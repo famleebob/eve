@@ -23,13 +23,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/lf-edge/eve/pkg/pillar/base"
 	"github.com/lf-edge/eve/pkg/pillar/types"
 	"github.com/lf-edge/eve/pkg/pillar/utils"
 	logutils "github.com/lf-edge/eve/pkg/pillar/utils/logging"
 	uuid "github.com/satori/go.uuid"
 	"github.com/vishvananda/netlink"
+	"google.golang.org/protobuf/proto"
 )
 
 // ContentTypeProto : binary-encoded Protobuf content type
@@ -317,7 +317,7 @@ func VerifyAllIntf(ctx *ZedCloudContext,
 			continue
 		}
 		switch resp.StatusCode {
-		case http.StatusOK, http.StatusCreated:
+		case http.StatusOK, http.StatusCreated, http.StatusNotModified, http.StatusNoContent:
 			log.Tracef("VerifyAllIntf: Zedcloud reachable via interface %s", intf)
 			intfStatusMap.RecordSuccess(intf)
 			intfSuccessCount++
@@ -705,7 +705,7 @@ func SendOnIntf(workContext context.Context, ctx *ZedCloudContext, destURL strin
 		}
 
 		switch resp.StatusCode {
-		case http.StatusOK, http.StatusCreated, http.StatusNotModified:
+		case http.StatusOK, http.StatusCreated, http.StatusNotModified, http.StatusNoContent:
 			log.Tracef("SendOnIntf to %s, response %s\n", reqUrl, resp.Status)
 			return resp, contents, senderStatus, nil
 		default:
@@ -715,8 +715,9 @@ func SendOnIntf(workContext context.Context, ctx *ZedCloudContext, destURL strin
 			// zedrouter probing sends 'http' to zedcloud server, expect to get status of 404, not an error
 			if resp.StatusCode != http.StatusNotFound || ctx.AgentName != "zedrouter" {
 				log.Errorln(errStr)
+				log.Errorf("Got payload for status %s: %s",
+					http.StatusText(resp.StatusCode), contents)
 			}
-			log.Tracef("received response %v\n", resp)
 			// Get caller to schedule a retry based on StatusCode
 			return resp, nil, types.SenderStatusNone, errors.New(errStr)
 		}

@@ -4,9 +4,15 @@
 #
 # Run make (with no arguments) to see help on what targets are available
 
+# universal constants and functions
+null  :=
+space := $(null) #
+comma := ,
+uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
+
 # you are not supposed to tweak these variables -- they are effectively R/O
 HV_DEFAULT=kvm
-GOVER ?= 1.17.7
+GOVER ?= 1.18.5
 PKGBASE=github.com/lf-edge/eve
 GOMODULE=$(PKGBASE)/pkg/pillar
 GOTREE=$(CURDIR)/pkg/pillar
@@ -114,8 +120,13 @@ CURRENT_INSTALLER=$(CURRENT_DIR)/installer
 INSTALLER_IMG=$(INSTALLER).$(INSTALLER_IMG_FORMAT)
 INSTALLER_FIRMWARE_DIR=$(INSTALLER)/firmware
 CURRENT_FIRMWARE_DIR=$(CURRENT_INSTALLER)/firmware
-BIOS_IMG=$(INSTALLER_FIRMWARE_DIR)/OVMF.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_CODE.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_VARS.fd
 UBOOT_IMG=$(INSTALLER_FIRMWARE_DIR)/boot
+
+# not every firmware file is used on every architecture
+BIOS_IMG_amd64=$(INSTALLER_FIRMWARE_DIR)/OVMF.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_CODE.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_VARS.fd
+BIOS_IMG_arm64=$(INSTALLER_FIRMWARE_DIR)/OVMF.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_VARS.fd
+BIOS_IMG_riscv64=$(INSTALLER_FIRMWARE_DIR)/OVMF.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_CODE.fd $(INSTALLER_FIRMWARE_DIR)/OVMF_VARS.fd
+BIOS_IMG=$(BIOS_IMG_$(ZARCH))
 
 RUNME=$(BUILD_DIR)/runme.sh
 BUILD_YML=$(BUILD_DIR)/build.yml
@@ -239,7 +250,6 @@ ifeq ($(V),1)
   SET_X := set -x
 endif
 
-DOCKER_UNPACK= _() { C=`docker create $$1 fake` ; shift ; docker export $$C | tar -xf - "$$@" ; docker rm $$C ; } ; _
 DOCKER_GO = _() { $(SET_X); mkdir -p $(CURDIR)/.go/src/$${3:-dummy} ; mkdir -p $(CURDIR)/.go/bin ; \
     docker_go_line="docker run $$DOCKER_GO_ARGS -i --rm -u $(USER) -w /go/src/$${3:-dummy} \
     -v $(CURDIR)/.go:/go -v $$2:/go/src/$${3:-dummy} -v $${4:-$(CURDIR)/.go/bin}:/go/bin -v $(CURDIR)/:/eve -v $${HOME}:/home/$(USER) \
@@ -251,9 +261,9 @@ DOCKER_GO = _() { $(SET_X); mkdir -p $(CURDIR)/.go/src/$${3:-dummy} ; mkdir -p $
 
 PARSE_PKGS=$(if $(strip $(EVE_HASH)),EVE_HASH=)$(EVE_HASH) DOCKER_ARCH_TAG=$(DOCKER_ARCH_TAG) ./tools/parse-pkgs.sh
 LINUXKIT=$(BUILDTOOLS_BIN)/linuxkit
-LINUXKIT_VERSION=80c4edd5c54dc05fbeae932440372990fce39bd6
+LINUXKIT_VERSION=7c4e89b652dd4cfaed766fb3098658862668aacb
 LINUXKIT_SOURCE=https://github.com/linuxkit/linuxkit.git
-LINUXKIT_OPTS=--disable-content-trust $(if $(strip $(EVE_HASH)),--hash) $(EVE_HASH) $(if $(strip $(EVE_REL)),--release) $(EVE_REL) $(FORCE_BUILD)
+LINUXKIT_OPTS=$(if $(strip $(EVE_HASH)),--hash) $(EVE_HASH) $(if $(strip $(EVE_REL)),--release) $(EVE_REL)
 LINUXKIT_PKG_TARGET=build
 LINUXKIT_PATCHES_DIR=tools/linuxkit/patches
 RESCAN_DEPS=FORCE
@@ -279,12 +289,19 @@ endif
 
 # We are currently filtering out a few packages from bulk builds
 # since they are not getting published in Docker HUB
-PKGS_$(ZARCH)=$(shell ls -d pkg/* | grep -Ev "eve|test-microsvcs")
-PKGS_riscv64=pkg/alpine pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
+PKGS_$(ZARCH)=$(shell ls -d pkg/* | grep -Ev "eve|test-microsvcs|alpine")
+PKGS_riscv64=pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
              pkg/mkimage-raw-efi pkg/uefi pkg/u-boot pkg/grub pkg/new-kernel \
-	     pkg/debug pkg/dom0-ztools pkg/gpt-tools pkg/storage-init
-PKGS=$(PKGS_$(ZARCH))
+	     pkg/debug pkg/dom0-ztools pkg/gpt-tools pkg/storage-init pkg/mkrootfs-squash
+# alpine-base and alpine must be the first packages to build
+PKGS=pkg/alpine-base pkg/alpine $(PKGS_$(ZARCH))
 
+# these are the packages that, when built, also need to be loaded into docker
+# if you need a pkg to be loaded into docker, in addition to the lkt cache, add it here
+PKGS_DOCKER_LOAD=mkconf mkimage-iso-efi mkimage-raw-efi mkrootfs-ext4 mkrootfs-squash
+# these packages should exists for HOSTARCH as well as for ZARCH
+# alpine-base and alpine are dependencies for others
+PKGS_HOSTARCH=alpine-base alpine $(PKGS_DOCKER_LOAD)
 # Top-level targets
 
 all: help
@@ -364,7 +381,8 @@ $(BIOS_IMG): PKG=uefi
 $(UBOOT_IMG): PKG=u-boot
 $(EFI_PART) $(BOOT_PART) $(INITRD_IMG) $(INSTALLER_IMG) $(KERNEL_IMG) $(IPXE_IMG) $(BIOS_IMG) $(UBOOT_IMG): $(LINUXKIT) | $(INSTALLER)
 	mkdir -p $(dir $@)
-	cd $(dir $@) && $(DOCKER_UNPACK) $(shell $(LINUXKIT) pkg show-tag pkg/$(PKG))-$(DOCKER_ARCH_TAG) $(notdir $@)
+	$(LINUXKIT) pkg build --platforms linux/$(ZARCH) pkg/$(PKG) # running linuxkit pkg build _without_ force ensures that we either pull it down or build it.
+	cd $(dir $@) && $(LINUXKIT) cache export -arch $(DOCKER_ARCH_TAG) -format filesystem -outfile - $(shell $(LINUXKIT) pkg show-tag pkg/$(PKG)) | tar xvf - $(notdir $@)
 	$(QUIET): $@: Succeeded
 
 # run swtpm if TPM flag defined
@@ -571,11 +589,27 @@ eve: $(INSTALLER) $(EVE_ARTIFACTS) current $(RUNME) $(BUILD_YML) | $(BUILD_DIR)
 	$(QUIET): "$@: Begin: EVE_REL=$(EVE_REL), HV=$(HV), LINUXKIT_PKG_TARGET=$(LINUXKIT_PKG_TARGET)"
 	cp images/*.yml $|
 	$(PARSE_PKGS) pkg/eve/Dockerfile.in > $|/Dockerfile
-	$(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) --disable-content-trust --hash-path $(CURDIR) --hash $(ROOTFS_VERSION)-$(HV) $(if $(strip $(EVE_REL)),--release) $(EVE_REL)$(if $(strip $(EVE_REL)),-$(HV)) $(FORCE_BUILD) $|
+	$(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) --platforms linux/$(ZARCH) --hash-path $(CURDIR) --hash $(ROOTFS_VERSION)-$(HV) --docker $(if $(strip $(EVE_REL)),--release) $(EVE_REL)$(if $(strip $(EVE_REL)),-$(HV)) $(FORCE_BUILD) $|
 	$(QUIET)if [ -n "$(EVE_REL)" ] && [ $(HV) = $(HV_DEFAULT) ]; then \
-	   $(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) --disable-content-trust --hash-path $(CURDIR) --hash $(EVE_REL)-$(HV) --release $(EVE_REL) $(FORCE_BUILD) $| ;\
+	   $(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) --platforms linux/$(ZARCH) --hash-path $(CURDIR) --hash $(EVE_REL)-$(HV) --docker --release $(EVE_REL) $(FORCE_BUILD) $| ;\
 	fi
 	$(QUIET): $@: Succeeded
+
+.PHONY: image-set outfile-set cache-export
+
+image-set:
+ifndef IMAGE
+	$(error IMAGE is not set)
+endif
+
+outfile-set:
+ifndef OUTFILE
+	$(error OUTFILE is not set)
+endif
+
+## exports an image from the linuxkit cache to stdout; responsibility of the caller to ensure that they redirect stdout to somewhere sane
+cache-export: image-set outfile-set $(LINUXKIT)
+	$(LINUXKIT) $(DASH_V) cache export -arch $(ZARCH) -outfile $(OUTFILE) $(IMAGE)
 
 proto-vendor:
 	@$(DOCKER_GO) "cd pkg/pillar ; go mod vendor" $(CURDIR) proto
@@ -629,8 +663,14 @@ shell: $(GOBUILDER)
 # Utility targets in support of our Dockerized build infrastrucutre
 #
 
+# file to store current linuxkit version
+# if version mismatch will delete linuxkit to rebuild
+$(LINUXKIT).$(LINUXKIT_VERSION):
+	@rm -rf $(LINUXKIT)
+	@touch $(LINUXKIT).$(LINUXKIT_VERSION)
 # build linuxkit for the host OS, not the container OS
 $(LINUXKIT): GOOS=$(shell uname -s | tr '[A-Z]' '[a-z]')
+$(LINUXKIT): $(LINUXKIT).$(LINUXKIT_VERSION)
 $(LINUXKIT): | $(GOBUILDER)
 	$(QUIET)$(DOCKER_GO) \
 	"unset GOFLAGS; rm -rf /tmp/linuxkit && \
@@ -691,7 +731,11 @@ get_pkg_build_dev_yml = $(if $(wildcard pkg/$1/build-dev.yml),build-dev.yml,buil
 
 eve-%: pkg/%/Dockerfile build-tools $(RESCAN_DEPS)
 	$(QUIET): "$@: Begin: LINUXKIT_PKG_TARGET=$(LINUXKIT_PKG_TARGET)"
-	$(QUIET)$(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) $(LINUXKIT_OPTS) -build-yml $(call get_pkg_build_yml,$*) pkg/$*
+	$(eval LINUXKIT_DOCKER_LOAD := $(if $(filter $(PKGS_DOCKER_LOAD),$*),--docker,))
+	$(eval LINUXKIT_BUILD_PLATFORMS_LIST := $(call uniq,linux/$(ZARCH) $(if $(filter $(PKGS_HOSTARCH),$*),linux/$(HOSTARCH),)))
+	$(eval LINUXKIT_BUILD_PLATFORMS := --platforms $(subst $(space),$(comma),$(strip $(LINUXKIT_BUILD_PLATFORMS_LIST))))
+	$(eval LINUXKIT_FLAGS := $(if $(filter manifest,$(LINUXKIT_PKG_TARGET)),,$(FORCE_BUILD) $(LINUXKIT_DOCKER_LOAD) $(LINUXKIT_BUILD_PLATFORMS)))
+	$(QUIET)$(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) $(LINUXKIT_OPTS) $(LINUXKIT_FLAGS) -build-yml $(call get_pkg_build_yml,$*) pkg/$*
 	$(QUIET)if [ -n "$(PRUNE)" ]; then docker image prune -f; fi
 	$(QUIET): "$@: Succeeded (intermediate for pkg/%)"
 
@@ -722,7 +766,7 @@ docker-image-clean:
 	docker rmi -f $(shell ./tools/oldimages.sh)
 
 .PRECIOUS: rootfs-% $(ROOTFS)-%.img $(ROOTFS_COMPLETE)
-.PHONY: all clean test run pkgs help build-tools live rootfs config installer live current FORCE $(DIST) HOSTARCH
+.PHONY: all clean test run pkgs help build-tools live rootfs config installer live current FORCE $(DIST) HOSTARCH image-set cache-export
 FORCE:
 
 help:

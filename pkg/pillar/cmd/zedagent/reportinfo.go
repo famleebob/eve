@@ -15,7 +15,6 @@ import (
 
 	"github.com/containerd/containerd/mount"
 	"github.com/eriknordmark/ipinfo"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lf-edge/eve/api/go/evecommon"
 	"github.com/lf-edge/eve/api/go/info"
@@ -29,6 +28,7 @@ import (
 	"github.com/lf-edge/eve/pkg/pillar/vault"
 	"github.com/lf-edge/eve/pkg/pillar/zedcloud"
 	"github.com/shirou/gopsutil/host"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -139,12 +139,22 @@ func objectInfoTask(ctxPtr *zedagentContext, triggerInfo <-chan infoForObjectKey
 						ctxPtr.iteration)
 					ctxPtr.iteration++
 				}
+			case info.ZInfoTypes_ZiHardware:
+				PublishHardwareInfoToZedCloud(ctxPtr)
+				ctxPtr.iteration++
 			case info.ZInfoTypes_ZiEdgeview:
 				// publish Edgeview info
 				sub := ctxPtr.subEdgeviewStatus
 				if c, err = sub.Get(infoForKeyMessage.objectKey); err == nil {
 					evStatus := c.(types.EdgeviewStatus)
 					PublishEdgeviewToZedCloud(ctxPtr, &evStatus)
+				}
+			case info.ZInfoTypes_ZiLocation:
+				locInfo := getLocationInfo(ctxPtr)
+				if locInfo != nil {
+					// Note that we use a zero iteration
+					// counter here.
+					publishLocationToController(locInfo, 0)
 				}
 			}
 			if err != nil {
@@ -165,6 +175,7 @@ func fillStorageChildren(children []*types.StorageChildren) []*info.StorageChild
 	for _, child := range children {
 		childInfo := new(info.StorageChildren)
 		childInfo.CurrentRaid = info.StorageRaidType(child.CurrentRaid)
+		childInfo.GUID = child.GUID
 		childInfo.DisplayName = child.DisplayName
 		for _, disk := range child.Disks {
 			diskInfo := new(info.StorageDiskState)
@@ -381,10 +392,12 @@ func PublishDeviceInfoToZedCloud(ctx *zedagentContext) {
 			storageInfo.CompressionRatio = zfsPoolStatus.CompressionRatio
 			storageInfo.ZpoolSize = zfsPoolStatus.ZpoolSize
 			storageInfo.CountZvols = zfsPoolStatus.CountZvols
+			storageInfo.PoolStatusMsg = zfsPoolStatus.PoolStatusMsgStr
 			storageInfo.CollectorErrors = zfsPoolStatus.CollectorErrors
 			for _, disk := range zfsPoolStatus.Disks {
 				diskInfo := new(info.StorageDiskState)
 				diskInfo.Status = info.StorageStatus(disk.Status)
+				diskInfo.State = disk.AuxStateStr
 				if disk.DiskName != nil {
 					diskInfo.DiskName = new(evecommon.DiskDescription)
 					diskInfo.DiskName.Name = disk.DiskName.Name

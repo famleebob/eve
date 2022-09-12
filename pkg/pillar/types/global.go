@@ -29,6 +29,8 @@ const (
 	SenderStatusCertUnknownAuthorityProxy              // device configed proxy, may miss proxy certificate for MiTM
 	SenderStatusNotFound                               // 404 indicating device might have been deleted in controller
 	SenderStatusForbidden                              // 403 indicating integrity token might invalidated
+	SenderStatusFailed                                 // Other failure
+	SenderStatusDebug                                  // Not a failure
 )
 
 const (

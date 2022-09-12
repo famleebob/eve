@@ -123,14 +123,22 @@ func (ctx *DeferredContext) handleDeferred(log *base.LogObject, event time.Time,
 			//SenderStatusNone indicates no problems
 			resp, _, result, err := SendOnAllIntf(ctxWork, ctx.zedcloudCtx, item.url,
 				item.size, item.buf, ctx.iteration, item.bailOnHTTPErr)
+			// We check StatusCode before err since we do not want
+			// to exit the loop just because some message is rejected
+			// by the controller.
 			if item.bailOnHTTPErr && resp != nil &&
 				resp.StatusCode >= 400 && resp.StatusCode < 600 {
 				log.Functionf("handleDeferred: for %s ignore code %d",
 					key, resp.StatusCode)
 			} else if err != nil {
-				log.Functionf("handleDeferred: for %s failed %s",
-					key, err)
+				log.Functionf("handleDeferred: for %s status %d failed %s",
+					key, result, err)
 				exit = true
+				// Make sure we pass a non-zero result
+				// to the sentHandler.
+				if result == types.SenderStatusNone {
+					result = types.SenderStatusFailed
+				}
 			} else if result != types.SenderStatusNone {
 				log.Functionf("handleDeferred: for %s received unexpected status %d",
 					key, result)
@@ -188,8 +196,19 @@ func (ctx *DeferredContext) handleDeferred(log *base.LogObject, event time.Time,
 	if len(ctx.deferredItems) == 0 {
 		stopTimer(log, ctx)
 	}
-	log.Functionf("handleDeferred() done items %d", len(ctx.deferredItems))
-	return len(ctx.deferredItems) == 0
+	if len(ctx.deferredItems) == 0 {
+		log.Functionf("handleDeferred() done")
+		return true
+	}
+	log.Noticef("handleDeferred() done items %d", len(ctx.deferredItems))
+	// Log the content of the queue
+	if ctx.sentHandler != nil {
+		for _, item := range ctx.deferredItems {
+			f := *ctx.sentHandler
+			f(item.itemType, item.buf, types.SenderStatusDebug)
+		}
+	}
+	return false
 }
 
 // Replace any item for the specified key. If timer not running start it

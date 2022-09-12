@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/eriknordmark/ipinfo"
-	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	eveuuid "github.com/lf-edge/eve/api/go/eveuuid"
 	"github.com/lf-edge/eve/pkg/pillar/agentlog"
@@ -33,6 +32,7 @@ import (
 	"github.com/lf-edge/eve/pkg/pillar/zedcloud"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -1117,6 +1117,8 @@ func myPost(ctx *diagContext, reqURL string, ifname string,
 	switch resp.StatusCode {
 	case http.StatusOK:
 		fmt.Fprintf(outfile, "INFO: %s: %s StatusOK\n", ifname, reqURL)
+	case http.StatusCreated:
+		fmt.Fprintf(outfile, "INFO: %s: %s StatusCreated\n", ifname, reqURL)
 	case http.StatusNotModified:
 		fmt.Fprintf(outfile, "INFO: %s: %s StatusNotModified\n", ifname, reqURL)
 	default:
