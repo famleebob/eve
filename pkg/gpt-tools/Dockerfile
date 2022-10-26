@@ -1,6 +1,6 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS gcc make file patch libc-dev util-linux-dev linux-headers openssl-dev g++ tar
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as build
+ENV BUILD_PKGS gcc make file patch glibc-devel glibc-devel-static util-linux libopenssl-1_1-devel gcc-c++ tar libuuid-devel-static libyaml-devel liblzma5 lzma-devel
+RUN eve-suse-deploy.sh
 
 ENV POPT_VERSION 1.16
 ENV GPTFDISK_VERSION 1.0.3
@@ -12,6 +12,7 @@ ENV VBOOT_COMMIT e0b3841863281a3fc3b188bfbab55d401fabdc73
 #
 
 WORKDIR /
+RUN ls /usr/bin/patch
 RUN mkdir /popt
 COPY popt-${POPT_VERSION}.tar.gz /popt
 
@@ -51,7 +52,8 @@ RUN tar xvzf vboot_reference-${VBOOT_COMMIT}.tar.gz
 
 WORKDIR /vboot_reference
 RUN [ -d host/arch/riscv64 ] || cp -r host/arch/arm host/arch/riscv64
-RUN make cgpt LDFLAGS=-static CFLAGS=-Wno-error=address-of-packed-member
+#RUN make cgpt LDFLAGS=-static CFLAGS=-Wno-error=address-of-packed-member
+RUN make cgpt LDFLAGS=-static
 RUN cp build/cgpt/cgpt /out/cgpt
 
 FROM scratch

@@ -2,9 +2,9 @@
 # StrongSwan VPN + Alpine Linux
 #
 
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS gcc make patch libc-dev linux-headers tar build-base ca-certificates iptables iproute2 openssl openssl-dev
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as build
+ENV BUILD_PKGS make patch gawk gcc glibc-devel tar iptables iproute2 openssl libopenssl-devel tar bzip binutils
+RUN eve-suse-deploy.sh
 
 ENV STRONGSWAN_VERSION 5.6.3
 ENV STRONGSWAN_FILE strongswan-${STRONGSWAN_VERSION}.tar.bz2
@@ -51,6 +51,7 @@ RUN rm -rf /out && mkdir /out
 # stock one:
 #    1. alpine 3.6+ now has a conflict with libressl for curl-dev
 #    2. linuxkit alpine image doesn't have curl-dev (because of #1?)
+#* still valid with SuSE or can we just install libcurl-devel?
 COPY curl-7.61.1.tar.bz2 /tmp/curl-7.61.1.tar.bz2
 RUN tar -C /tmp -xjvf /tmp/curl-7.61.1.tar.bz2 ; cd /tmp/curl-7.61.1 ; ./configure --prefix=/usr ; make  -j "$(getconf _NPROCESSORS_ONLN)" install
 

@@ -1,8 +1,9 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as zfs
-ENV BUILD_PKGS git patch ca-certificates util-linux build-base gettext-dev libtirpc-dev automake autoconf \
-    libtool linux-headers attr-dev e2fsprogs-dev glib-dev openssl-dev util-linux-dev coreutils
-ENV PKGS ca-certificates util-linux libintl libuuid libtirpc libblkid libcrypto1.1 zlib
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as zfs
+ENV BUILD_PKGS tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip \
+   libtool attr-devel e2fsprogs-devel openssl-devel coreutils libtirpc-devel
+ENV PKGS util-linux libuuid1 libtirpc-devel libtirpc3 libblkid1
+
+RUN eve-suse-deploy.sh
 
 COPY /patches /
 
@@ -38,7 +39,7 @@ RUN ./autogen.sh && \
     --with-config=user \
     --with-udevdir=/lib/udev \
     --disable-systemd \
-    --disable-static && \
+    --disable-static || cat config.log && \
     ./scripts/make_gitrev.sh && \
     make -j "$(getconf _NPROCESSORS_ONLN)" && \
     make DESTDIR=/tmp/zfs-out install-strip

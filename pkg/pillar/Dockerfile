@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:0b7cc0d9d620e47fc54e21d56cb8a5cd224f9c9b as fscrypt
+FROM lfedge/eve-fscrypt:7c5426d6d7e5c209ed2bf579a3475f3483cff7c8 as fscrypt
 
-FROM lfedge/eve-dom0-ztools:417d4ff6a57d2317c9e65166274b0ea6f6da16e2 as zfs
+FROM lfedge/eve-dom0-ztools:4e4771ff4556ceb12dc917870e5b9afd79c14da2 as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,17 +13,18 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as build
 
 ARG DEV=n
 
-ENV BUILD_PKGS git gcc linux-headers libc-dev make linux-pam-dev m4 findutils go util-linux make patch \
-    libintl libuuid libtirpc libblkid libcrypto1.1 zlib tar
-ENV PKGS alpine-baselayout musl-utils libtasn1-progs pciutils yajl xz bash iptables ip6tables iproute2 dhcpcd \
-    coreutils dmidecode libbz2 libuuid ipset curl radvd ethtool util-linux e2fsprogs libcrypto1.1 xorriso \
-    qemu-img jq e2fsprogs-extra keyutils ca-certificates ip6tables-openrc iptables-openrc ipset-openrc hdparm \
-    libintl libtirpc libblkid zlib
-RUN eve-alpine-deploy.sh
+ENV BUILD_PKGS git gcc glibc-devel make pam pam-devel m4 findutils go1.18 util-linux make patch \
+    gettext-tools libuuid-devel libtirpc-devel libblkid-devel libopenssl-devel zlib tar libtasn1-devel
+# SuSE iprout2 busybox version installed
+ENV PKGS libtasn1 pciutils libyajl2 xz bash iptables libxtables12 dhcp-client \
+    coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd ethtool util-linux e2fsprogs openssl-1_1 xorriso \
+    qemu-tools jq keyutils ca-certificates hdparm \
+    gettext-runtime libtirpc3 libblkid1 zlib
+RUN eve-suse-deploy.sh
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
 
@@ -74,24 +75,28 @@ fi
 WORKDIR /
 
 COPY patches/* /sys-patches/
+
 # hadolint ignore=SC1097
-RUN set -e && for patch in /sys-patches/*.patch; do \
-        echo "Applying $patch"; \
-        patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
-    done
+#* SuSE has no dhcpcd package, trying to patch configuration
+#*  files, as such will fail need to get dhcpcd and its config
+#*  files installed -- thought I had it ... sigh!
+#* RUN set -ex && for patch in /sys-patches/*.patch; do \
+#*        echo "Applying $patch"; \
+#*        patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
+#*    done
 
 # we need zfs files on running system
 COPY --from=zfs /out /out
 
-FROM lfedge/eve-dnsmasq:3af908d86a95a627c729e09b1b125bf8de7fadcb as dnsmasq
-FROM lfedge/eve-strongswan:3f426e1c9fe2bbeb324a61c33b861c37459f616a as strongswan
-FROM lfedge/eve-gpt-tools:ab2e9f924e22709b4e08ebedd6d3c6a2882d071e as gpttools
+FROM lfedge/eve-dnsmasq:06478299b9d0373b15fa2dceff91352463ca64d6 as dnsmasq
+FROM lfedge/eve-strongswan:c3c879e21248315b5fe5de69c0dd171f38fab1cb as strongswan
+FROM lfedge/eve-gpt-tools:35186db63b4718670ae89b84f736dd6ead4adede as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as collector
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as collector
 
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 # we put everything into /final
 COPY --from=build /out/ /final
@@ -114,6 +119,7 @@ ADD conf/lisp.config.base /final/var/tmp/zededa/lisp.config.base
 COPY rootfs/ /final
 
 # We will start experimenting with stripping go binaries on ARM only for now
+#* will need SL-EVE attention, apk is Alpine only and doesn't work with SuSE
 RUN if [ "$(uname -m)" = "aarch64" ] ; then                                             \
        apk add --no-cache findutils binutils file                                      ;\
        find /final -type f -executable -exec file {} \; | grep 'not stripped' | cut -f1 -d: |\
