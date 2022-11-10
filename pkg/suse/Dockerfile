@@ -41,13 +41,11 @@ WORKDIR /tmp/mirrors
 RUN zypper --no-gpg-checks addrepo -p 1 https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
 RUN zypper --no-gpg-checks addrepo -p 2 https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
 
-RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
-RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
-RUN cd /tmp/createrepo-0.10.4 && make install
-RUN ls -l /usr/bin/createrepo
+#RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
+#RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
+#RUN cd /tmp/createrepo-0.10.4 && make install
+#RUN ls -l /usr/bin/createrepo
 #RUN /usr/bin/createrepo --help
-RUN find / -name \*rootfs\*.tar.gz
-
 
 #   Where was that mirror again???
 ARG THE_CACHE=https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
@@ -63,21 +61,18 @@ RUN for repo in main community testing; do \
       done \
     done
 
-RUN pwd && ls -lR /mirror
-RUN find /var/cache/zypp -name \*.repo
-RUN find / -name \\*rootfs\\* -a -type f
-# set the default repository to use
+ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/${TARGET_ARCH}
+RUN find / -name \*.rpm > list.1
+RUN cat list.1
 
-RUN cp /mirror/${SUSE_VERSION}/rootfs/etc/suse/repositories /etc/suse
+#RUN cp /mirror/${SUSE_VERSION}/rootfs/etc/suse/repositories /etc/suse
 
 #* FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
+
 FROM registry.suse.com/bci/bci-base:15.4 as compactor
 
-# my snooping
-RUN zypper lr
-
-COPY --from=cache /etc/apk/repositories* /etc/apk/
-COPY --from=cache /etc/apk/keys /etc/apk/keys/
+#COPY --from=cache /etc/apk/repositories* /etc/apk/
+#COPY --from=cache /etc/apk/keys /etc/apk/keys/
 COPY --from=cache /mirror /mirror/
 COPY eve-suse-deploy.sh go-compile.sh /bin/
 

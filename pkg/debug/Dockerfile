@@ -3,45 +3,51 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS abuild curl tar make linux-headers patch g++ git gcc ncurses-dev autoconf
+# FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
+FROM lfedge/eve-suse:588d346aab0c5c69505e33974beb1fec1036e8e6-dirty-c23634a as build
+#* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
+ENV BUILD_PKGS curl tar make glibc-devel patch g++ git gcc ncurses-dev autoconf
 # Feel free to add additional packages here, but be aware that
 # EVE's rootfs image can be no larger than 300Mb (and don't
 # forget to check on all supported architectures: e.g. arm64
 # binaries are typically larger and amd64 ones).
 # RUN apk add --no-cache gdb valgrind
-ENV PKGS openssl openssh-client openssh-server tini util-linux ca-certificates pciutils usbutils vim tcpdump perf strace iproute2-minimal
-RUN eve-alpine-deploy.sh
+ENV PKGS openssl openssh-clients openssh-server util-linux ca-certificates pciutils usbutils vim tcpdump gperf strace iproute2-minimal
+#*  remove `tini` as not found in SuSE stuff
+#*  use iproute2 as iproute2-minimal not available in SuSE
+RUN cat /etc/os.release
+RUN set -x && eve-suse-deploy.sh
 
 ENV LSHW_VERSION 02.19.2
 
 # setting up building account
-RUN adduser -G abuild -D builder || :
-RUN su builder -c 'abuild-keygen -a -n'
+RUN useradd -G abuild -D builder || :
+#* disable for now
+#RUN su builder -c 'abuild-keygen -a -n'
 
-COPY --chown=builder:abuild abuild/ /
-ENV MUSL_VERSION v1.2.3
-ENV DISTFILES_MIRROR /tmp/mirror
-ADD --chown=builder:abuild https://git.musl-libc.org/cgit/musl/snapshot/${MUSL_VERSION}.tar.gz ${DISTFILES_MIRROR}/musl-${MUSL_VERSION}.tar.gz
-RUN su builder -c 'cd /musl && abuild checksum && abuild -r'
+#* COPY --chown=builder:abuild abuild/ /
+#* ENV MUSL_VERSION v1.2.3
+#* ENV DISTFILES_MIRROR /tmp/mirror
+#* ADD --chown=builder:abuild https://git.musl-libc.org/cgit/musl/snapshot/${MUSL_VERSION}.tar.gz ${DISTFILES_MIRROR}/musl-${MUSL_VERSION}.tar.gz
+#* RUN su builder -c 'cd /musl && abuild checksum && abuild -r'
 
 # now install it locally so we can pick it up later on below
 # hadolint ignore=DL3019,DL3018
-RUN apk add -p /out --allow-untrusted /home/builder/packages/*/musl-1.2*.apk
+#* RUN apk add -p /out --allow-untrusted /home/builder/packages/*/musl-1.2*.apk
 
 # hadolint ignore=DL4006
-ADD https://www.ezix.org/software/files/lshw-B.${LSHW_VERSION}.tar.gz lshw.tar.gz
-RUN tar -xzvf lshw.tar.gz
+#* ADD https://www.ezix.org/software/files/lshw-B.${LSHW_VERSION}.tar.gz lshw.tar.gz
+#* RUN tar -xzvf lshw.tar.gz
 
-COPY lshw/ lshw-B.${LSHW_VERSION}/
+#COPY lshw/ lshw-B.${LSHW_VERSION}/
 
-WORKDIR /lshw-B.${LSHW_VERSION}
+#WORKDIR /lshw-B.${LSHW_VERSION}
 
 # order is important
-RUN for patch in fix-musl-sc_long_bit.patch wrapper-for-basename.patch 15565229509455527de9ce7cbb9530e2b31d043b.patch\
- 2b1c730b493d647bbab4854713571458e82a81e7.patch; do patch -p1 < $patch; done &&\
- make -C src RPM_OPT_FLAGS=-DNONLS static &&\
- cp src/lshw-static /out/usr/bin/lshw && strip /out/usr/bin/lshw
+#* RUN for patch in fix-musl-sc_long_bit.patch wrapper-for-basename.patch 15565229509455527de9ce7cbb9530e2b31d043b.patch\
+#*  2b1c730b493d647bbab4854713571458e82a81e7.patch; do patch -p1 < $patch; done &&\
+#*  make -C src RPM_OPT_FLAGS=-DNONLS static &&\
+#*  cp src/lshw-static /out/usr/bin/lshw && strip /out/usr/bin/lshw
 
 # building hexedit
 WORKDIR /tmp/hexedit/hexedit-1.5
