@@ -14,6 +14,7 @@ RUN zypper install -y -l openssh-clients git gcc glibc-devel util-linux libpcap-
 # ttf-freefonts => free-ttf-fonts, but can't find the package
 # we need updated libraries, here we use the same version as for eve/alpine
 # hadolint ignore=DL3018
+RUN userdel ${USER} ; groupdel ${GROUP} || :
 RUN zypper --non-interactive addrepo -r https://download.opensuse.org/repositories/filesystems/15.4/filesystems.repo -f -G
 # had to disable gpg check wouldn't install, pilot error I'm sure
 RUN zypper --non-interactive refresh
@@ -22,7 +23,7 @@ RUN zypper --non-interactive refresh
 # was https://dl-cdn.alpinelinux.org/alpine/v3.16/main
 # had to remove the -U --upgrade, does not exist in zypper
 RUN sed -ie /:${UID}:/d /etc/passwd /etc/shadow ; sed -ie /:${GID}:/d /etc/group || :
-RUN groupadd -g ${GID} ${GROUP} && useradd -h /home/${USER} -G ${GROUP} -D -H -u ${UID} ${USER}
+RUN groupadd -g ${GID} ${GROUP} && useradd -d /home/${USER} -G ${GROUP} -M -u ${UID} ${USER}
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER}
 # dep is deprecated and probably should be gotten rid of; no need to parametrize the version, as there will be no further releases
 # hadolint ignore=SC2086,DL4006

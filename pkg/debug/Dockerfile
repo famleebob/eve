@@ -4,7 +4,7 @@
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-FROM lfedge/eve-suse:b4f8e5a78efbb8d406aa0de18e38244a37482cb0-dirty-60a2dd2 as build
+FROM lfedge/eve-suse:7a4f394a8eacbb2e22935e81af039fb9fb2ed434 as build
 #* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
 ENV BUILD_PKGS curl tar make glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf
 # Feel free to add additional packages here, but be aware that
