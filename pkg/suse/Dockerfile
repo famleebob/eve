@@ -15,7 +15,7 @@ ARG TARGET_ARCH=amd64
 # RUN apk update && apk upgrade -a
 RUN zypper refresh && zypper update
 RUN zypper -n in tar gzip make python gawk pkg-config
-#*  Will need to add `-r local` at some point to limite 
+#*  Will need to add `-r local` at some point to limite
 #*  the search to local repos, need to know how to create
 #*  a zypper alias ...
 
@@ -74,7 +74,10 @@ FROM registry.suse.com/bci/bci-base:15.4 as compactor
 #COPY --from=cache /etc/apk/repositories* /etc/apk/
 #COPY --from=cache /etc/apk/keys /etc/apk/keys/
 COPY --from=cache /mirror /mirror/
+COPY --from=cache /var/cache/zypp /var/cache/zypp
+COPY --from=cache /etc/zypp /etc/zypp
 COPY eve-suse-deploy.sh go-compile.sh /bin/
+RUN ls /bin/*.sh
 
 #RUN apk update && apk upgrade -a
 
@@ -83,3 +86,5 @@ COPY eve-suse-deploy.sh go-compile.sh /bin/
 FROM scratch
 COPY --from=compactor / /
 CMD ["/bin/sh"]
+RUN ls /bin/*.sh /sbin/*ini*
+RUN find /var/cache/zypp -name \*.rpm

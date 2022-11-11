@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 # shellcheck disable=SC2086
 # shellcheck disable=SC2154
 #
@@ -39,18 +39,19 @@ case "$(uname -m)" in
 esac
 
 set $BUILD_PKGS
-[ $# -eq 0 ] || apk add "$@"
+[ $# -eq 0 ] || zypper --non-interactive in --dry-run "$@"
 
 rm -rf /out
 mkdir /out
-tar -C "/mirror/$ALPINE_VERSION/rootfs" -cf- . | tar -C /out -xf-
+find /mirror -name rootfs
+#tar -C "/mirror/$ALPINE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
 # FIXME: for now we're apk-enabling executable repos, but strictly
 # speaking this maybe not needed (or at least optional)
-PKGS="$PKGS apk-tools"
+#*  PKGS="$PKGS apk-tools"
 
 set $PKGS
-[ $# -eq 0 ] || apk add --no-cache -p /out "$@"
+[ $# -eq 0 ] || zipper --non-interactive in --dry-run --no-cache -p /out "$@"
 
 # FIXME: see above
-cp /etc/apk/repositories.upstream /out/etc/apk/repositories
+# cp /etc/apk/repositories.upstream /out/etc/apk/repositories

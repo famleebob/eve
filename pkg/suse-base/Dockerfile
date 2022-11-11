@@ -1,5 +1,5 @@
 FROM registry.suse.com/bci/bci-busybox:latest AS builder
-#*  we need to start here at some point; however, 
+#*  we need to start here at some point; however,
 #*   for now need to use the most primative SuSE
 #*   BCI (Base Container Image) that includes `zypper`
 #*   Will use that in `pkg/suse` for now ...

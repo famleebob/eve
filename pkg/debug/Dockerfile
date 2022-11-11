@@ -4,9 +4,9 @@
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-FROM lfedge/eve-suse:588d346aab0c5c69505e33974beb1fec1036e8e6-dirty-c23634a as build
+FROM lfedge/eve-suse:b4f8e5a78efbb8d406aa0de18e38244a37482cb0-dirty-60a2dd2 as build
 #* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
-ENV BUILD_PKGS curl tar make glibc-devel patch g++ git gcc ncurses-dev autoconf
+ENV BUILD_PKGS curl tar make glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf
 # Feel free to add additional packages here, but be aware that
 # EVE's rootfs image can be no larger than 300Mb (and don't
 # forget to check on all supported architectures: e.g. arm64
@@ -15,8 +15,10 @@ ENV BUILD_PKGS curl tar make glibc-devel patch g++ git gcc ncurses-dev autoconf
 ENV PKGS openssl openssh-clients openssh-server util-linux ca-certificates pciutils usbutils vim tcpdump gperf strace iproute2-minimal
 #*  remove `tini` as not found in SuSE stuff
 #*  use iproute2 as iproute2-minimal not available in SuSE
-RUN cat /etc/os.release
-RUN set -x && eve-suse-deploy.sh
+RUN cat /etc/os-release
+RUN ls /bin/eve-suse-deploy.sh
+RUN find /var/cache/zypp -name \*.rpm
+RUN eve-suse-deploy.sh
 
 ENV LSHW_VERSION 02.19.2
 
@@ -70,4 +72,4 @@ WORKDIR /
 
 COPY --from=build /out/ /
 
-CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
+# CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
