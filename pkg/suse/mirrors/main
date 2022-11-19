@@ -29,8 +29,7 @@ dosfstools
 doxygen
 dtc
 e2fsprogs
-elfutils-dev
-libelf
+libelf1
 libelf-devel
 ethtool
 file
@@ -44,7 +43,8 @@ gettext-tools
 git
 glib-devel
 gmp-devel
-gnu-efi-dev
+gnu-efi
+efivar-devel
 gpg2
 gnutls
 grep
@@ -78,6 +78,7 @@ libpng16-devel
 librelp-devel
 libseccomp-devel
 libopenssl1_1
+libopenssl-1_1-devel
 libtirpc-devel
 libtool
 libunwind-devel
@@ -106,14 +107,14 @@ nasm
 ncurses-devel
 libnettle8
 openssh
-openssl1_1
-openssl-1_1-devel
+openssl-1_1
+libopenssl-1_1-devel
 p11-kit
 patch
 pciutils
 perl
 pixman-1-0-devel
-pkgconf
+pkg-config
 ppp
 protobuf-devel
 python3-appdirs
@@ -141,7 +142,7 @@ tcpdump
 texinfo
 usbutils
 util-linux
-gvim
+vim
 wget
 wireless-tools
 wpa_supplicant

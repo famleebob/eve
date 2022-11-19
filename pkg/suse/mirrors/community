@@ -1,7 +1,7 @@
 go
 libvncserver0
 qemu-tools
-perf
+gperf
 python3-CacheControl
 python3-colorama
 python3-contexter

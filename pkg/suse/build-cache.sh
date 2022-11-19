@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e -x
+set -e
 
 bail() {
   echo "$*"
@@ -27,20 +27,17 @@ done
 # fetch the missing packages
 # shellcheck disable=SC2086
 if [ -n "$PKGS" ]; then
-   zypper -n --no-gpg-checks download "$CACHE" $PKGS
-     # zypper -n download -X "$SUSE_REPO" --no-cache -o "$CACHE" $PKGS
+   zypper -n download $PKGS
+   #  Get single package, not dependencies.  Following should
+   #   just download the set of packages needed
+   # zypper -n install -y -d $PKGS
 fi
 
+# DEBUG:peek to see if packages on node
+find / -name \*.rpm
 # index the cache
-#rm -f "$CACHE"/APKINDEX*
-#apk index --rewrite-arch "$(apk --print-arch)" -o "$CACHE/APKINDEX.unsigned.tar.gz" "$CACHE"/*.apk
-#cp "$CACHE/APKINDEX.unsigned.tar.gz" "$CACHE/APKINDEX.tar.gz"
-#abuild-sign "$CACHE/APKINDEX.tar.gz"
 
 mkdir -p "$ROOTFS/etc/zypp"
-#cp -r /etc/suse/keys "$ROOTFS/etc/suse"
-#cp ~/.abuild/*.rsa.pub "$ROOTFS/etc/suse/keys/"
-#cp ~/.abuild/*.rsa.pub /etc/suse/keys/
 echo "$CACHE/.." > "$ROOTFS/etc/suse/repositories"
 # -X from repo, xx, --initdb new package database, -p manage as a root
 zypper -n --installroot "$ROOTFS" --resposd "$CACHE/.." in busybox

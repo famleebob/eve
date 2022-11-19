@@ -2,8 +2,8 @@
 # shellcheck disable=SC2086
 # shellcheck disable=SC2154
 #
-# This script is used to setup Alpine build environments
-# for EVE containers and produce the resulting, Alpine-based
+# This script is used to setup SuSE build environments
+# for EVE containers and produce the resulting, SuSE-based
 # executable container if needed (note that not all builds produce
 # executable containers -- some just wrap binaries).
 #
@@ -13,13 +13,13 @@
 #   PKGS - packages required for the executable container
 #   PKGS_[amd64|arm64|riscv64] - like PKGS but arch specific
 #
-# In the future, you'll be able to pass an optional Alpine version to
+# In the future, you'll be able to pass an optional SuSE version to
 # the script to indicate the the environment has to be setup with that
 # cached version. E.g.:
-#   eve-alpine-deploy.sh 3.17
+#   eve-suse-deploy.sh 15-SP4
 set -e
 
-ALPINE_VERSION=${1:-3.16}
+SUSE_VERSION=${1:-15-SP4}
 
 bail() {
    echo "$@"
@@ -39,19 +39,19 @@ case "$(uname -m)" in
 esac
 
 set $BUILD_PKGS
-[ $# -eq 0 ] || zypper --non-interactive in --dry-run "$@"
+# [ $# -eq 0 ] || zypper --no-refresh --non-interactive install --dry-run "$@"
 
 rm -rf /out
 mkdir /out
-find /mirror -name rootfs
-#tar -C "/mirror/$ALPINE_VERSION/rootfs" -cf- . | tar -C /out -xf-
+tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
 # FIXME: for now we're apk-enabling executable repos, but strictly
 # speaking this maybe not needed (or at least optional)
 #*  PKGS="$PKGS apk-tools"
 
 set $PKGS
-[ $# -eq 0 ] || zipper --non-interactive in --dry-run --no-cache -p /out "$@"
+# [ $# -eq 0 ] || zipper --non-interactive in --dry-run -p /out "$@"
+# [ $# -eq 0 ] || zipper --no-refresh --non-interactive --root /out in --dry-run "$@"  #install into /out
 
 # FIXME: see above
 # cp /etc/apk/repositories.upstream /out/etc/apk/repositories

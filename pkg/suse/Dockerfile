@@ -3,7 +3,6 @@
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS cache
 FROM registry.suse.com/bci/bci-base:15.4 as cache
 
-# ARG ALPINE_VERSION=3.16
 ARG releasever_major=15
 ARG releasever_minor=4
 ARG suse_product=SLE_BCI
@@ -28,7 +27,7 @@ COPY build-cache.sh /bin/
 #* RUN apk add --no-cache abuild gcc sudo
 #*  replace abuild with rmt-server for package repos
 #*  remove gcc for now, needed for abuild to sign packages
-#* RUN zypper install -y rmt-server sudo
+#* RUN zypper install o
 #*  -- tried to use rmt-server the SuSE written in ruby, needs my.sql
 
 # install a new key into /etc/apk/keys
@@ -38,8 +37,11 @@ COPY build-cache.sh /bin/
 # create all the mirrors
 WORKDIR /tmp/mirrors
 #   first point to the public package repositories
-RUN zypper --no-gpg-checks addrepo -p 1 https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
-RUN zypper --no-gpg-checks addrepo -p 2 https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
+RUN zypper mr -k 1
+RUN zypper addrepo -k -p 1 https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
+RUN zypper addrepo -k -p 2 https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
+# RUN zypper mr -F -k --local
+# RUN zypper se zfs
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -50,6 +52,7 @@ RUN zypper --no-gpg-checks addrepo -p 2 https://download.opensuse.org/repositori
 #   Where was that mirror again???
 ARG THE_CACHE=https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
 
+RUN ls /etc/zypp/repos.d
 RUN [ -d /etc/zypper ] || mkdir /etc/zypper
 RUN [ -f /etc/zypper/cache.url ] || echo ${THE_CACHE} > /etc/zypper/cache.url
 RUN for repo in main community testing; do \
@@ -61,11 +64,15 @@ RUN for repo in main community testing; do \
       done \
     done
 
-ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/${TARGET_ARCH}
-RUN find / -name \*.rpm > list.1
-RUN cat list.1
+ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
+RUN find / -name \*.rpm
+RUN mv /tmp/mirrors/suse-busybox-bci-x86_64.tar /tmp
+RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
+# may want to make this verbose, once working -- debug stuff
+RUN tar -C /mirror/${SUSE_VERSION}/rootfs -xf /tmp/suse-busybox-bci-x86_64.tar
 
 #RUN cp /mirror/${SUSE_VERSION}/rootfs/etc/suse/repositories /etc/suse
+RUN ls /var/cache/zypp
 
 #* FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
 
@@ -77,7 +84,7 @@ COPY --from=cache /mirror /mirror/
 COPY --from=cache /var/cache/zypp /var/cache/zypp
 COPY --from=cache /etc/zypp /etc/zypp
 COPY eve-suse-deploy.sh go-compile.sh /bin/
-RUN ls /bin/*.sh
+RUN find / -name \*.git\*.rpm
 
 #RUN apk update && apk upgrade -a
 
@@ -86,5 +93,3 @@ RUN ls /bin/*.sh
 FROM scratch
 COPY --from=compactor / /
 CMD ["/bin/sh"]
-RUN ls /bin/*.sh /sbin/*ini*
-RUN find /var/cache/zypp -name \*.rpm
