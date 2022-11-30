@@ -27,17 +27,16 @@ done
 # fetch the missing packages
 # shellcheck disable=SC2086
 if [ -n "$PKGS" ]; then
-   zypper -n download $PKGS
+   # zypper --non-interactive install --no-recommends --download-only --no-confirm $PKGS
    #  Get single package, not dependencies.  Following should
    #   just download the set of packages needed
-   # zypper -n install -y -d $PKGS
+   zypper --non-interactive download $PKGS
 fi
+find /var/cache/zypp/packages
 
-# DEBUG:peek to see if packages on node
-find / -name \*.rpm
 # index the cache
 
 mkdir -p "$ROOTFS/etc/zypp"
 echo "$CACHE/.." > "$ROOTFS/etc/suse/repositories"
 # -X from repo, xx, --initdb new package database, -p manage as a root
-zypper -n --installroot "$ROOTFS" --resposd "$CACHE/.." in busybox
+# zypper -n --installroot "$ROOTFS" --resposd "$CACHE/.." in busybox

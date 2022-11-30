@@ -17,7 +17,7 @@
 # the script to indicate the the environment has to be setup with that
 # cached version. E.g.:
 #   eve-suse-deploy.sh 15-SP4
-set -e
+# set -e -x
 
 SUSE_VERSION=${1:-15-SP4}
 
@@ -38,12 +38,16 @@ case "$(uname -m)" in
            ;;
 esac
 
+zypper --non-interactive modifyrepo --no-refresh --keep-packages --all
+
 set $BUILD_PKGS
-# [ $# -eq 0 ] || zypper --no-refresh --non-interactive install --dry-run "$@"
+[ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-force-resolution --no-recommends --force "$@"
 
 rm -rf /out
 mkdir /out
+ls /usr/bin/tar /out
 tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
+ls -lr /out
 
 # FIXME: for now we're apk-enabling executable repos, but strictly
 # speaking this maybe not needed (or at least optional)
@@ -51,7 +55,11 @@ tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
 set $PKGS
 # [ $# -eq 0 ] || zipper --non-interactive in --dry-run -p /out "$@"
-# [ $# -eq 0 ] || zipper --no-refresh --non-interactive --root /out in --dry-run "$@"  #install into /out
 
+[ $# -eq 0 ] || zypper --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
+zypper --installroot /out --no-refresh --non-interactive se -i || :
+
+echo $?
+exit 0
 # FIXME: see above
 # cp /etc/apk/repositories.upstream /out/etc/apk/repositories

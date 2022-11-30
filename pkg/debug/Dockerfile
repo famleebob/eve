@@ -3,27 +3,25 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-# FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-FROM lfedge/eve-suse:7a4f394a8eacbb2e22935e81af039fb9fb2ed434 as build
+FROM lfedge/eve-suse:4454406cdb1b3bea4b56b43ae54d430ea8d76bab-dirty-f7b083c as build
 #* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
-ENV BUILD_PKGS curl tar make glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf
+ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip
 # Feel free to add additional packages here, but be aware that
 # EVE's rootfs image can be no larger than 300Mb (and don't
 # forget to check on all supported architectures: e.g. arm64
 # binaries are typically larger and amd64 ones).
 # RUN apk add --no-cache gdb valgrind
-ENV PKGS openssl openssh-clients openssh-server util-linux ca-certificates pciutils usbutils vim tcpdump gperf strace iproute2-minimal
+#* ENV PKGS openssl-1_1 openssh-clients openssh-server util-linux ca-certificates pciutils usbutils vim tcpdump gperf strace iproute2-minimal
+ENV PKGS openssl openssh-clients tcpdump gperf strace lshw
 #*  remove `tini` as not found in SuSE stuff
 #*  use iproute2 as iproute2-minimal not available in SuSE
-RUN cat /etc/os-release
-RUN ls /bin/eve-suse-deploy.sh
-RUN find /var/cache/zypp -name \*.rpm
+#*  there is an iproute2 that is part of busybox ...
+
 RUN eve-suse-deploy.sh
 
 ENV LSHW_VERSION 02.19.2
-
 # setting up building account
-RUN useradd -G abuild -D builder || :
+# RUN useradd -G abuild -D builder || :
 #* disable for now
 #RUN su builder -c 'abuild-keygen -a -n'
 
@@ -38,24 +36,30 @@ RUN useradd -G abuild -D builder || :
 #* RUN apk add -p /out --allow-untrusted /home/builder/packages/*/musl-1.2*.apk
 
 # hadolint ignore=DL4006
-#* ADD https://www.ezix.org/software/files/lshw-B.${LSHW_VERSION}.tar.gz lshw.tar.gz
-#* RUN tar -xzvf lshw.tar.gz
+# ADD https://www.ezix.org/software/files/lshw-B.${LSHW_VERSION}.tar.gz lshw.tar.gz
+# RUN tar -xzvf lshw.tar.gz
 
-#COPY lshw/ lshw-B.${LSHW_VERSION}/
+# COPY lshw/ lshw-B.${LSHW_VERSION}/
 
-#WORKDIR /lshw-B.${LSHW_VERSION}
+# WORKDIR /lshw-B.${LSHW_VERSION}
 
 # order is important
-#* RUN for patch in fix-musl-sc_long_bit.patch wrapper-for-basename.patch 15565229509455527de9ce7cbb9530e2b31d043b.patch\
-#*  2b1c730b493d647bbab4854713571458e82a81e7.patch; do patch -p1 < $patch; done &&\
-#*  make -C src RPM_OPT_FLAGS=-DNONLS static &&\
-#*  cp src/lshw-static /out/usr/bin/lshw && strip /out/usr/bin/lshw
+# RUN patch -p1 < fix-musl-sc_long_bit.patch
+# RUN patch -p1 < wrapper-for-basename.patch
+# RUN patch -p1 < 15565229509455527de9ce7cbb9530e2b31d043b.patch
+# RUN patch -p1 < e2b1c730b493d647bbab4854713571458e82a81e7.patch
+
+# RUN for patch in fix-musl-sc_long_bit.patch wrapper-for-basename.patch 15565229509455527de9ce7cbb9530e2b31d043b.patch \
+#  e2b1c730b493d647bbab4854713571458e82a81e7.patch; do patch -p1 < $patch; done && \
+# RUN make -C src RPM_OPT_FLAGS=-DNONLS static &&\
+#  cp src/lshw-static /out/usr/bin/lshw && strip /out/usr/bin/lshw
 
 # building hexedit
 WORKDIR /tmp/hexedit/hexedit-1.5
+
 # hadolint ignore=DL4006
 ADD https://github.com/pixel/hexedit/archive/refs/tags/1.5.tar.gz ../1.5.tar.gz
-RUN tar -C .. -xzvf ../1.5.tar.gz
+RUN /usr/bin/tar -C .. -xzvf ../1.5.tar.gz
 RUN ./autogen.sh && ./configure && make DESTDIR=/out install
 
 # tweaking various bit
@@ -63,8 +67,9 @@ WORKDIR /out
 COPY ssh.sh spec.sh ./usr/bin/
 RUN mkdir -p ./etc/ssh ./root/.ssh && chmod 0700 ./root/.ssh
 RUN cp /etc/passwd /etc/group ./etc/
-RUN ln -s /run ./var/run
-RUN sed -i -e 's#AllowTcpForwarding.*$#AllowTcpForwarding yes#' ./etc/ssh/sshd_config
+# Won't work until openssh-servers can be installed in the
+#  target root environment
+# RUN sed -i -e 's#AllowTcpForwarding.*$#AllowTcpForwarding yes#' ./etc/ssh/sshd_config
 
 FROM scratch
 ENTRYPOINT []
@@ -73,3 +78,4 @@ WORKDIR /
 COPY --from=build /out/ /
 
 # CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
+CMD ["/usr/bin/ssh.sh"]

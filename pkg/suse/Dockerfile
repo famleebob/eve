@@ -12,9 +12,9 @@ ARG TARGET_ARCH=amd64
 # is rebased on the new version of Alpine and
 # you have to have FROM alpine:x.y.z above:
 # RUN apk update && apk upgrade -a
-RUN zypper refresh && zypper update
-RUN zypper -n in tar gzip make python gawk pkg-config
-#*  Will need to add `-r local` at some point to limite
+# RUN zypper refresh && zypper update
+RUN zypper -n in -y tar gzip make python gawk pkg-config
+#*  Will need to add `-r local` at some point to limit
 #*  the search to local repos, need to know how to create
 #*  a zypper alias ...
 
@@ -36,12 +36,13 @@ COPY build-cache.sh /bin/
 
 # create all the mirrors
 WORKDIR /tmp/mirrors
+
 #   first point to the public package repositories
-RUN zypper mr -k 1
-RUN zypper addrepo -k -p 1 https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
-RUN zypper addrepo -k -p 2 https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
-# RUN zypper mr -F -k --local
-# RUN zypper se zfs
+# RUN zypper --non-interactive addrepo -keep-packages https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
+# RUN zypper --non-interactive --gpg-auto-import-keys refresh 2
+RUN zypper --non-interactive addrepo --keep-packages https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
+RUN zypper --non-interactive --gpg-auto-import-keys refresh filesystems
+RUN zypper --non-interactive modifyrepo --keep-packages --all
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -52,7 +53,6 @@ RUN zypper addrepo -k -p 2 https://download.opensuse.org/repositories/filesystem
 #   Where was that mirror again???
 ARG THE_CACHE=https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
 
-RUN ls /etc/zypp/repos.d
 RUN [ -d /etc/zypper ] || mkdir /etc/zypper
 RUN [ -f /etc/zypper/cache.url ] || echo ${THE_CACHE} > /etc/zypper/cache.url
 RUN for repo in main community testing; do \
@@ -64,32 +64,27 @@ RUN for repo in main community testing; do \
       done \
     done
 
+RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l
+RUN find /var/cache/zypp -name libopenssl\*.rpm
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
-RUN find / -name \*.rpm
 RUN mv /tmp/mirrors/suse-busybox-bci-x86_64.tar /tmp
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
 # may want to make this verbose, once working -- debug stuff
 RUN tar -C /mirror/${SUSE_VERSION}/rootfs -xf /tmp/suse-busybox-bci-x86_64.tar
 
-#RUN cp /mirror/${SUSE_VERSION}/rootfs/etc/suse/repositories /etc/suse
-RUN ls /var/cache/zypp
-
 #* FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
 
 FROM registry.suse.com/bci/bci-base:15.4 as compactor
+## FROM lfedge/eve-suse:4454406cdb1b3bea4b56b43ae54d430ea8d76bab-dirty-710098b as compactor
 
-#COPY --from=cache /etc/apk/repositories* /etc/apk/
-#COPY --from=cache /etc/apk/keys /etc/apk/keys/
 COPY --from=cache /mirror /mirror/
 COPY --from=cache /var/cache/zypp /var/cache/zypp
 COPY --from=cache /etc/zypp /etc/zypp
 COPY eve-suse-deploy.sh go-compile.sh /bin/
-RUN find / -name \*.git\*.rpm
-
-#RUN apk update && apk upgrade -a
 
 # we merge layers in previous step
 # so we should avoid large possible diff
 FROM scratch
+
 COPY --from=compactor / /
 CMD ["/bin/sh"]
