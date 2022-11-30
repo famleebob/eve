@@ -488,6 +488,7 @@ func (zedagentCtx *zedagentContext) init() {
 		currentMetricInterval: zedagentCtx.globalConfig.GlobalValueInt(types.MetricInterval),
 		// edge-view configure
 		configEdgeview: &types.EdgeviewConfig{},
+		cipherContexts: make(map[string]types.CipherContext),
 	}
 
 	cipherCtx := &cipherContext{}
@@ -1064,18 +1065,6 @@ func initPublications(zedagentCtx *zedagentContext) {
 		log.Fatal(err)
 	}
 	getconfigCtx.pubControllerCert.ClearRestarted()
-
-	// for CipherContextStatus Publisher
-	getconfigCtx.pubCipherContext, err = ps.NewPublication(
-		pubsub.PublicationOptions{
-			AgentName:  agentName,
-			Persistent: true,
-			TopicType:  types.CipherContext{},
-		})
-	if err != nil {
-		log.Fatal(err)
-	}
-	getconfigCtx.pubCipherContext.ClearRestarted()
 
 	// for ContentTree config Publisher
 	getconfigCtx.pubContentTreeConfig, err = ps.NewPublication(
@@ -1899,7 +1888,8 @@ func handleZbootRestarted(ctxArg interface{}, restartCounter int) {
 }
 
 // handleAppInstanceStatusCreate - Handle AIS create. Publish ZInfoApp
-//  and ZInfoDevice to the cloud.
+//
+//	and ZInfoDevice to the cloud.
 func handleAppInstanceStatusCreate(ctxArg interface{}, key string,
 	statusArg interface{}) {
 	status := statusArg.(types.AppInstanceStatus)

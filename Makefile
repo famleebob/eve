@@ -261,13 +261,14 @@ DOCKER_GO = _() { $(SET_X); mkdir -p $(CURDIR)/.go/src/$${3:-dummy} ; mkdir -p $
 
 PARSE_PKGS=$(if $(strip $(EVE_HASH)),EVE_HASH=)$(EVE_HASH) DOCKER_ARCH_TAG=$(DOCKER_ARCH_TAG) ./tools/parse-pkgs.sh
 LINUXKIT=$(BUILDTOOLS_BIN)/linuxkit
-LINUXKIT_VERSION=f8947c6ae6c518da585e515fbd75b4e0747f714e
+LINUXKIT_VERSION=bbd62314edf03b8e947536511c1286df65b1e0ff
 LINUXKIT_SOURCE=https://github.com/linuxkit/linuxkit.git
 LINUXKIT_OPTS=$(if $(strip $(EVE_HASH)),--hash) $(EVE_HASH) $(if $(strip $(EVE_REL)),--release) $(EVE_REL)
 LINUXKIT_PKG_TARGET=build
 LINUXKIT_PATCHES_DIR=tools/linuxkit/patches
 RESCAN_DEPS=FORCE
-FORCE_BUILD=--force
+# set FORCE_BUILD to --force to enforce rebuild
+FORCE_BUILD=
 
 # we use the following block to assign correct tag to the Docker registry artifact
 ifeq ($(LINUXKIT_PKG_TARGET),push)
@@ -336,6 +337,16 @@ test: $(LINUXKIT) test-images-patches | $(DIST)
 	$(QUIET)$(DOCKER_GO) "gotestsum --jsonfile $(DOCKER_DIST)/results.json --junitfile $(DOCKER_DIST)/results.xml" $(GOTREE) $(GOMODULE)
 	$(QUIET): $@: Succeeded
 
+# wrap command into DOCKER_GO and propagate it to the pillar's Makefile
+# for example make pillar-fmt will run docker container based on
+# build-tools/src/scripts/Dockerfile
+# mount pkg/pillar into it
+# and will run make fmt
+pillar-%: $(GOBUILDER) | $(DIST)
+	@echo Running make $* on pillar
+	$(QUIET)$(DOCKER_GO) "make $*" $(GOTREE)
+	$(QUIET): $@: Succeeded
+
 clean:
 	rm -rf $(DIST) images/*.yml
 
@@ -385,7 +396,7 @@ $(BIOS_IMG): PKG=uefi
 $(UBOOT_IMG): PKG=u-boot
 $(EFI_PART) $(BOOT_PART) $(INITRD_IMG) $(INSTALLER_IMG) $(KERNEL_IMG) $(IPXE_IMG) $(BIOS_IMG) $(UBOOT_IMG): $(LINUXKIT) | $(INSTALLER)
 	mkdir -p $(dir $@)
-	$(LINUXKIT) pkg build --platforms linux/$(ZARCH) pkg/$(PKG) # running linuxkit pkg build _without_ force ensures that we either pull it down or build it.
+	$(LINUXKIT) pkg build --pull --platforms linux/$(ZARCH) pkg/$(PKG) # running linuxkit pkg build _without_ force ensures that we either pull it down or build it.
 	cd $(dir $@) && $(LINUXKIT) cache export -arch $(DOCKER_ARCH_TAG) -format filesystem -outfile - $(shell $(LINUXKIT) pkg show-tag pkg/$(PKG)) | tar xvf - $(notdir $@)
 	$(QUIET): $@: Succeeded
 
@@ -574,7 +585,6 @@ $(LIVE).parallels: $(LIVE).raw
 
 # top-level linuxkit packages targets, note the one enforcing ordering between packages
 pkgs: RESCAN_DEPS=
-pkgs: FORCE_BUILD=
 pkgs: build-tools $(PKGS)
 	@echo Done building packages
 
@@ -618,12 +628,17 @@ cache-export: image-set outfile-set $(LINUXKIT)
 
 ## export an image from linuxkit cache and load it into docker.
 cache-export-docker-load: $(LINUXKIT)
-	TARFILE=$(shell mktemp); $(MAKE) cache-export OUTFILE=$${TARFILE}; cat $${TARFILE} | docker load
+	$(eval TARFILE := $(shell mktemp))
+	$(MAKE) cache-export OUTFILE=${TARFILE} && cat ${TARFILE} | docker load
+	rm -rf ${TARFILE}
 
 %-cache-export-docker-load: $(LINUXKIT)
-	$(MAKE) cache-export-docker-load IMAGE=$(shell $(MAKE) $*-show-tag)
+	$(eval IMAGE_TAG := $(shell $(MAKE) $*-show-tag))
+	$(eval CACHE_CONTENT := $(shell $(LINUXKIT) cache ls 2>&1))
+	$(if $(filter $(IMAGE_TAG),$(CACHE_CONTENT)),$(MAKE) cache-export-docker-load IMAGE=$(IMAGE_TAG),@echo "Missing image $(IMAGE_TAG) in cache")
 
-## export list of images in PKGS_DOCKER_LOAD from linuxkit cache and load them into docker.
+## export list of images in PKGS_DOCKER_LOAD from linuxkit cache and load them into docker
+## will skip image if not found in cache
 cache-export-docker-load-all: $(LINUXKIT) $(addsuffix -cache-export-docker-load,$(PKGS_DOCKER_LOAD))
 
 proto-vendor:
@@ -761,8 +776,8 @@ eve-%: pkg/%/Dockerfile build-tools $(RESCAN_DEPS)
 images/rootfs-%.yml.in: images/rootfs.yml.in FORCE
 	$(QUITE)tools/compose-image-yml.sh $< $@ "$(ROOTFS_VERSION)-$*-$(ZARCH)"
 
-images-patches := $(wildcard images/*.patch)
-test-images-patches: $(images-patches:%.patch=%)
+images-patches := $(wildcard images/*.yq)
+test-images-patches: $(images-patches:%.yq=%)
 
 $(ROOTFS_FULL_NAME)-adam-kvm-$(ZARCH).$(ROOTFS_FORMAT): $(ROOTFS_FULL_NAME)-kvm-adam-$(ZARCH).$(ROOTFS_FORMAT)
 $(ROOTFS_FULL_NAME)-kvm-adam-$(ZARCH).$(ROOTFS_FORMAT): fullname-rootfs $(SSH_KEY)
@@ -772,7 +787,7 @@ $(ROOTFS_FULL_NAME)-%-$(ZARCH).$(ROOTFS_FORMAT): $(ROOTFS_IMG)
 	$(QUIET): $@: Succeeded
 
 %-show-tag:
-	@$(LINUXKIT) pkg show-tag pkg/$*
+	@$(LINUXKIT) pkg show-tag -canonical pkg/$*
 
 %Gopkg.lock: %Gopkg.toml | $(GOBUILDER)
 	@$(DOCKER_GO) "dep ensure -update $(GODEP_NAME)" $(dir $@)

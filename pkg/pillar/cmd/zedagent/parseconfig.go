@@ -625,6 +625,7 @@ func parseAppInstanceConfig(getconfigCtx *getconfigContext,
 		appInstance.FixedResources.Memory = int(cfgApp.Fixedresources.Memory)
 		appInstance.FixedResources.RootDev = cfgApp.Fixedresources.Rootdev
 		appInstance.FixedResources.VCpus = int(cfgApp.Fixedresources.Vcpus)
+		appInstance.FixedResources.MaxCpus = int(cfgApp.Fixedresources.Maxcpus)
 		appInstance.FixedResources.VirtualizationMode = types.VmMode(cfgApp.Fixedresources.VirtualizationMode)
 		appInstance.FixedResources.EnableVnc = cfgApp.Fixedresources.EnableVnc
 		appInstance.FixedResources.VncDisplay = cfgApp.Fixedresources.VncDisplay
@@ -633,6 +634,7 @@ func parseAppInstanceConfig(getconfigCtx *getconfigContext,
 		appInstance.MetaDataType = types.MetaDataType(cfgApp.MetaDataType)
 		appInstance.Delay = time.Duration(cfgApp.StartDelayInSeconds) * time.Second
 		appInstance.Service = cfgApp.Service
+		appInstance.CloudInitVersion = cfgApp.CloudInitVersion
 		appInstance.FixedResources.CPUsPinned = cfgApp.Fixedresources.PinCpu
 
 		appInstance.VolumeRefConfigList = make([]types.VolumeRefConfig,
@@ -685,8 +687,7 @@ func parseAppInstanceConfig(getconfigCtx *getconfigContext,
 			appInstance.CloudInitUserData = &userData
 		}
 		appInstance.RemoteConsole = cfgApp.GetRemoteConsole()
-		appInstance.CipherBlockStatus = parseCipherBlock(getconfigCtx, appInstance.Key(),
-			cfgApp.GetCipherData())
+		appInstance.CipherBlockStatus = parseCipherBlock(getconfigCtx, appInstance.Key(), cfgApp.GetCipherData())
 		appInstance.ProfileList = cfgApp.ProfileList
 
 		// Add config submitted via local profile server.
@@ -1618,8 +1619,7 @@ func publishDatastoreConfig(ctx *getconfigContext,
 
 		datastore.DsCertPEM = ds.GetDsCertPEM()
 
-		datastore.CipherBlockStatus = parseCipherBlock(ctx, datastore.Key(),
-			ds.GetCipherData())
+		datastore.CipherBlockStatus = parseCipherBlock(ctx, datastore.Key(), ds.GetCipherData())
 		ctx.pubDatastoreConfig.Publish(datastore.Key(), *datastore)
 	}
 }
@@ -1898,8 +1898,7 @@ func parseNetworkWirelessConfig(ctx *getconfigContext, key string, netEnt *zconf
 			wifi.Password = wificfg.GetPassword()
 			wifi.Priority = wificfg.GetPriority()
 			key = fmt.Sprintf("%s-%s", key, wifi.SSID)
-			wifi.CipherBlockStatus = parseCipherBlock(ctx, key,
-				wificfg.GetCipherData())
+			wifi.CipherBlockStatus = parseCipherBlock(ctx, key, wificfg.GetCipherData())
 
 			wconfig.Wifi = append(wconfig.Wifi, wifi)
 		}

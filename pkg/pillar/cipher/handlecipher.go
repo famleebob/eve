@@ -28,7 +28,6 @@ type DecryptCipherContext struct {
 	AgentName         string
 	AgentMetrics      *AgentMetrics
 	SubControllerCert pubsub.Subscription
-	SubCipherContext  pubsub.Subscription
 	SubEdgeNodeCert   pubsub.Subscription
 }
 
@@ -46,18 +45,15 @@ func lookupControllerCert(ctx *DecryptCipherContext, key string) *types.Controll
 	return &status
 }
 
-// look up cipher context
-func lookupCipherContext(ctx *DecryptCipherContext, key string) *types.CipherContext {
-	ctx.Log.Functionf("lookupCipherContext(%s)\n", key)
-	sub := ctx.SubCipherContext
-	item, err := sub.Get(key)
-	if err != nil {
-		ctx.Log.Errorf("lookupCipherContext(%s) not found\n", key)
-		return nil
+// get embedded cipher context
+func getCipherContext(ctx *DecryptCipherContext, cipherBlock types.CipherBlockStatus) *types.CipherContext {
+	ctx.Log.Functionf("getCipherContext(%s)", cipherBlock.CipherBlockID)
+	if cipherBlock.CipherContext != nil {
+		ctx.Log.Functionf("getCipherContext(%s) use embedded CipherContext", cipherBlock.CipherBlockID)
+		return cipherBlock.CipherContext
 	}
-	status := item.(types.CipherContext)
-	ctx.Log.Functionf("lookupCipherContext(%s) done\n", key)
-	return &status
+	ctx.Log.Errorf("getCipherContext(%s) embedded CipherContext not found", cipherBlock.CipherBlockID)
+	return nil
 }
 
 // look up edge node cert
@@ -78,7 +74,7 @@ func getDeviceCert(ctx *DecryptCipherContext,
 	cipherBlock types.CipherBlockStatus) ([]byte, error) {
 
 	ctx.Log.Functionf("getDeviceCert for %s\n", cipherBlock.CipherBlockID)
-	cipherContext := lookupCipherContext(ctx, cipherBlock.CipherContextID)
+	cipherContext := getCipherContext(ctx, cipherBlock)
 	if cipherContext == nil {
 		errStr := fmt.Sprintf("cipher context %s not found\n",
 			cipherBlock.CipherContextID)
@@ -133,7 +129,7 @@ func DecryptCipherBlock(ctx *DecryptCipherContext,
 	if len(cipherBlock.CipherData) == 0 {
 		return []byte{}, errors.New("Invalid Cipher Payload")
 	}
-	cipherContext := lookupCipherContext(ctx, cipherBlock.CipherContextID)
+	cipherContext := getCipherContext(ctx, cipherBlock)
 	if cipherContext == nil {
 		errStr := fmt.Sprintf("cipher context %s not found\n",
 			cipherBlock.CipherContextID)

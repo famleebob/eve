@@ -353,23 +353,6 @@ func Run(ps *pubsub.PubSub, loggerArg *logrus.Logger, logArg *base.LogObject, ar
 	domainCtx.decryptCipherContext.SubEdgeNodeCert = subEdgeNodeCert
 	subEdgeNodeCert.Activate()
 
-	// Look for cipher context which will be used for decryption
-	subCipherContext, err := ps.NewSubscription(pubsub.SubscriptionOptions{
-		AgentName:   "zedagent",
-		MyAgentName: agentName,
-		TopicImpl:   types.CipherContext{},
-		Activate:    false,
-		Ctx:         &domainCtx,
-		WarningTime: warningTime,
-		ErrorTime:   errorTime,
-		Persistent:  true,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	domainCtx.decryptCipherContext.SubCipherContext = subCipherContext
-	subCipherContext.Activate()
-
 	// Look for global config such as log levels
 	subGlobalConfig, err := ps.NewSubscription(
 		pubsub.SubscriptionOptions{
@@ -602,9 +585,6 @@ func Run(ps *pubsub.PubSub, loggerArg *logrus.Logger, logArg *base.LogObject, ar
 
 		case change := <-subEdgeNodeCert.MsgChan():
 			subEdgeNodeCert.ProcessChange(change)
-
-		case change := <-subCipherContext.MsgChan():
-			subCipherContext.ProcessChange(change)
 
 		case change := <-subGlobalConfig.MsgChan():
 			subGlobalConfig.ProcessChange(change)
@@ -1881,7 +1861,7 @@ func doInactivate(ctx *domainContext, status *types.DomainStatus, impatient bool
 		status.UUIDandVersion, status.DisplayName)
 }
 
-//unmountContainers process provided diskStatusList and unmount all disks with Format_CONTAINER
+// unmountContainers process provided diskStatusList and unmount all disks with Format_CONTAINER
 func unmountContainers(ctx *domainContext, diskStatusList []types.DiskStatus, force bool) bool {
 	done := true
 	for _, ds := range diskStatusList {
@@ -2622,6 +2602,27 @@ func cloudInitISOFileLocation(ctx *domainContext, uuid uuid.UUID) string {
 		ciDirname, uuid.String())
 }
 
+func getCloudInitVersion(config types.DomainConfig) string {
+	//
+	// `CloudInitVersion` is a proper field for cloud-init config tracking,
+	// but this field was introduced long after the cloud-init feature
+	// implemented and in order to keep backwards compatibility with old
+	// configuration we return `UUIDandVersion.Version` as it was before
+	// if `CloudInitVersion` is zeroed (thus does not exist).
+	//
+	// Why we need a separate version field? According to the spec
+	// `UUIDandVersion.Version` is increased for each change of the application
+	// config so even an application restart from the controller side leads
+	// to the version increase, which in its turn leads to the config-init tool
+	// restart on the guest side and this behavior is catastrophic.
+	//
+	if config.CloudInitVersion > 0 {
+		return fmt.Sprintf("%d", config.CloudInitVersion)
+	}
+
+	return config.UUIDandVersion.Version
+}
+
 // Create a isofs with user-data and meta-data and add it to DiskStatus
 // We do this in domainmgr and keep it in /run (and not volumemgr and /persist)
 // since it 1) potentially contains confidential info like passwords,
@@ -2658,7 +2659,7 @@ func createCloudInitISO(ctx *domainContext,
 		}
 		metafile.WriteString(fmt.Sprintf("instance-id: %s/%s\n",
 			config.UUIDandVersion.UUID.String(),
-			config.UUIDandVersion.Version))
+			getCloudInitVersion(config)))
 		metafile.WriteString(fmt.Sprintf("local-hostname: %s\n",
 			config.UUIDandVersion.UUID.String()))
 		metafile.Close()

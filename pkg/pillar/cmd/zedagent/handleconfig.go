@@ -88,7 +88,6 @@ type getconfigContext struct {
 	pubDatastoreConfig        pubsub.Publication
 	pubNetworkInstanceConfig  pubsub.Publication
 	pubControllerCert         pubsub.Publication
-	pubCipherContext          pubsub.Publication
 	subContentTreeStatus      pubsub.Subscription
 	pubContentTreeConfig      pubsub.Publication
 	subVolumeStatus           pubsub.Subscription
@@ -141,6 +140,8 @@ type getconfigContext struct {
 	currentMetricInterval uint32
 
 	configEdgeview *types.EdgeviewConfig // edge-view config save
+
+	cipherContexts map[string]types.CipherContext
 }
 
 // current devUUID from OnboardingStatus
@@ -185,9 +186,10 @@ const (
 )
 
 // Load bootstrap config provided that:
-//  - it exists
-//  - has not been loaded before (incl. previous device boots)
-//  - has valid controller signature
+//   - it exists
+//   - has not been loaded before (incl. previous device boots)
+//   - has valid controller signature
+//
 // The function will only load and publish global config items (publishes default values
 // if empty set is configured) and items related to networking (system adapters, networks,
 // vlans, bonds, etc.).

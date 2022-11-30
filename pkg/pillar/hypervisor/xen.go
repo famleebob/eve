@@ -266,7 +266,7 @@ func (ctx xenContext) CreateDomConfig(domainName string, config types.DomainConf
 	if maxCpus == 0 {
 		maxCpus = vCpus
 	}
-	file.WriteString(fmt.Sprintf("maxcpus = %d\n", maxCpus))
+	file.WriteString(fmt.Sprintf("maxvcpus = %d\n", maxCpus))
 	if config.CPUs != "" {
 		file.WriteString(fmt.Sprintf("cpus = \"%s\"\n", config.CPUs))
 	}
@@ -517,7 +517,7 @@ func (ctx xenContext) Delete(domainName string) (result error) {
 	return nil
 }
 
-//Cleanup removes containerd-shim
+// Cleanup removes containerd-shim
 func (ctx xenContext) Cleanup(domainName string) error {
 	if err := ctx.ctrdContext.Cleanup(domainName); err != nil {
 		return fmt.Errorf("couldn't cleanup task %s: %v", domainName, err)
