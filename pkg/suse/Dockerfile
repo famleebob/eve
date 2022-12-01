@@ -64,8 +64,8 @@ RUN for repo in main community testing; do \
       done \
     done
 
-RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l
-RUN find /var/cache/zypp -name libopenssl\*.rpm
+RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l
+
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
 RUN mv /tmp/mirrors/suse-busybox-bci-x86_64.tar /tmp
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs

@@ -3,7 +3,7 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-suse:4454406cdb1b3bea4b56b43ae54d430ea8d76bab-dirty-f7b083c as build
+FROM lfedge/eve-suse:b0489bfe9acb29b78d7022ce7bb54d7c82dfa250-dirty-2f1fdf8 as build
 #* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
 ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip
 # Feel free to add additional packages here, but be aware that
@@ -59,6 +59,7 @@ WORKDIR /tmp/hexedit/hexedit-1.5
 
 # hadolint ignore=DL4006
 ADD https://github.com/pixel/hexedit/archive/refs/tags/1.5.tar.gz ../1.5.tar.gz
+RUN ls ../1.5.tar.gz
 RUN /usr/bin/tar -C .. -xzvf ../1.5.tar.gz
 RUN ./autogen.sh && ./configure && make DESTDIR=/out install
 

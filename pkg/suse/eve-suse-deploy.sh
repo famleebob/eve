@@ -41,7 +41,8 @@ esac
 zypper --non-interactive modifyrepo --no-refresh --keep-packages --all
 
 set $BUILD_PKGS
-[ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-force-resolution --no-recommends --force "$@"
+# [ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-recommends --force-resolution --allow-name-change --allow-vendor-change "$@"
+[ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
 
 rm -rf /out
 mkdir /out
@@ -54,10 +55,7 @@ ls -lr /out
 #*  PKGS="$PKGS apk-tools"
 
 set $PKGS
-# [ $# -eq 0 ] || zipper --non-interactive in --dry-run -p /out "$@"
-
 [ $# -eq 0 ] || zypper --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
-zypper --installroot /out --no-refresh --non-interactive se -i || :
 
 echo $?
 exit 0
