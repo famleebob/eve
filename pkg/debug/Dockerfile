@@ -3,7 +3,7 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-suse:b0489bfe9acb29b78d7022ce7bb54d7c82dfa250-dirty-2f1fdf8 as build
+FROM lfedge/eve-suse:7a09a7ff6391f495b38b5eedd3e25ff0236cd082-dirty-0bb32ea as build
 #* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
 ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip
 # Feel free to add additional packages here, but be aware that

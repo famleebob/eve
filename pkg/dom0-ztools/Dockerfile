@@ -1,5 +1,5 @@
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as zfs
-FROM lfedge/eve-suse:b0489bfe9acb29b78d7022ce7bb54d7c82dfa250-dirty-2f1fdf8 as zfs
+FROM lfedge/eve-suse:7a09a7ff6391f495b38b5eedd3e25ff0236cd082-dirty-0bb32ea as zfs
 #ENV BUILD_PKGS git patch ca-certificates util-linux build-base gettext-dev libtirpc-dev automake autoconf \
 #   libtool linux-headers attr-dev e2fsprogs-dev glib-dev openssl-dev util-linux-dev coreutils
 ENV BUILD_PKGS tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip \

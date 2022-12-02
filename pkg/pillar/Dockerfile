@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:d5e104001ebf23fdaddd4305fe1ddc00dab42cf1 as fscrypt
+FROM lfedge/eve-fscrypt:d5e104001ebf23fdaddd4305fe1ddc00dab42cf1-dirty-af6b586 as fscrypt
 
-FROM lfedge/eve-dom0-ztools:417d4ff6a57d2317c9e65166274b0ea6f6da16e2 as zfs
+FROM lfedge/eve-dom0-ztools:7b81de3bc60686dfca1003acfd2db11af4f81575-dirty-f4b8e8b as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,17 +13,17 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
+FROM lfedge/eve-suse:7a09a7ff6391f495b38b5eedd3e25ff0236cd082-dirty-0bb32ea as build
 
 ARG DEV=n
 
-ENV BUILD_PKGS git gcc linux-headers libc-dev make linux-pam-dev m4 findutils go util-linux make patch \
+ENV BUILD_PKGS git gcc glibc-devel make pam-devel m4 findutils go util-linux make patch \
     libintl libuuid libtirpc libblkid libcrypto1.1 zlib
-ENV PKGS alpine-baselayout musl-utils libtasn1-progs pciutils yajl xz bash iptables ip6tables iproute2 dhcpcd \
+ENV PKGS libtasn1-progs pciutils yajl xz bash iptables ip6tables iproute2 dhcpcd \
     coreutils dmidecode libbz2 libuuid ipset curl radvd ethtool util-linux e2fsprogs libcrypto1.1 xorriso \
     qemu-img jq e2fsprogs-extra keyutils ca-certificates ip6tables-openrc iptables-openrc ipset-openrc hdparm \
     libintl libtirpc libblkid zlib
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
 
