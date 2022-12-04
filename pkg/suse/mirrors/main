@@ -249,3 +249,11 @@ libeconf0
 libext2fs2
 e2fsprogs-devel
 libtircp3
+file-magic
+libtextstyle0
+pam
+pam-devel
+libxtables12
+libxtables12-devel
+libyajl12
+libyajl12-devel

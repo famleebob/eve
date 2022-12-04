@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:d5e104001ebf23fdaddd4305fe1ddc00dab42cf1-dirty-af6b586 as fscrypt
+FROM lfedge/eve-fscrypt:5826b0e7a2ead50392abacef90f4bbe66b976796-dirty-132f4d9 as fscrypt
 
-FROM lfedge/eve-dom0-ztools:7b81de3bc60686dfca1003acfd2db11af4f81575-dirty-f4b8e8b as zfs
+FROM lfedge/eve-dom0-ztools:707176b8daceea8b9540e150cdc3f7a87ed738c2-dirty-b4e8421 as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,16 +13,17 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:7a09a7ff6391f495b38b5eedd3e25ff0236cd082-dirty-0bb32ea as build
+FROM lfedge/eve-suse:e5b625e0b30be10fbb968bf32e4b25589f323c7f-dirty-e6668c8 as build
 
 ARG DEV=n
 
-ENV BUILD_PKGS git gcc glibc-devel make pam-devel m4 findutils go util-linux make patch \
-    libintl libuuid libtirpc libblkid libcrypto1.1 zlib
-ENV PKGS libtasn1-progs pciutils yajl xz bash iptables ip6tables iproute2 dhcpcd \
-    coreutils dmidecode libbz2 libuuid ipset curl radvd ethtool util-linux e2fsprogs libcrypto1.1 xorriso \
-    qemu-img jq e2fsprogs-extra keyutils ca-certificates ip6tables-openrc iptables-openrc ipset-openrc hdparm \
-    libintl libtirpc libblkid zlib
+ENV BUILD_PKGS git gcc glibc-devel make pam pam-devel m4 findutils go1.18 util-linux make patch \
+    gettext-tools libuuid-devel libtirpc-devel libblkid-devel libopenssl-devel zlib tar libtasn1-devel
+# SuSE iprout2 busybox version installed
+ENV PKGS libtasn1 pciutils libyajl2 xz bash iptables libxtables12 dhcp-client \
+    coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd ethtool util-linux e2fsprogs openssl-1_1 xorriso \
+    qemu-tools jq keyutils ca-certificates hdparm \
+    gettext-runtime libtirpc3 libblkid1 zlib
 RUN eve-suse-deploy.sh
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
@@ -69,10 +70,13 @@ fi
 
 COPY patches/* /sys-patches/
 # hadolint ignore=SC1097
-RUN set -e && for patch in /sys-patches/*.patch; do \
-        echo "Applying $patch"; \
-        patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
-    done
+#* SuSE has no dhcpcd package, trying to patch configuration
+#*  files, as such will fail need to get dhcpcd and its config
+#*  files installed -- thought I had it ... sigh!
+#* RUN set -ex && for patch in /sys-patches/*.patch; do \
+#*        echo "Applying $patch"; \
+#*        patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
+#*    done
 
 # we need zfs files on running system
 COPY --from=zfs /out /out
@@ -83,9 +87,9 @@ FROM lfedge/eve-gpt-tools:ab2e9f924e22709b4e08ebedd6d3c6a2882d071e as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as collector
+FROM lfedge/eve-suse:e5b625e0b30be10fbb968bf32e4b25589f323c7f-dirty-e6668c8 as collector
 
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 # we put everything into /final
 COPY --from=build /out/ /final
