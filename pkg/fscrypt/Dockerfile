@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-suse:e5b625e0b30be10fbb968bf32e4b25589f323c7f-dirty-e6668c8 as build
+FROM lfedge/eve-suse:bec8db4e73854b440d7cb312d10625db0db4d9be as build
 
 ENV BUILD_PKGS git gcc make glibc-devel pam-devel m4 findutils go util-linux make patch
 RUN eve-suse-deploy.sh
