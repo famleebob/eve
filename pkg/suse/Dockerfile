@@ -1,5 +1,8 @@
 # updating per https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
 #*   for SuSE not Alpine -- no more card board tree hanging on the rear view mirror
+
+FROM registry.suse.com/bci/bci-busybox:15.4 as base_rootfs
+
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS cache
 FROM registry.suse.com/bci/bci-base:15.4 as cache
 
@@ -68,10 +71,11 @@ RUN for repo in main community testing; do \
 RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.18
 
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
-RUN mv /tmp/mirrors/suse-busybox-bci-x86_64.tar /tmp
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
+COPY --from=base_rootfs / /mirror/${SUSE_VERSION}/rootfs
+
 # may want to make this verbose, once working -- debug stuff
-RUN tar -C /mirror/${SUSE_VERSION}/rootfs -xf /tmp/suse-busybox-bci-x86_64.tar
+# RUN tar -C /mirror/${SUSE_VERSION}/rootfs -xf /tmp/suse-busybox-bci-x86_64.tar
 
 #* FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
 
