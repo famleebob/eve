@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:5826b0e7a2ead50392abacef90f4bbe66b976796-dirty-132f4d9 as fscrypt
+FROM lfedge/eve-fscrypt:c1578f2a1b244389216f9a2a611e19ec480a6d1b as fscrypt
 
-FROM lfedge/eve-dom0-ztools:707176b8daceea8b9540e150cdc3f7a87ed738c2-dirty-b4e8421 as zfs
+FROM lfedge/eve-dom0-ztools:2e7dfac88b06c09c419b50ee8beac536a079efde as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,7 +13,7 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:e5b625e0b30be10fbb968bf32e4b25589f323c7f-dirty-e6668c8 as build
+FROM lfedge/eve-suse:bec8db4e73854b440d7cb312d10625db0db4d9be as build
 
 ARG DEV=n
 
@@ -69,6 +69,7 @@ RUN if [ ${DEV} = "y" ]; then \
 fi
 
 COPY patches/* /sys-patches/
+RUN ls patches
 # hadolint ignore=SC1097
 #* SuSE has no dhcpcd package, trying to patch configuration
 #*  files, as such will fail need to get dhcpcd and its config

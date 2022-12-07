@@ -6,17 +6,18 @@ FROM registry.suse.com/bci/bci-busybox:15.4 as base_rootfs
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS cache
 FROM registry.suse.com/bci/bci-base:15.4 as cache
 
-ARG releasever_major=15
-ARG releasever_minor=4
-ARG suse_product=SLE_BCI
-ARG SUSE_VERSION=${releasever_major}-SP${releasever_minor}
-ARG TARGET_ARCH=amd64
+ENV releasever_major=15
+ENV releasever_minor=4
+ENV suse_product=SLE_BCI
+ENV SUSE_VERSION=${releasever_major}-SP${releasever_minor}
+ENV TARGET_ARCH=amd64
 # this is only needed once, when this package
 # is rebased on the new version of Alpine and
 # you have to have FROM alpine:x.y.z above:
 # RUN apk update && apk upgrade -a
 # RUN zypper refresh && zypper update
 RUN zypper -n in -y tar gzip make python gawk pkg-config
+
 #*  Will need to add `-r local` at some point to limit
 #*  the search to local repos, need to know how to create
 #*  a zypper alias ...
@@ -47,6 +48,10 @@ WORKDIR /tmp/mirrors
 RUN zypper --non-interactive addrepo --keep-packages https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
 RUN zypper --non-interactive --gpg-auto-import-keys refresh filesystems
 RUN zypper --non-interactive modifyrepo --keep-packages --all
+
+RUN zypper -n in -y tar gzip make python gawk pkg-config
+
+RUN ls /usr/bin/tar
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -86,6 +91,9 @@ COPY --from=cache /mirror /mirror/
 COPY --from=cache /var/cache/zypp /var/cache/zypp
 COPY --from=cache /etc/zypp /etc/zypp
 COPY eve-suse-deploy.sh go-compile.sh /bin/
+
+# load base tools expected in EVE linuxkit build container
+RUN zypper -n in -y tar gzip make python gawk pkg-config
 
 # we merge layers in previous step
 # so we should avoid large possible diff
