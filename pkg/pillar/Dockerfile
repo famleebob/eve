@@ -88,7 +88,7 @@ FROM lfedge/eve-gpt-tools:ab2e9f924e22709b4e08ebedd6d3c6a2882d071e as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-suse:e5b625e0b30be10fbb968bf32e4b25589f323c7f-dirty-e6668c8 as collector
+FROM lfedge/eve-suse:94e897dd63b16092d301dc51cae9ec5df3dd0222 as collector
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
@@ -113,6 +113,7 @@ ADD conf/lisp.config.base /final/var/tmp/zededa/lisp.config.base
 COPY rootfs/ /final
 
 # We will start experimenting with stripping go binaries on ARM only for now
+#* will need SL-EVE attention, apk is Alpine only and doesn't work with SuSE
 RUN if [ "$(uname -m)" = "aarch64" ] ; then                                             \
        apk add --no-cache findutils binutils file                                      ;\
        find /final -type f -executable -exec file {} \; | grep 'not stripped' | cut -f1 -d: |\
