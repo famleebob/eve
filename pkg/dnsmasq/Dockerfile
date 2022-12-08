@@ -1,6 +1,6 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS gcc make patch libc-dev linux-headers tar
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:1759b981cbb69269b73efca55b1b44f67a26a99e as build
+ENV BUILD_PKGS gcc make patch glibc-devel tar
+RUN eve-suse-deploy.sh
 
 ENV DNSMASQ_VERSION 2.84
 
@@ -13,6 +13,9 @@ WORKDIR /dnsmasq
 RUN tar xvzf dnsmasq-${DNSMASQ_VERSION}.tar.gz
 
 WORKDIR /dnsmasq/dnsmasq-${DNSMASQ_VERSION}
+RUN ls ../patches
+RUN cat ../patches/lease_release.patch
+RUN patch --help
 RUN set -e && for patch in ../patches/*.patch; do \
         echo "Applying $patch"; \
         patch -p1 < "$patch"; \

@@ -1,6 +1,6 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS gcc make file patch libc-dev util-linux-dev linux-headers openssl-dev g++ tar
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:1759b981cbb69269b73efca55b1b44f67a26a99e as build
+ENV BUILD_PKGS gcc make file patch glibc-devel util-linux-devel openssl-devel gcc-g++ tar
+RUN eve-suse-deploy.sh
 
 ENV POPT_VERSION 1.16
 ENV GPTFDISK_VERSION 1.0.3

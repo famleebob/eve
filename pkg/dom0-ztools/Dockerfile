@@ -1,10 +1,6 @@
-# FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as zfs
-FROM lfedge/eve-suse:94e897dd63b16092d301dc51cae9ec5df3dd0222 as zfs
-#ENV BUILD_PKGS git patch ca-certificates util-linux build-base gettext-dev libtirpc-dev automake autoconf \
-#   libtool linux-headers attr-dev e2fsprogs-dev glib-dev openssl-dev util-linux-dev coreutils
+FROM lfedge/eve-suse:1759b981cbb69269b73efca55b1b44f67a26a99e as zfs
 ENV BUILD_PKGS tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip \
    libtool attr-devel e2fsprogs-devel openssl-devel coreutils libtirpc-devel
-# ENV PKGS ca-certificates util-linux libintl libuuid libtirpc libblkid libcrypto1.1 zlib
 ENV PKGS util-linux libuuid1 libtirpc-devel libtirpc3 libblkid1
 
 RUN eve-suse-deploy.sh
