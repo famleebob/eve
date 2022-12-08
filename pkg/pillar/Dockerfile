@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:c1578f2a1b244389216f9a2a611e19ec480a6d1b as fscrypt
+FROM lfedge/eve-fscrypt:e5064bdbb788d208c36e472fd65f4e96940d8aef as fscrypt
 
-FROM lfedge/eve-dom0-ztools:2e7dfac88b06c09c419b50ee8beac536a079efde as zfs
+FROM lfedge/eve-dom0-ztools:ec139d397b74790b6ca4fd69ec2b684288a1cdc4 as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,7 +13,7 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:bec8db4e73854b440d7cb312d10625db0db4d9be as build
+FROM lfedge/eve-suse:94e897dd63b16092d301dc51cae9ec5df3dd0222 as build
 
 ARG DEV=n
 
