@@ -257,3 +257,11 @@ libxtables12
 libxtables12-devel
 libyajl12
 libyajl12-devel
+bzip
+libip4tc2
+libip6tc2
+libmnl0
+libnfnetlink0
+libnftnl11
+libnetfilter_conntrack3
+xtables-plugins

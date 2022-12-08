@@ -41,14 +41,11 @@ esac
 zypper --non-interactive modifyrepo --no-refresh --keep-packages --all
 
 set $BUILD_PKGS
-# [ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-recommends --force-resolution --allow-name-change --allow-vendor-change "$@"
 [ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
 
 rm -rf /out
 mkdir /out
-ls /usr/bin/tar /out
 tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
-ls -lr /out
 
 # FIXME: for now we're apk-enabling executable repos, but strictly
 # speaking this maybe not needed (or at least optional)
