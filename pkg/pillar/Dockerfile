@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:e5064bdbb788d208c36e472fd65f4e96940d8aef as fscrypt
+FROM lfedge/eve-fscrypt:7c5426d6d7e5c209ed2bf579a3475f3483cff7c8 as fscrypt
 
-FROM lfedge/eve-dom0-ztools:ec139d397b74790b6ca4fd69ec2b684288a1cdc4 as zfs
+FROM lfedge/eve-dom0-ztools:4e4771ff4556ceb12dc917870e5b9afd79c14da2 as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,7 +13,7 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:94e897dd63b16092d301dc51cae9ec5df3dd0222 as build
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as build
 
 ARG DEV=n
 
@@ -69,7 +69,7 @@ RUN if [ ${DEV} = "y" ]; then \
 fi
 
 COPY patches/* /sys-patches/
-RUN ls patches
+
 # hadolint ignore=SC1097
 #* SuSE has no dhcpcd package, trying to patch configuration
 #*  files, as such will fail need to get dhcpcd and its config
@@ -82,13 +82,13 @@ RUN ls patches
 # we need zfs files on running system
 COPY --from=zfs /out /out
 
-FROM lfedge/eve-dnsmasq:3af908d86a95a627c729e09b1b125bf8de7fadcb as dnsmasq
-FROM lfedge/eve-strongswan:3f426e1c9fe2bbeb324a61c33b861c37459f616a as strongswan
-FROM lfedge/eve-gpt-tools:ab2e9f924e22709b4e08ebedd6d3c6a2882d071e as gpttools
+FROM lfedge/eve-dnsmasq:06478299b9d0373b15fa2dceff91352463ca64d6 as dnsmasq
+FROM lfedge/eve-strongswan:c3c879e21248315b5fe5de69c0dd171f38fab1cb as strongswan
+FROM lfedge/eve-gpt-tools:35186db63b4718670ae89b84f736dd6ead4adede as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-suse:94e897dd63b16092d301dc51cae9ec5df3dd0222 as collector
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as collector
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
