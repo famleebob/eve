@@ -265,3 +265,9 @@ libnfnetlink0
 libnftnl11
 libnetfilter_conntrack3
 xtables-plugins
+libuuid-devel-static
+libyaml-0-2
+libyaml-devel
+glibc-devel-static
+libxcrypt-devel-static
+lzma-devel
