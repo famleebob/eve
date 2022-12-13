@@ -1,6 +1,6 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV PKGS alpine-baselayout musl-utils wireless-tools wpa_supplicant
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:586fbc00b49c6846ca6b5a79208698ed44ee952c as build
+ENV PKGS wireless-tools wpa_supplicant
+RUN eve-suse-deploy.sh
 
 FROM scratch
 COPY --from=build /out/ /

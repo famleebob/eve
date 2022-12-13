@@ -1,7 +1,7 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS git go
-ENV PKGS alpine-baselayout musl-utils
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:586fbc00b49c6846ca6b5a79208698ed44ee952c as build
+ENV BUILD_PKGS git go1.18
+#ENV PKGS Ialpine-baselayout musl-utils
+RUN eve-suse-deploy.sh
 
 COPY src/  /measure-config/.
 COPY go.mod /measure-config/.
@@ -11,7 +11,7 @@ COPY vendor /measure-config/vendor
 WORKDIR /measure-config
 
 ENV CGO_ENABLED=0
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 # hadolint ignore=SC2046
 RUN echo "Running go vet" && go vet ./... && echo "Running go fmt" && \
     ERR=$(gofmt -e -l -s $(find . -name \*.go | grep -v /vendor/)) && \

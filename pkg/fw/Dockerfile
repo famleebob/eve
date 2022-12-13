@@ -1,7 +1,7 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
+FROM lfedge/eve-suse:586fbc00b49c6846ca6b5a79208698ed44ee952c as build
 
 ENV BUILD_PKGS tar make
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 
 ENV WIRELESS_REGDB_VERSION 2022.06.06
 ENV WIRELESS_REGDB_REPO https://mirrors.edge.kernel.org/pub/software/network/wireless-regdb/wireless-regdb
@@ -46,7 +46,7 @@ ADD ${RPI_BT_FIRMWARE_URL}/${RPI_BT_FIRMWARE_VERSION}/broadcom/BCM4345C0.hcd .
 ADD ${RPI_BT_FIRMWARE_URL}/${RPI_BT_FIRMWARE_VERSION}/broadcom/BCM43430B0.hcd .
 ADD ${RPI_BT_FIRMWARE_URL}/${RPI_BT_FIRMWARE_VERSION}/broadcom/BCM4345C5.hcd .
 
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
+FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc-dirty-4fdfddf as compactor
 ENTRYPOINT []
 WORKDIR /
 COPY --from=build /lib/firmware/regulatory* /lib/firmware/
