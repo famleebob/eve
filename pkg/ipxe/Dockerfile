@@ -1,8 +1,8 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS build
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 AS build
 
-ENV BUILD_PKGS patch make gcc perl util-linux-dev git mtools linux-headers musl-dev xz-dev
+ENV BUILD_PKGS patch make gcc perl git glibc-devel mtools xz-devel gzip
 # bash xorriso coreutils syslinux
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 
 WORKDIR /ws
 ADD https://github.com/ipxe/ipxe/tarball/v1.21.1 /ipxe.tgz

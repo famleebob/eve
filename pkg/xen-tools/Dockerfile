@@ -1,10 +1,11 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:d821658883d6748d8bbf0d6640c62288e3ce8c6f as uefi-build
+FROM lfedge/eve-uefi:d31a2e77c36ed3a17e39582f12b4549053199a95 as uefi-build
 
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as runx-build
-ENV BUILD_PKGS mkinitfs gcc musl-dev e2fsprogs
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as runx-build
+# ENV BUILD_PKGS mkinitfs gcc e2fsprogs
+ENV BUILD_PKGS gcc
+RUN eve-suse-deploy.sh
 
 RUN rm -f /sbin/poweroff /etc/mkinitfs/features.d/base.files
 COPY initrd/base.files /etc/mkinitfs/features.d/base.files
@@ -16,19 +17,19 @@ RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
 ENV BUILD_PKGS \
-    gcc make libc-dev dev86 xz-dev perl bash python3-dev \
-    gettext iasl util-linux-dev ncurses-dev glib-dev \
-    pixman-dev libaio-dev yajl-dev argp-standalone \
-    linux-headers git patch texinfo tar libcap-ng-dev \
-    attr-dev flex bison cmake libusb-dev
+    gcc make glibc-devel dev86 xz-devel perl bash python3-devel \
+    gettext iasl util-linux-devel ncurses-devel libglib-2 \
+    libpixman-1-0-devel libaio-devel yajl-devel \
+    git patch texinfo tar libcap-ng-devel \
+    attr-devel flex bison cmake libusb-devel
 ENV BUILD_PKGS_arm64 dtc-dev
 
-ENV PKGS alpine-baselayout musl-utils bash libaio libbz2 glib pixman yajl keyutils libusb xz-libs libuuid sudo
+ENV PKGS bash libaio libbz2 glib libpixman-1-0 yajl keyutils libusb xz-libs libuuid sudo
 ENV PKGS_arm64 libfdt
 
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 
 # Alpine linux defines all 64bit integer types as long. Patch
 # /usr/include/bits/alltypes.h to fix compilation with -m32

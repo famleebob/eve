@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:279e9bb118f7cb178eb46fd081bc318f5d69a0dc as build
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
 ENV BUILD_PKGS gcc make patch glibc-devel tar
 RUN eve-suse-deploy.sh
 

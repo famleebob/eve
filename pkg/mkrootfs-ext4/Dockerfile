@@ -1,8 +1,9 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS build
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 AS build
 
-ENV PKGS dosfstools libarchive-tools binutils mtools sfdisk sgdisk xfsprogs \
-         e2fsprogs util-linux coreutils multipath-tools squashfs-tools
-RUN eve-alpine-deploy.sh
+ENV BUILD_PKGS tar
+ENV PKGS libarchive13 mtools \
+         squashfs
+RUN eve-suse-deploy.sh
 
 COPY . /out/
 

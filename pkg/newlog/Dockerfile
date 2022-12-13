@@ -1,7 +1,7 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS git go
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
+ENV BUILD_PKGS git go1.18
 ENV PKGS coreutils
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 
 COPY ./  /newlog/.
 WORKDIR /newlog

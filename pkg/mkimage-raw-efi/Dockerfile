@@ -4,13 +4,16 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS build
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
-ENV BUILD_PKGS mkinitfs grep patch
-ENV PKGS mtools dosfstools libarchive-tools sgdisk e2fsprogs util-linux squashfs-tools coreutils tar dmidecode
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 AS build
+
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+ENV BUILD_PKGS grep patch dracut-mkinitrd-deprecated
+ENV PKGS mtools libarchive13 gptfdisk squashfs dmidecode
+
+RUN eve-suse-deploy.sh
 
 WORKDIR /out
+
 RUN echo "mtools_skip_check=1" >> etc/mtools.conf
 RUN mkdir -p efifs parts root bits config persist opt/pillar opt/debug lib/modules run sys
 COPY make-raw install grub.cfg.in UsbInvocationScript.txt ./
@@ -30,13 +33,14 @@ RUN mv rootfs /out
 
 # bootstrap Alpine's initrd
 WORKDIR /
-COPY initramfs-init.patch /tmp/
-RUN patch -p1 < /tmp/initramfs-init.patch
-RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
+#COPY initramfs-init.patch /tmp/
+#RUN patch -p1 < /tmp/initramfs-init.patch
+#RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
+RUN /usr/bin/dracut -f --regenerate-all
 RUN mkinitfs -n -o /out/initrd.img
 
 FROM scratch
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 COPY --from=build /out/ /
 

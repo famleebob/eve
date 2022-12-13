@@ -8,6 +8,7 @@ bail() {
 
 [ "$#" -gt 2 ] || bail "Usage: $0 <os version> <path to the cache> [packages...]"
 
+REPO_FILE=" $1"
 SUSE_REPO="$(cat /etc/zypper/cache.url)/v$1"
 MY_ARCH="$(zypper tos)"
 MY_ARCH=${MY_ARCH##*-}
@@ -27,16 +28,27 @@ done
 # fetch the missing packages
 # shellcheck disable=SC2086
 if [ -n "$PKGS" ]; then
-   # zypper --non-interactive install --no-recommends --download-only --no-confirm $PKGS
+   # download the rpm files using install, should
+   #  pull the dependencies with explicitly stated packages
+   #  note: only dependencies, don't add recommended packages
+#   zypper --non-interactive --disable-system-resolvables --ignore-unknown \
+#	install \
+#	--no-recommends --download-only --name \
+#	--no-confirm --auto-agree-with-licenses \
+#	--auto-agree-with-product-licenses $PKGS
    #  Get single package, not dependencies.  Following should
    #   just download the set of packages needed
-   zypper --non-interactive download $PKGS
+   zypper --non-interactive --ignore-unknown --disable-system-resolvables \
+	--terse download $PKGS
+
+   echo -n "${REPO_FILE} Package count "
+   find /var/cache/zypp -name \*.rpm | wc
+   echo "========"
 fi
-find /var/cache/zypp/packages
 
 # index the cache
 
 mkdir -p "$ROOTFS/etc/zypp"
 echo "$CACHE/.." > "$ROOTFS/etc/suse/repositories"
 # -X from repo, xx, --initdb new package database, -p manage as a root
-# zypper -n --installroot "$ROOTFS" --resposd "$CACHE/.." in busybox
+# zypper -n --installroot "$ROOTFS" --resposd "$CACHE/.." in busybox 

@@ -1,13 +1,15 @@
 # This file must be kept as much in sync with pkg/new-kernel/Dockerfile as posisble
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS kernel-build-base
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 AS kernel-build-base
 
+#* mpc1 -> mpfr
 ENV BUILD_PKGS \
-    argp-standalone automake bash bc binutils-dev bison build-base \
-    diffutils flex git gmp-dev gnupg installkernel kmod elfutils-dev    \
-    linux-headers libunwind-dev mpc1-dev mpfr-dev ncurses-dev findutils \
-    openssl-dev patch rsync sed squashfs-tools tar xz xz-dev zlib-dev openssl \
-    attr-dev autoconf file coreutils libtirpc-dev libtool util-linux-dev
-RUN eve-alpine-deploy.sh
+    automake bash bc binutils-devel bison gcc libelf-devel libopenssl-1_1-devel \
+    diffutils flex git gmp-devel gpg2 kmod elfutils \
+    glibc-devel libunwind-devel mpfr-devel ncurses-devel findutils \
+    openssl-1_1-devel patch rsync sed squashfs tar xz xz-devel zlib-devel openssl-1_1 \
+    libattr-devel autoconf file coreutils libtirpc-devel libtool util-linux unzip
+ENV PKGS busybox-unzip
+RUN eve-suse-deploy.sh
 
 # set versions for arm64
 FROM kernel-build-base AS kernel-build-arm64
@@ -120,9 +122,15 @@ RUN ./autogen.sh && \
 
 # Verify kconfig after ZFS is prepared as built-in
 WORKDIR /linux
+#* the diff fails, and kills the process, possibly
+#*  as a step to insure that we alays have the best
+#*  defconfg/oldconfig in source control
+#* RUN make defconfig && \
+#*     make oldconfig && \
+#*     diff -cw .config .config.new
 RUN make defconfig && \
-    make oldconfig && \
-    diff -cw .config .config.new
+    make oldconfig
+
 
 # Make kernel
 RUN make -j "$(getconf _NPROCESSORS_ONLN)" KCFLAGS="-fno-pie" && \

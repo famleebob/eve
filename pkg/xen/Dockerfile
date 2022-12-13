@@ -1,11 +1,11 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as kernel-build
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as kernel-build
 
 ENV BUILD_PKGS argp-standalone automake bash bc binutils-dev bison build-base \
                diffutils flex git gmp-dev gnupg installkernel kmod \
                elfutils-dev openssl-dev linux-headers ncurses-dev python3 \
                sed squashfs-tools tar xz xz-dev zlib-dev libunwind-dev
-ENV BUILD_PKGS_arm64 u-boot-tools
-RUN eve-alpine-deploy.sh
+ENV BUILD_PKGS_arm64 uboot-tools
+RUN eve-suse-deploy.sh
 
 ENV XEN_UBOOT_ADDR 0x81000000
 ENV XEN_VERSION 4.15.0
@@ -19,6 +19,7 @@ RUN [ -f "$(basename ${XEN_SOURCE})" ] || tar --absolute-names -xz < /xen.tar.gz
 
 WORKDIR /xen/xen
 COPY *.patch arch /tmp/
+RUN ls /tmp #* failes to patch
 RUN cp /tmp/"$(uname -m)"/*.patch /tmp/
 RUN for p in /tmp/*.patch ; do patch -p1 < "$p" || exit 1 ; done
 RUN chmod +x scripts/* || :

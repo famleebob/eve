@@ -17,7 +17,6 @@
 # the script to indicate the the environment has to be setup with that
 # cached version. E.g.:
 #   eve-suse-deploy.sh 15-SP4
-# set -e -x
 
 SUSE_VERSION=${1:-15-SP4}
 
@@ -41,7 +40,7 @@ esac
 zypper --non-interactive modifyrepo --no-refresh --keep-packages --all
 
 set $BUILD_PKGS
-[ $# -eq 0 ] || zypper --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
+[ $# -eq 0 ] || zypper --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
 
 rm -rf /out
 mkdir /out
@@ -52,7 +51,7 @@ tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 #*  PKGS="$PKGS apk-tools"
 
 set $PKGS
-[ $# -eq 0 ] || zypper --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
+[ $# -eq 0 ] || zypper --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
 
 echo $?
 exit 0

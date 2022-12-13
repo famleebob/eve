@@ -1,7 +1,7 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build-base
-ENV BUILD_PKGS bash binutils-dev build-base bc bison flex openssl-dev python3 swig dtc
-ENV BUILD_PKGS_amd64 python3-dev py-pip
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build-base
+ENV BUILD_PKGS bash binutils-devel bc bison flex libopenssl-1_1-devel python3 swig
+ENV BUILD_PKGS_amd64 python3-devel python3-pip
+RUN eve-suse-deploy.sh
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 

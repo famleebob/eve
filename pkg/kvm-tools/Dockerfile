@@ -1,15 +1,15 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
+FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
 # Building qemu in strip-down mirovm only mode:
 # qemu 5.1 dependencies: python3 glib-dev pixman-dev
 # qemu 5.2+ dependencies: py3-setuptools bash perl
 # ninja dependencies: cmake g++
-ENV BUILD_PKGS gcc make libc-dev binutils-dev patch libaio-dev zlib-dev zlib-static linux-headers libvncserver-dev python3 glib-dev pixman-dev py3-setuptools bash perl cmake g++
+ENV BUILD_PKGS gcc make glibc-devel binutils-devel patch libaio-devel zlib-devel zlib-devel-static libvncserver0-devel python3 libglib-2_0-0 libpixman-1-0 python3-setuptools bash perl cmake gcc-c++ patch xz bzip glib2-devel
 ENV BUILD_PKGS_arm64 dtc dtc-dev
 # libgcc, pixman and glib are required for qemu
 # it maybe possible to get rid of libgcc & pixman
-ENV PKGS libgcc pixman glib libvncserver libaio musl-utils
+ENV PKGS libgcc_s1 libpixman-1-0 libglib-2_0-0 libvncserver0 libaio1
 ENV PKGS_arm64 libfdt libstdc++
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 
 ENV KVMTOOL_VERSION=90b2d3adadf218dfc6bdfdfcefe269843360223c
 

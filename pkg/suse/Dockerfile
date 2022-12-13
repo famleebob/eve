@@ -26,7 +26,6 @@ RUN zypper -n in -y tar gzip make python gawk pkg-config
 COPY Dockerfile /etc/
 COPY mirrors /tmp/mirrors/
 COPY build-cache.sh /bin/
-COPY make_rootfs.sh /bin/
 
 # install abuild for signing (which requires gcc as well)
 #* RUN apk add --no-cache abuild gcc sudo
@@ -49,9 +48,7 @@ RUN zypper --non-interactive addrepo --keep-packages https://download.opensuse.o
 RUN zypper --non-interactive --gpg-auto-import-keys refresh filesystems
 RUN zypper --non-interactive modifyrepo --keep-packages --all
 
-RUN zypper -n in -y tar gzip make python gawk pkg-config
-
-RUN ls /usr/bin/tar
+RUN zypper -n in -y tar gcc gzip make python gawk pkg-config patch
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -79,13 +76,8 @@ ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
 COPY --from=base_rootfs / /mirror/${SUSE_VERSION}/rootfs
 
-# may want to make this verbose, once working -- debug stuff
-# RUN tar -C /mirror/${SUSE_VERSION}/rootfs -xf /tmp/suse-busybox-bci-x86_64.tar
-
-#* FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
-
 FROM registry.suse.com/bci/bci-base:15.4 as compactor
-## FROM lfedge/eve-suse:4454406cdb1b3bea4b56b43ae54d430ea8d76bab-dirty-710098b as compactor
+## FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 as compactor
 
 COPY --from=cache /mirror /mirror/
 COPY --from=cache /var/cache/zypp /var/cache/zypp
