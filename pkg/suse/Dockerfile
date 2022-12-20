@@ -26,7 +26,6 @@ RUN zypper -n in -y tar gzip make python gawk pkg-config
 COPY Dockerfile /etc/
 COPY mirrors /tmp/mirrors/
 COPY build-cache.sh /bin/
-COPY make_rootfs.sh /bin/
 
 # install abuild for signing (which requires gcc as well)
 #* RUN apk add --no-cache abuild gcc sudo
