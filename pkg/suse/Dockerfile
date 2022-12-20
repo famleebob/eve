@@ -49,9 +49,7 @@ RUN zypper --non-interactive addrepo --keep-packages https://download.opensuse.o
 RUN zypper --non-interactive --gpg-auto-import-keys refresh filesystems
 RUN zypper --non-interactive modifyrepo --keep-packages --all
 
-RUN zypper -n in -y tar gzip make python gawk pkg-config
-
-RUN ls /usr/bin/tar
+# RUN zypper -n in -y tar gzip make python gawk pkg-config
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -73,16 +71,11 @@ RUN for repo in main community testing; do \
       done \
     done
 
-RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.18
+# RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.18
 
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
 COPY --from=base_rootfs / /mirror/${SUSE_VERSION}/rootfs
-
-# may want to make this verbose, once working -- debug stuff
-# RUN tar -C /mirror/${SUSE_VERSION}/rootfs -xf /tmp/suse-busybox-bci-x86_64.tar
-
-#* FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as compactor
 
 FROM registry.suse.com/bci/bci-base:15.4 as compactor
 ## FROM lfedge/eve-suse:4454406cdb1b3bea4b56b43ae54d430ea8d76bab-dirty-710098b as compactor
