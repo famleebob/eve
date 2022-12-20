@@ -48,7 +48,7 @@ RUN zypper --non-interactive addrepo --keep-packages https://download.opensuse.o
 RUN zypper --non-interactive --gpg-auto-import-keys refresh filesystems
 RUN zypper --non-interactive modifyrepo --keep-packages --all
 
-# RUN zypper -n in -y tar gzip make python gawk pkg-config
+RUN zypper -n in -y tar gcc gzip make python gawk pkg-config patch
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -70,7 +70,7 @@ RUN for repo in main community testing; do \
       done \
     done
 
-# RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.18
+RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.18
 
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
