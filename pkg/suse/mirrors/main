@@ -448,3 +448,8 @@ liblzo2
 liblzo2-2
 openslp
 unzip
+libaio1
+libjsoncpp19
+librhash0
+cmake-full
+libuv1
