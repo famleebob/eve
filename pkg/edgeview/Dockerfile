@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:586fbc00b49c6846ca6b5a79208698ed44ee952c as build
+FROM lfedge/eve-suse:7595cac560afd50d82093da86567899883918377 as build
 ENV BUILD_PKGS git go1.18
 ENV PKGS iproute2 iptables
 RUN eve-suse-deploy.sh

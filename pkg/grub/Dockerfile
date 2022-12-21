@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile-upstream:master-labs
 
-FROM lfedge/eve-suse:586fbc00b49c6846ca6b5a79208698ed44ee952c as grub-build-base
+FROM lfedge/eve-suse:7595cac560afd50d82093da86567899883918377 as grub-build-base
 ENV BUILD_PKGS automake \
                make \
                bison \
