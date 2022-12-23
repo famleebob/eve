@@ -1,20 +1,20 @@
-# syntax=docker/dockerfile-upstream:master-labs
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # Instructions for this package are taken from:
 #   https://wiki.ubuntu.com/UEFI/EDK2
 #   https://wiki.linaro.org/LEG/UEFIforQEMU
 #
-# On ARM here's what works for other boars:
+# On ARM here's what works for other boars: (? boards ?)
 #   git clone https://github.com/tianocore/edk2
 #   git clone https://github.com/tianocore/edk2-platforms
 #   git clone https://github.com/tianocore/edk2-non-osi
 #   git clone https://git.linaro.org/uefi/uefi-tools.git
 #   ./uefi-tools/edk2-build.sh -b DEBUG -b RELEASE all
 #
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS make gcc g++ python3 libuuid nasm util-linux-dev bash git util-linux patch
+FROM lfedge/eve-suse:981edcffdf5c761308af691f5c5423210aa1f2b3 as build
+ENV BUILD_PKGS make gcc gcc-c++ python3 libuuid1 nasm bash git patch
 ENV BUILD_PKGS_amd64 iasl
 ENV BUILD_PKGS_arm64 iasl
-RUN eve-alpine-deploy.sh
+RUN eve-suse-deploy.sh
 RUN ln -s python3 /usr/bin/python
 
 COPY edk2-patches /edk2-patches

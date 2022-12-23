@@ -1,10 +1,12 @@
-# syntax=docker/dockerfile-upstream:master-labs
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS automake autoconf gettext gettext-dev git pkgconfig \
-               libtool libc-dev linux-headers gcc make glib-dev \
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
+FROM lfedge/eve-suse:981edcffdf5c761308af691f5c5423210aa1f2b3 as build
+ENV BUILD_PKGS automake autoconf gettext-runtime gettext-tools git pkgconfig \
+               libtool glibc-devel gcc make glib2-devel \
                autoconf-archive patch cmake gtk-doc
-ENV PKGS alpine-baselayout musl-utils ppp jq glib
-RUN eve-alpine-deploy.sh
+#* could find no sub for ppp
+#* removed muscl* stuff
+ENV PKGS jq glib2-tools
+RUN eve-suse-deploy.sh
 
 ENV LIBUBOX_COMMIT=7da66430de3fc235bfc6ebb0b85fb90ea246138d
 ENV JSONC_COMMIT=ed54353d8478ccdb8296c33c675662d16d68b40d
