@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-suse:981edcffdf5c761308af691f5c5423210aa1f2b3 as uefi-build
+FROM lfedge/eve-uefi:37c694a30d35e0c44729951a34a8853c5b0f75df as uefi-build
 
-FROM lfedge/eve-suse:981edcffdf5c761308af691f5c5423210aa1f2b3 as runx-build
+FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS gcc
 RUN eve-suse-deploy.sh
@@ -17,7 +17,7 @@ RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:586fbc00b49c6846ca6b5a79208698ed44ee952c as build
+FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 as build
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \
     gettext iasl util-linux-devel ncurses-devel libglib-2 \
