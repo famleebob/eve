@@ -10,7 +10,7 @@
 #   git clone https://git.linaro.org/uefi/uefi-tools.git
 #   ./uefi-tools/edk2-build.sh -b DEBUG -b RELEASE all
 #
-FROM lfedge/eve-suse:981edcffdf5c761308af691f5c5423210aa1f2b3 as build
+FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 as build
 ENV BUILD_PKGS make gcc gcc-c++ python3 libuuid1 nasm bash git patch
 ENV BUILD_PKGS_amd64 iasl
 ENV BUILD_PKGS_arm64 iasl

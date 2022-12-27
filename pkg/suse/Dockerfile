@@ -77,7 +77,7 @@ RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
 COPY --from=base_rootfs / /mirror/${SUSE_VERSION}/rootfs
 
 FROM registry.suse.com/bci/bci-base:15.4 as compactor
-## FROM lfedge/eve-suse:7595cac560afd50d82093da86567899883918377 as compactor
+## FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 as compactor
 
 COPY --from=cache /mirror /mirror/
 COPY --from=cache /var/cache/zypp /var/cache/zypp

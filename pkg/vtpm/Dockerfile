@@ -6,11 +6,10 @@
 #    and the server
 
 #Build TPM2-TSS and TPM2-TOOLS
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 as build
-ENV BUILD_PKGS linux-headers git gcc g++ autoconf automake libtool doxygen make \
-               openssl-dev protobuf-dev gnupg curl-dev patch
-ENV PKGS alpine-baselayout musl-utils
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 as build
+ENV BUILD_PKGS glibc-devel git gcc g++ autoconf automake libtool doxygen make \
+               openssl-devel protobuf-devel gnupg curl-devel patch
+RUN eve-suse-deploy.sh
 
 WORKDIR /
 ADD https://ftpmirror.gnu.org/autoconf-archive/autoconf-archive-2019.01.06.tar.xz /autoconf-archive-2019.01.06.tar.xz

@@ -1,7 +1,8 @@
-FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS build
+FROM lfedge/eve-suse:c44c0bbfa6d2ecd892de235362d2c635c6475090 AS build
 
-ENV PKGS dosfstools libarchive-tools binutils mtools xorriso
-RUN eve-alpine-deploy.sh
+ENV BUILD_PKGS tar
+ENV PKGS libarchive13 mtools xorriso
+RUN eve-suse-deploy.sh
 
 RUN echo "mtools_skip_check=1" >> /out/etc/mtools.conf
 
