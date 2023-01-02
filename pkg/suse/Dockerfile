@@ -70,7 +70,7 @@ RUN for repo in main community testing; do \
       done \
     done
 
-RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.18
+RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.19
 
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs

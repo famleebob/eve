@@ -1,5 +1,5 @@
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
-ENV BUILD_PKGS git go1.18
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
+ENV BUILD_PKGS git go1.19
 #ENV PKGS Ialpine-baselayout musl-utils
 RUN eve-suse-deploy.sh
 

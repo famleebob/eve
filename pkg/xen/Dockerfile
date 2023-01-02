@@ -1,9 +1,10 @@
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as kernel-build
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as kernel-build
 
 ENV BUILD_PKGS argp-standalone automake bash bc binutils-dev bison build-base \
-               diffutils flex git gmp-dev gnupg installkernel kmod \
-               elfutils-dev openssl-dev linux-headers ncurses-dev python3 \
-               sed squashfs-tools tar xz xz-dev zlib-dev libunwind-dev
+               diffutils flex git gmp-devel gnupg installkernel kmod \
+               libelf-devel openssl-devel glibc-devel ncurses-devel python3 \
+               sed squashfs-tools tar xz xz-dev zlib-devel libunwind-devel \
+	       patch gcc gcc-c++
 ENV BUILD_PKGS_arm64 uboot-tools
 RUN eve-suse-deploy.sh
 

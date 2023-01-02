@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 AS build
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 AS build
 
 ENV BUILD_PKGS patch curl make gcc perl util-linux git mtools glibc-devel xz-devel libelf-devel libbz2-1
 ENV PKGS xz-devel util-linux libelf-devel libbz2-1

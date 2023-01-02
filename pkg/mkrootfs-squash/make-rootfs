@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 #
 # mkrootfs -- Create an EVE rootfs
 #

@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:27f7986a5f0a47f209ff92433a56a2d2bced8cca as uefi-build
+FROM lfedge/eve-uefi:68ff274ac2cc3aa11af915d550e4e3981e756547 as uefi-build
 
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as runx-build
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS gcc
 RUN eve-suse-deploy.sh
@@ -17,16 +17,18 @@ RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
+## removed texinfo, pulls in multiple GiBytes of stuff
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \
-    gettext iasl util-linux-devel ncurses-devel libglib-2 \
-    libpixman-1-0-devel libaio-devel yajl-devel \
-    git patch texinfo tar libcap-ng-devel \
-    attr-devel flex bison cmake libusb-devel
+    gettext-runtime acpica util-linux-devel ncurses-devel libglib-2_0-0 \
+    libpixman-1-0-devel libaio-devel libyajl-devel \
+    git patch tar libcap-ng-devel \
+    libattr-devel flex bison cmake libusb_1-0-devel dracut-mkinitrd-deprecated
 ENV BUILD_PKGS_arm64 dtc-dev
 
-ENV PKGS bash libaio libbz2 glib libpixman-1-0 yajl keyutils libusb xz-libs libuuid sudo
+## remove sudo part of SuSE busybox utils
+ENV PKGS bash libaio1 libbz2-1 libglib-2_0-0 libpixman-1-0 libyajl2 keyutils libusb-1_0-0 xz-devel libuuid1
 ENV PKGS_arm64 libfdt
 
 RUN eve-suse-deploy.sh
@@ -34,8 +36,9 @@ RUN eve-suse-deploy.sh
 # Alpine linux defines all 64bit integer types as long. Patch
 # /usr/include/bits/alltypes.h to fix compilation with -m32
 WORKDIR /
-COPY alpine.patch /
-RUN patch -p1 < alpine.patch
+#COPY alpine.patch /
+#RUN patch -p1 < alpine.patch
+RUN patch --help
 
 ENV LIBURING_VERSION 0.7
 ENV LIBURING_SOURCE=https://git.kernel.dk/cgit/liburing/snapshot/liburing-${LIBURING_VERSION}.tar.bz2

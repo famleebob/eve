@@ -6,9 +6,9 @@
 #    and the server
 
 #Build TPM2-TSS and TPM2-TOOLS
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 as build
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
 ENV BUILD_PKGS glibc-devel git gcc g++ autoconf automake libtool doxygen make \
-               openssl-devel protobuf-devel gnupg curl-devel patch
+               openssl-devel protobuf-devel gnupg curl-devel patch tar
 RUN eve-suse-deploy.sh
 
 WORKDIR /

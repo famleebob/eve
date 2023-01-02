@@ -1,5 +1,5 @@
 ARG GOVER=1.18.6
-FROM registry.suse.com/bci/golang:1.18-16.43
+FROM registry.suse.com/bci/golang:1.19
 ARG USER
 ARG GROUP
 ARG UID

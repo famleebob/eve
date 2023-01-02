@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-suse:6be054ed61f0d9d9d91f04cbfaef8c91ae606003 AS kernel-build
+FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 AS kernel-build
 
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel gettext-runtime acpica         \
