@@ -16,7 +16,7 @@ ENV TARGET_ARCH=amd64
 # you have to have FROM alpine:x.y.z above:
 # RUN apk update && apk upgrade -a
 # RUN zypper refresh && zypper update
-RUN zypper -n in -y tar gzip make python gawk pkg-config
+RUN zypper --terse -n in -y tar gzip make python gawk pkg-config
 
 #*  Will need to add `-r local` at some point to limit
 #*  the search to local repos, need to know how to create
@@ -44,11 +44,11 @@ WORKDIR /tmp/mirrors
 #   first point to the public package repositories
 # RUN zypper --non-interactive addrepo -keep-packages https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
 # RUN zypper --non-interactive --gpg-auto-import-keys refresh 2
-RUN zypper --non-interactive addrepo --keep-packages https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
-RUN zypper --non-interactive --gpg-auto-import-keys refresh filesystems
-RUN zypper --non-interactive modifyrepo --keep-packages --all
+RUN zypper --terse --non-interactive addrepo --keep-packages https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
+RUN zypper --terse --non-interactive --gpg-auto-import-keys refresh filesystems
+RUN zypper --terse --non-interactive modifyrepo --keep-packages --all
 
-RUN zypper -n in -y tar gcc gzip make python gawk pkg-config patch
+RUN zypper --terse -n in -y tar gcc gzip make python gawk pkg-config patch
 
 #RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
 #RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
@@ -70,7 +70,7 @@ RUN for repo in main community testing; do \
       done \
     done
 
-RUN zypper --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.19
+RUN zypper --terse --non-interactive download libcom_err-devel-1.46.4 libopenssl-1_1-devel-1.1.1l libopenssl-devel-1.1.1l go1.19
 
 ARG CACHE_BASE=/var/cache/zypp/packages/SLE_BCI/x86_64
 RUN mkdir -p /mirror/${SUSE_VERSION}/rootfs
@@ -85,7 +85,7 @@ COPY --from=cache /etc/zypp /etc/zypp
 COPY eve-suse-deploy.sh go-compile.sh /bin/
 
 # load base tools expected in EVE linuxkit build container
-RUN zypper -n in -y tar gzip make python gawk pkg-config
+RUN zypper --terse -n in -y tar gzip make python gawk pkg-config
 
 # we merge layers in previous step
 # so we should avoid large possible diff
