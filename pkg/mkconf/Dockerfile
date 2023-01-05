@@ -1,6 +1,7 @@
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 AS build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 AS build
 
-ENV PKGS mtools dosfstools
+#* dosfstools already in SuSE busybox image
+ENV PKGS mtools
 RUN eve-suse-deploy.sh
 
 COPY make-config /out/

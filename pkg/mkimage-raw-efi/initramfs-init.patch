@@ -4,7 +4,7 @@
  #!/bin/sh
 
  # this is the init script version
--VERSION=3.6.2-r0
+-VERSION=3.6.2
 +VERSION=3.6.2-EVE
  SINGLEMODE=no
  sysroot=/sysroot

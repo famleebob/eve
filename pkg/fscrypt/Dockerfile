@@ -2,10 +2,10 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as build
 
-ENV BUILD_PKGS git gcc make glibc-devel pam-devel m4 findutils go1.19 util-linux make patch
-RUN eve-suse-deploy.sh
+ENV BUILD_PKGS git gcc glibc-devel pam-devel m4 go1.19 make patch
+RUN /bin/sh -x eve-suse-deploy.sh
 
 ENV FSCRYPT_COMMIT=b41569d397d3e66099cde07d8eef36b2f42dd0ec
 WORKDIR /go/src/github.com/google/fscrypt

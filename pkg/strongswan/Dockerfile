@@ -2,7 +2,7 @@
 # StrongSwan VPN + Alpine Linux
 #
 
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as build
 ENV BUILD_PKGS make patch gawk gcc glibc-devel tar iptables iproute2 openssl libopenssl-devel tar bzip binutils
 RUN eve-suse-deploy.sh
 

@@ -1,14 +1,17 @@
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # This mkimage-raw-efi produces the raw EFI partition for EVE,
 # including the files in efi-files in the image.  This includes:
 #
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 AS build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 AS build
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-ENV BUILD_PKGS grep patch dracut-mkinitrd-deprecated
+ENV BUILD_PKGS grep patch libblkid-devel libkmod-devel libcryptsetup-devel \
+		util-linux libbsd-devel gcc binutils elfutils which
 ENV PKGS mtools libarchive13 gptfdisk squashfs dmidecode
+ENV MKINITFS_SHA 224826dcee28425a81bae099ade87fad797a5674
 
 RUN eve-suse-deploy.sh
 
@@ -33,10 +36,25 @@ RUN mv rootfs /out
 
 # bootstrap Alpine's initrd
 WORKDIR /
-#COPY initramfs-init.patch /tmp/
-#RUN patch -p1 < /tmp/initramfs-init.patch
-#RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
-RUN /usr/bin/dracut -f --regenerate-all
+#* SuSE Linux EVE -- need to build mkinitfs,
+#*  clone the repo, patch it so it will build here, build/install
+COPY suse.patch /
+ADD https://gitlab.alpinelinux.org/alpine/mkinitfs.git#${MKINITFS_SHA} /initramfs
+RUN cd /initramfs && patch -p1 < /suse.patch && make all install
+COPY initramfs-init.patch /tmp/
+#* modified the patche file as the `git` version does not
+#*  have the `-r0` at the end of it
+RUN patch -p1 < /tmp/initramfs-init.patch
+RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
+
+#* mkinitfs needs lddtree to function, couldn't find
+#*  a SuSE package that has it, located this script
+#*  so, clone, and use the script.  Added `binutils`
+#*  and `elftools` to help
+ADD https://github.com/ncopa/lddtree.git /lddtree
+RUN cp /lddtree/lddtree.sh /usr/sbin/lddtree
+RUN mkdir -p /etc/apk/keys && touch /etc/apk/keys/kaka
+
 RUN mkinitfs -n -o /out/initrd.img
 
 FROM scratch

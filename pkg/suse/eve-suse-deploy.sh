@@ -55,7 +55,7 @@ tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 # speaking this maybe not needed (or at least optional)
 #*  PKGS="$PKGS apk-tools"
 
-/* set $PKGS
+#* set $PKGS
 [ -n "$PKGS" ] && zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends $PKGS
 #* new more explicit way to help with empty PKGS or BUILD_PKGS
 #* [ $# -eq 0 ] || zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"

@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:68ff274ac2cc3aa11af915d550e4e3981e756547 as uefi-build
+FROM lfedge/eve-uefi:4fa77666c5f2b3cd91acdc9b1c5b8fce299f9a32 as uefi-build
 
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as runx-build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS gcc
 RUN eve-suse-deploy.sh
@@ -17,7 +17,7 @@ RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as build
 ## removed texinfo, pulls in multiple GiBytes of stuff
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \

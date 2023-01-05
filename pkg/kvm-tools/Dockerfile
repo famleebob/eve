@@ -1,13 +1,14 @@
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as build
+FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as build
 # Building qemu in strip-down mirovm only mode:
 # qemu 5.1 dependencies: python3 glib-dev pixman-dev
 # qemu 5.2+ dependencies: py3-setuptools bash perl
 # ninja dependencies: cmake g++
-ENV BUILD_PKGS gcc make glibc-devel binutils-devel patch libaio-devel zlib-devel zlib-devel-static libvncserver0-devel python3 libglib-2_0-0 libpixman-1-0 python3-setuptools bash perl cmake gcc-c++ patch xz bzip glib2-devel
+ENV BUILD_PKGS gcc make glibc-devel binutils-devel patch libaio-devel zlib-devel zlib-devel-static libvncserver0-devel python3 libglib-2_0-0 libpixman-1-0-devel python3-setuptools bash perl cmake gcc-c++ patch xz bzip glib2-devel
 ENV BUILD_PKGS_arm64 dtc dtc-dev
 # libgcc, pixman and glib are required for qemu
 # it maybe possible to get rid of libgcc & pixman
-ENV PKGS libgcc_s1 libpixman-1-0 libglib-2_0-0 libvncserver0 libaio1
+#* libvncserver0 not available in SuSE
+ENV PKGS glibc libgcc_s1 libpixman-1-0 libglib-2_0-0 libaio1
 ENV PKGS_arm64 libfdt libstdc++
 RUN eve-suse-deploy.sh
 
@@ -60,9 +61,11 @@ COPY include /usr/include
 # ? --disable-vxhs
 # T --disable-slirp
 ENV CONF_aarch64 --enable-fdt=git
-ENV CONF_x86_64 --disable-tcg --disable-fdt --without-default-devices --enable-trace-backends=dtrace
+#* SuSE need to disable PAM authentication to get __ILP32__ set ????
+ENV CONF_x86_64 --disable-tcg --disable-fdt --without-default-devices --enable-trace-backends=dtrace --disable-auth-pam
 
-RUN eval ./configure '$CONF_'$(uname -m) --target-list=$(uname -m)-softmmu --enable-kvm --disable-user --disable-linux-user --disable-bsd-user --disable-docs --disable-guest-agent --disable-guest-agent-msi --disable-pie --disable-modules --disable-module-upgrades --disable-debug-tcg --disable-debug-info --disable-sparse --disable-gnutls --disable-nettle --disable-gcrypt --disable-auth-pam --disable-sdl --disable-sdl-image --disable-gtk --disable-vte --disable-curses --disable-iconv --disable-vnc --disable-vnc-sasl --disable-vnc-jpeg --disable-vnc-png --disable-cocoa --disable-virtfs --disable-mpath --disable-xen --disable-xen-pci-passthrough --disable-brlapi --disable-curl --disable-membarrier --disable-hax --disable-hvf --disable-whpx --disable-rdma --disable-pvrdma --disable-vde --disable-netmap --disable-linux-aio --disable-linux-io-uring --disable-cap-ng --disable-attr --disable-vhost-net --disable-vhost-vsock --disable-vhost-scsi --disable-vhost-crypto --disable-spice --disable-rbd --disable-libiscsi --disable-libnfs --disable-smartcard --disable-libusb --disable-live-block-migration --disable-usb-redir --disable-lzo --disable-snappy --disable-bzip2 --disable-lzfse --disable-zstd --disable-seccomp --disable-coroutine-pool --disable-glusterfs --disable-tpm --disable-libssh --disable-numa --disable-libxml2 --disable-tcmalloc --disable-jemalloc --disable-avx2 --disable-avx512f --disable-replication --disable-opengl --disable-virglrenderer --disable-xfsctl --disable-qom-cast-debug --disable-tools --disable-bochs --disable-cloop --disable-dmg --disable-qcow1 --disable-vdi --disable-vvfat --disable-qed --disable-parallels --disable-sheepdog --disable-crypto-afalg --disable-capstone --disable-debug-mutex --disable-libpmem --disable-xkbcommon
+#* SuSE some quirk in the eval doesn't work for the machine specifc additions
+RUN ./configure $CONF_x86_64 --target-list=x86_64-softmmu --enable-kvm --disable-user --disable-linux-user --disable-bsd-user --disable-docs --disable-guest-agent --disable-guest-agent-msi --disable-pie --disable-modules --disable-module-upgrades --disable-debug-tcg --disable-debug-info --disable-sparse --disable-gnutls --disable-nettle --disable-gcrypt --disable-auth-pam --disable-sdl --disable-sdl-image --disable-gtk --disable-vte --disable-curses --disable-iconv --disable-vnc --disable-vnc-sasl --disable-vnc-jpeg --disable-vnc-png --disable-cocoa --disable-virtfs --disable-mpath --disable-xen --disable-xen-pci-passthrough --disable-brlapi --disable-curl --disable-membarrier --disable-hax --disable-hvf --disable-whpx --disable-rdma --disable-pvrdma --disable-vde --disable-netmap --disable-linux-aio --disable-linux-io-uring --disable-cap-ng --disable-attr --disable-vhost-net --disable-vhost-vsock --disable-vhost-scsi --disable-vhost-crypto --disable-spice --disable-rbd --disable-libiscsi --disable-libnfs --disable-smartcard --disable-libusb --disable-live-block-migration --disable-usb-redir --disable-lzo --disable-snappy --disable-bzip2 --disable-lzfse --disable-zstd --disable-seccomp --disable-coroutine-pool --disable-glusterfs --disable-tpm --disable-libssh --disable-numa --disable-libxml2 --disable-tcmalloc --disable-jemalloc --disable-avx2 --disable-avx512f --disable-replication --disable-opengl --disable-virglrenderer --disable-xfsctl --disable-qom-cast-debug --disable-tools --disable-bochs --disable-cloop --disable-dmg --disable-qcow1 --disable-vdi --disable-vvfat --disable-qed --disable-parallels --disable-sheepdog --disable-crypto-afalg --disable-capstone --disable-debug-mutex --disable-libpmem --disable-xkbcommon
 
 # qemu's configure script takes presence of as sys/signal.h as
 # a hint to set HAVE_SYS_SIGNAL_H=y, meanwhile the only reason
@@ -83,8 +86,9 @@ COPY --from=build /usr/bin/lkvm /usr/bin/lkvm
 COPY --from=build /qemu-5.2.0/build/qemu-system-* /usr/bin/
 COPY --from=build /bios /usr/share/qemu
 RUN ln -sf lkvm /usr/bin/vm
-RUN ldd /usr/bin/lkvm
-RUN ldd /usr/bin/qemu-system-$(uname -m)
+#* seems more informational than anything, SuSE env "not found"
+#RUN ldd /usr/bin/lkvm
+#RUN ldd /usr/bin/qemu-system-$(uname -m)
 
 ENTRYPOINT ["/bin/sh", "-c", "while true; do sleep 100000; done"]
 #CMD ["/usr/sbin/vm",]
