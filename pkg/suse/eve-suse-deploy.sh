@@ -35,6 +35,11 @@ case "$(uname -m)" in
   riscv64) BUILD_PKGS="$BUILD_PKGS $BUILD_PKGS_riscv64"
            PKGS="$PKGS $PKGS_riscv64"
            ;;
+        # condition shell variables so always at least 1 space
+        *) BUILD_PKGS="$BUILD_PKGS "
+           PKGS="$PKGS "
+           echo "Unknown Machine" >&2
+           ;;
 esac
 
 zypper --terse --non-interactive modifyrepo --no-refresh --keep-packages --all
@@ -42,7 +47,8 @@ zypper --terse --non-interactive modifyrepo --no-refresh --keep-packages --all
 #* use -n like `pkg/mkconf/make-config`
 #* don't need "set" with new method
 #* set $BUILD_PKGS
-[ -n "$BUILD_PKGS" ] && zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution $BUILD_PKGS
+#* because of machine
+[ "$BUILD_PKGS" != " " ] && zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution $BUILD_PKGS
 #* try new way that explicitly works for an empty set of packages
 #* [ $# -eq 0 ] || zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
 
@@ -56,7 +62,8 @@ tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 #*  PKGS="$PKGS apk-tools"
 
 #* set $PKGS
-[ -n "$PKGS" ] && zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends $PKGS
+#* PKGS always at least a singe space character
+[ "$PKGS" != " " ] && zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends $PKGS
 #* new more explicit way to help with empty PKGS or BUILD_PKGS
 #* [ $# -eq 0 ] || zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
 
