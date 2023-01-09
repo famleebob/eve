@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as kernel-build
+FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as kernel-build
 
 ENV BUILD_PKGS \
     argp-standalone automake bash bc binutils-devel bison build-base \

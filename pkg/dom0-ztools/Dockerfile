@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as zfs
+FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as zfs
 ENV BUILD_PKGS tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip \
    libtool attr-devel e2fsprogs-devel openssl-devel coreutils libtirpc-devel
 ENV PKGS util-linux libuuid1 libtirpc-devel libtirpc3 libblkid1

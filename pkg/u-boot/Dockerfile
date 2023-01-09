@@ -1,5 +1,5 @@
-FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as build-base
-ENV BUILD_PKGS bash binutils-devel bc bison flex libopenssl-1_1-devel python3 swig
+FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as build-base
+ENV BUILD_PKGS bash binutils-devel bc bison flex libopenssl-1_1-devel python3 swig gcc
 ENV BUILD_PKGS_amd64 python3-devel python3-pip
 RUN eve-suse-deploy.sh
 
@@ -17,7 +17,8 @@ RUN tar -C / -xzf /uboot.tar.gz && rm -f /uboot.tar.gz && mv /u-boot* /u-boot
 WORKDIR /u-boot
 COPY patches /tmp/patches
 
-RUN mkdir /boot
+RUN ls -ld /
+RUN mkdir -p /boot
 
 
 FROM build-base AS build-amd64

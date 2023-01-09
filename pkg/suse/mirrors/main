@@ -505,3 +505,5 @@ shadow
 sysuser-shadow
 system-group-hardware
 libutempter0
+busybox-hostname
+hostname

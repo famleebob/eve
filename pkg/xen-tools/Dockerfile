@@ -1,11 +1,28 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:4fa77666c5f2b3cd91acdc9b1c5b8fce299f9a32 as uefi-build
+FROM fedge/eve-uefi:76542e9b1bd71965b32353189d5a6a6a744deaa3 as uefi-build
 
-FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as runx-build
+FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
-ENV BUILD_PKGS gcc
+ENV BUILD_PKGS make gcc patch libblkid-devel libkmod-devel libcryptsetup-devel \
+		libbsd-devel binutils elfutils which
 RUN eve-suse-deploy.sh
+
+#* SuSE Linux EVE -- need to build mkinitfs,
+#*  clone the repo, patch it so it will build here, build/install
+WORKDIR /
+ENV MKINITFS_SHA 224826dcee28425a81bae099ade87fad797a5674
+COPY suse.patch /
+ADD https://gitlab.alpinelinux.org/alpine/mkinitfs.git#${MKINITFS_SHA} /initramfs
+RUN cd /initramfs && patch -p1 < /suse.patch && make all install
+
+#* mkinitfs needs lddtree to function, couldn't find
+#*  a SuSE package that has it, located this script
+#*  so, clone, and use the script.  Added `binutils`
+#*  and `elftools` to help
+ADD https://github.com/ncopa/lddtree.git /lddtree
+RUN cp /lddtree/lddtree.sh /usr/sbin/lddtree
+RUN mkdir -p /etc/apk/keys && touch /etc/apk/keys/kaka
 
 RUN rm -f /sbin/poweroff /etc/mkinitfs/features.d/base.files
 COPY initrd/base.files /etc/mkinitfs/features.d/base.files
@@ -15,16 +32,17 @@ COPY initrd/chroot2.c initrd/hacf.c /tmp/
 COPY initrd/00000080 /etc/acpi/PWRF/
 RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
+
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:263a9793e6b21aae48083a653552bec245ee1a92 as build
+FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as build
 ## removed texinfo, pulls in multiple GiBytes of stuff
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \
     gettext-runtime acpica util-linux-devel ncurses-devel libglib-2_0-0 \
-    libpixman-1-0-devel libaio-devel libyajl-devel \
-    git patch tar libcap-ng-devel \
-    libattr-devel flex bison cmake libusb_1-0-devel dracut-mkinitrd-deprecated
+    libpixman-1-0-devel libaio-devel libyajl-devel glib2-devel \
+    git patch tar libcap-ng-devel bzip2 gettext-tools \
+    libattr-devel flex bison cmake libusb-1_0-devel libuuid-devel
 ENV BUILD_PKGS_arm64 dtc-dev
 
 ## remove sudo part of SuSE busybox utils
@@ -36,9 +54,8 @@ RUN eve-suse-deploy.sh
 # Alpine linux defines all 64bit integer types as long. Patch
 # /usr/include/bits/alltypes.h to fix compilation with -m32
 WORKDIR /
-#COPY alpine.patch /
-#RUN patch -p1 < alpine.patch
-RUN patch --help
+#* COPY alpine.patch /
+#* RUN patch -p1 < alpine.patch
 
 ENV LIBURING_VERSION 0.7
 ENV LIBURING_SOURCE=https://git.kernel.dk/cgit/liburing/snapshot/liburing-${LIBURING_VERSION}.tar.bz2
