@@ -31,7 +31,7 @@ HV=$(HV_DEFAULT)
 # Enable development build (disabled by default)
 DEV=n
 # How large to we want the disk to be in Mb
-MEDIA_SIZE=8192
+MEDIA_SIZE=12288
 # Image type for final disk images
 IMG_FORMAT=qcow2
 # Filesystem type for rootfs image
@@ -297,6 +297,7 @@ endif
 
 # We are currently filtering out a few packages from bulk builds
 # since they are not getting published in Docker HUB
+#* may need to change for SL-EVE
 PKGS_$(ZARCH)=$(shell ls -d pkg/* | grep -Ev "eve|test-microsvcs|alpine")
 PKGS_riscv64=pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
              pkg/mkimage-raw-efi pkg/uefi pkg/u-boot pkg/grub pkg/new-kernel \
@@ -580,6 +581,10 @@ $(SBOM): $(ROOTFS_TAR) | $(INSTALLER)
 	# when syft supports reading straight from a tar archive with duplicate entries,
 	# this all can go away, and we can read the rootfs.tar
 	# see https://github.com/anchore/syft/issues/1400
+	#* can cure UTF-8 issue with LANG=en_US.UTF-8, had
+	#*  added a `-U` to unlink before write, but the
+	#*  characterization indicates wrong thing to do ...
+	#*  var/lock needs to be in run/lock as a soft link
 	tar xf $< -C $(TMP_ROOTDIR) --exclude "dev/*"
 	docker run -v $(TMP_ROOTDIR):/rootdir:ro $(SYFT_IMAGE) -o spdx-json /rootdir > $@
 	rm -rf $(TMP_ROOTDIR)

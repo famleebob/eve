@@ -1,5 +1,7 @@
-FROM lfedge/eve-suse:7d66f557e844047f0740535c5d5178af0f10be04 as tools
-ENV PKGS qemu-img tar uboot-tools coreutils dosfstools
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as tools
+ENV PKGS qemu-img tar uboot-tools coreutils dosfstools bash
+#* SuSE may not have bash
+SHELL ["/bin/sh", "-c"]
 RUN eve-suse-deploy.sh
 
 # hadolint ignore=DL3006
@@ -9,7 +11,10 @@ FROM IPXE_TAG as ipxe
 # hadolint ignore=DL3006
 FROM MKRAW_TAG as raw
 # we need to get rid of embedded initrd & installer.img since we will get them from outside
-RUN rm /initrd.img /installer.img
+
+#* RUN rm /initrd.img /installer.img #* change may not be needed
+RUN rm -f /initrd.img /installer.img
+
 # hadolint ignore=DL3006
 FROM MKCONF_TAG as conf
 

@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 #
 # mkrootfs -- Create an EVE rootfs
 #
@@ -15,6 +15,8 @@ IMGFILE=/rootfs.img
 [ -f "$IMGFILE" ] || EXPORT_CMD="cat $IMGFILE"
 
 # we want everything except the final result to stderr
+#* SuSE operating environment seems to need this
+export LANG=en_US.UTF-8
 ( exec 1>&2;
 
   mkdir -p /tmp/rootfs

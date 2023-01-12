@@ -1,5 +1,5 @@
 # This file must be kept as much in sync with pkg/kernel/Dockerfile as possible
-FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as kernel-build-base
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as kernel-build-base
 
 ENV BUILD_PKGS \
     automake bash bc binutils-devel bison build-base gcc libelf-devel \

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as build
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
 ENV BUILD_PKGS automake autoconf gettext-runtime gettext-tools git pkgconfig \
                libtool glibc-devel gcc make glib2-devel \
                autoconf-archive patch cmake gtk-doc

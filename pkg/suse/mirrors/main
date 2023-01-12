@@ -507,3 +507,4 @@ system-group-hardware
 libutempter0
 busybox-hostname
 hostname
+bsdtar

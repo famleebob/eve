@@ -2,7 +2,7 @@
 
 FROM fedge/eve-uefi:76542e9b1bd71965b32353189d5a6a6a744deaa3 as uefi-build
 
-FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as runx-build
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS make gcc patch libblkid-devel libkmod-devel libcryptsetup-devel \
 		libbsd-devel binutils elfutils which
@@ -35,7 +35,7 @@ RUN gcc -s -o /hacf /tmp/hacf.c
 
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as build
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
 ## removed texinfo, pulls in multiple GiBytes of stuff
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \

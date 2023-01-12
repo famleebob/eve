@@ -83,12 +83,16 @@ INSTALLER_SYS_PART_SIZE=$(( 300 * 1024 * 1024 ))
 # sector where the first partition starts on a blank disk
 FIRST_PART_SEC=2048
 
+#* SuSE operating environment seems to need this
+export LANG=en_US.UTF-8
+
 sgdisk() {
   # filter out annoying messages we can't get rid of:
   #   https://github.com/kini/gptfdisk/blob/master/diskio-unix.cc#L153
   local OUT
   local RET
-  OUT=$(/usr/bin/sgdisk "$@" 2>&1)
+  #* SuSE puts it in `sbin`
+  OUT=$(/usr/sbin/sgdisk "$@" 2>&1)
   RET=$?
   echo "$OUT" | grep -Ev "$(echo '^Disk device is
 when determining sector size! Setting sector size to 512
@@ -124,7 +128,9 @@ dir2vfat() {
   # FAT32 can only reside on disks larger than 33Mb
   [ "$2" -lt 33792 ] && FORCE_FAT32="-v"
   (rm -rf /tmp/data
-   mkdir /tmp/data
+   mkdir -p /tmp/data
+   #* why??? works fine in a SuSE container ...
+   touch /tmp/data/MARKER "$IMG"
    mkfs.vfat "$FORCE_FAT32" -v -n "$LABEL" -C "$IMG" "$2"
    mcopy -i $IMG -s $1/* ::/ ) >&2
   echo $IMG

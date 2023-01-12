@@ -15,7 +15,8 @@ copy() {
 
 #
 # Extract partitions from stdin or look them up in /bits
-#
+#* SuSE operating environment seems to need this
+export LANG=en_US.UTF-8
 mkdir /parts 2>/dev/null || :
 cd /parts
 if [ -d /bits ]; then
@@ -35,6 +36,7 @@ fi
 # create a ISO with a EFI boot partition
 # Stuff it into a FAT filesystem, making it as small as possible.  511KiB
 # headroom seems to be enough; (x+31)/32*32 rounds up to multiple of 32.
+touch boot.img
 mkfs.vfat -v -C boot.img \
         $(( ($(stat -c %s EFI/BOOT/BOOT*EFI) / 1024 + 511) \
         / 32 * 32 )) > /dev/null

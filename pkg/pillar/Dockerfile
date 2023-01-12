@@ -13,7 +13,7 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as build
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
 
 ARG DEV=n
 
@@ -21,9 +21,9 @@ ENV BUILD_PKGS git gcc glibc-devel make pam pam-devel m4 findutils go1.19 util-l
     gettext-tools libuuid-devel libtirpc-devel libblkid-devel libopenssl-devel zlib tar libtasn1-devel
 # SuSE iprout2 busybox version installed
 ENV PKGS libtasn1 pciutils libyajl2 xz bash iptables libxtables12 dhcp-client \
-    coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd ethtool util-linux e2fsprogs openssl-1_1 xorriso \
+    coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd ethtool util-linux openssl-1_1 xorriso \
     qemu-tools jq keyutils ca-certificates hdparm \
-    gettext-runtime libtirpc3 libblkid1 zlib
+    gettext-runtime libtirpc3 libblkid1 zlib hostname
 RUN eve-suse-deploy.sh
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
@@ -94,7 +94,7 @@ FROM lfedge/eve-gpt-tools:3456199475b31bf0aaae314d2cfcc7ac4f61fd94 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-suse:2f1c38631c5199f885ef4ddde47108a7cb5e6e2d as collector
+FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as collector
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
