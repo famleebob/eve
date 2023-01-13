@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:7a565b49c1682ab4067d1c2c40cf77a6427de53c as fscrypt
+FROM lfedge/eve-fscrypt:730e183bc9491979108760fa5874d2d1d42c42ff as fscrypt
 
-FROM lfedge/eve-dom0-ztools:ddfb8f7ff54a05c89428da29dfa86fee53b0b62a as zfs
+FROM lfedge/eve-dom0-ztools:3bcc5a517c79edf4a280cd39603960c668590d6c as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -88,9 +88,9 @@ COPY patches/* /sys-patches/
 # we need zfs files on running system
 COPY --from=zfs /out /out
 
-FROM lfedge/eve-dnsmasq:ccb8bbe98362d1478cc5ed711ceab5da4037df00 as dnsmasq
-FROM lfedge/eve-strongswan:cc41824a831239cb714bbfb707a45841109b92f9 as strongswan
-FROM lfedge/eve-gpt-tools:3456199475b31bf0aaae314d2cfcc7ac4f61fd94 as gpttools
+FROM lfedge/eve-dnsmasq:6129ffa7fd47a804bc979a27a887cfd0e06dfcbd as dnsmasq
+FROM lfedge/eve-strongswan:2b36db9a0b9c1db785154b0186433b5e2c32e12d as strongswan
+FROM lfedge/eve-gpt-tools:9ee6c4ff947631afa2efd243341f944a6a865776 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
