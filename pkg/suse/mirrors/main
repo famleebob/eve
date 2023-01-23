@@ -508,3 +508,8 @@ libutempter0
 busybox-hostname
 hostname
 bsdtar
+perl-base
+cpio
+libsystemd0
+netcfg
+libzstd-devel
