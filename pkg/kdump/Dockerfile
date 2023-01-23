@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f AS build
+FROM lfedge/eve-suse:436e4b1043717ae65942c12f64465d370996f1c6 AS build
 
 #* SuSE linux headers come from glibc-devel, libdw* for dwarf info
 ENV BUILD_PKGS patch curl make gcc perl util-linux git mtools glibc-devel xz-devel elfutils libbz2-1 patch libdw-devel
@@ -9,8 +9,12 @@ RUN eve-suse-deploy.sh
 # Build makedumpfile
 WORKDIR /tmp/makedumpfile/makedumpfile-1.7.1
 RUN curl -L https://github.com/makedumpfile/makedumpfile/archive/refs/tags/1.7.1.tar.gz | tar -C .. -xzvf -
-RUN ln -s /usr/lib/libbz2.so.1 /usr/lib/libbz2.so && \
-    ln -s /usr/lib64/libbz2.so.1 /usr/lib64/libbz2.so && \
+
+#* SuSE supplies only the 64bit version of libbz2
+#*  so try but allow for failure of the 32bit,
+#*  but insist that the 64bit (`/usr/lib64`) exists
+RUN ln -s /usr/lib/libbz2.so.1 /usr/lib/libbz2.so || :
+RUN ln -s /usr/lib64/libbz2.so.1 /usr/lib64/libbz2.so && \
     make LINKTYPE=dynamic && \
     make DESTDIR=/out install
 RUN  make LINKTYPE=dynamic
