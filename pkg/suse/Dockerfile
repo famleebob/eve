@@ -1,7 +1,7 @@
 # updating per https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
 #*   for SuSE not Alpine -- no more card board tree hanging on the rear view mirror
 
-FROM registry.suse.com/bci/bci-busybox:15.4 as base_rootfs
+FROM registry.suse.com/bci/bci-base:15.4 as base_rootfs
 
 # FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS cache
 FROM registry.suse.com/bci/bci-base:15.4 as cache

@@ -48,10 +48,8 @@ zypper --terse --non-interactive modifyrepo --no-refresh --keep-packages --all
 #* don't need "set" with new method
 #* set $BUILD_PKGS
 #* because of machine
-[ "$BUILD_PKGS" != " " ] && zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution $BUILD_PKGS
+[ "$BUILD_PKGS" == " " ] || zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution $BUILD_PKGS
 #* try new way that explicitly works for an empty set of packages
-#* [ $# -eq 0 ] || zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
-
 
 rm -rf /out
 mkdir /out
@@ -59,14 +57,11 @@ tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
 # FIXME: for now we're apk-enabling executable repos, but strictly
 # speaking this maybe not needed (or at least optional)
-#*  PKGS="$PKGS apk-tools"
 
 #* set $PKGS
 #* PKGS always at least a singe space character
-[ "$PKGS" != " " ] && zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends $PKGS
+[ "$PKGS" == " " ] || zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends --force-resolution --force $PKGS
 #* new more explicit way to help with empty PKGS or BUILD_PKGS
-#* [ $# -eq 0 ] || zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
 
-echo "Results is $? <<<======="
 # FIXME: see above
 # cp /etc/apk/repositories.upstream /out/etc/apk/repositories
