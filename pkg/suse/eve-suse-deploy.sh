@@ -20,11 +20,6 @@
 
 SUSE_VERSION=${1:-15-SP4}
 
-bail() {
-   echo "$@"
-   exit 1
-}
-
 case "$(uname -m)" in
    x86_64) BUILD_PKGS="$BUILD_PKGS $BUILD_PKGS_amd64"
            PKGS="$PKGS $PKGS_amd64"
@@ -44,29 +39,19 @@ esac
 
 zypper --terse --non-interactive modifyrepo --no-refresh --keep-packages --all
 
-#* use -n like `pkg/mkconf/make-config`
-#* don't need "set" with new method
-#* set $BUILD_PKGS
-#* because of machine
-[ "$BUILD_PKGS" != " " ] && zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution $BUILD_PKGS
-#* try new way that explicitly works for an empty set of packages
-#* [ $# -eq 0 ] || zypper --terse --ignore-unknown --non-interactive install --no-confirm --no-recommends --force-resolution "$@"
-
+[ "$BUILD_PKGS" == " " ] || zypper --verbose --ignore-unknown \
+				--non-interactive install --no-confirm \
+				--no-recommends --force-resolution $BUILD_PKGS
 
 rm -rf /out
 mkdir /out
 tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
-# FIXME: for now we're apk-enabling executable repos, but strictly
-# speaking this maybe not needed (or at least optional)
-#*  PKGS="$PKGS apk-tools"
+[ "$PKGS" == " " ] || zypper --verbose --ignore-unknown --installroot /out \
+			--no-refresh --non-interactive install --no-confirm \
+			--no-recommends --force-resolution $PKGS
 
-#* set $PKGS
-#* PKGS always at least a singe space character
-[ "$PKGS" != " " ] && zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends $PKGS
-#* new more explicit way to help with empty PKGS or BUILD_PKGS
-#* [ $# -eq 0 ] || zypper --terse --ignore-unknown --installroot /out --no-refresh --non-interactive install --no-confirm --no-recommends "$@"
-
+# Utilizes the default location for the package cache
+#  sometimes, zypper returns an error code even when
+#  the message indicates that evrything installed ...
 echo "Results is $? <<<======="
-# FIXME: see above
-# cp /etc/apk/repositories.upstream /out/etc/apk/repositories

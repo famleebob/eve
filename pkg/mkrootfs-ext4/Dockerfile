@@ -1,8 +1,11 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f AS build
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 AS build
 
 ENV BUILD_PKGS tar bsdtar
-ENV PKGS libarchive13 mtools \
-         squashfs bsdtar
+#* Alpine sfdisk package just provides the utility from util-linux
+#*  which we install, and not found in another package
+ENV PKGS dosfstools libarchive-devel binutils mtools coreutils gptfdisk \
+	xfsprogs e2fsprogs util-linux coreutils multipath-tools squashfs \
+	systemd-sysvinit
 RUN eve-suse-deploy.sh
 
 COPY . /out/

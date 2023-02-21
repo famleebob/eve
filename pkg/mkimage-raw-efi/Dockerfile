@@ -5,12 +5,12 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f AS build
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 AS build
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 ENV BUILD_PKGS grep patch libblkid-devel libkmod-devel libcryptsetup-devel \
 		util-linux libbsd-devel gcc binutils elfutils which
-ENV PKGS mtools libarchive13 gptfdisk squashfs dmidecode
+ENV PKGS mtools libarchive13 gptfdisk squashfs dmidecode dosfstools coreutils
 ENV MKINITFS_SHA 224826dcee28425a81bae099ade87fad797a5674
 
 RUN eve-suse-deploy.sh

@@ -11,50 +11,32 @@ ENV releasever_minor=4
 ENV suse_product=SLE_BCI
 ENV SUSE_VERSION=${releasever_major}-SP${releasever_minor}
 ENV TARGET_ARCH=amd64
-# this is only needed once, when this package
-# is rebased on the new version of Alpine and
-# you have to have FROM alpine:x.y.z above:
-# RUN apk update && apk upgrade -a
-# RUN zypper refresh && zypper update
-RUN zypper --terse -n in -y tar gzip make python gawk pkg-config
 
-#*  Will need to add `-r local` at some point to limit
-#*  the search to local repos, need to know how to create
-#*  a zypper alias ...
+RUN zypper --terse -n in -y tar gzip make python gawk pkg-config
 
 # Copy Dockerfile so we can include it in the hash
 COPY Dockerfile /etc/
 COPY mirrors /tmp/mirrors/
 COPY build-cache.sh /bin/
 
-# install abuild for signing (which requires gcc as well)
-#* RUN apk add --no-cache abuild gcc sudo
-#*  replace abuild with rmt-server for package repos
-#*  remove gcc for now, needed for abuild to sign packages
-#* RUN zypper install o
-#*  -- tried to use rmt-server the SuSE written in ruby, needs my.sql
-
-# install a new key into /etc/apk/keys
-#* RUN abuild-keygen -a -i -n
-#*  may not need keygen locally ... sort out SuSE repo needs
-
 # create all the mirrors
 WORKDIR /tmp/mirrors
 
 #   first point to the public package repositories
+# OpenSuSE which we comment out for now to keep as close as possible
+#  to the default SuSE packages.
 # RUN zypper --non-interactive addrepo -keep-packages https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo
 # RUN zypper --non-interactive --gpg-auto-import-keys refresh 2
-RUN zypper --terse --non-interactive addrepo --keep-packages https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
-RUN zypper --terse --non-interactive --gpg-auto-import-keys refresh filesystems
+# However, we pull the zfs packages from the filesystems repos; however,
+#* we (EVE) build the zfs user level utilities...
+#  may pollute the meta-data with higher version number pacakages such
+#  as e2fs packages -- may need to pull the zfs packages without full
+#  setting it up as a repo ...
+#RUN zypper --terse --non-interactive addrepo --keep-packages https://download.opensuse.org/repositories/filesystems/${releasever_major}.${releasever_minor}/filesystems.repo
+#RUN zypper --terse --non-interactive --gpg-auto-import-keys refresh filesystems
 RUN zypper --terse --non-interactive modifyrepo --keep-packages --all
 
 RUN zypper --terse -n in -y tar gcc gzip make python gawk pkg-config patch
-
-#RUN curl -O http://createrepo.baseurl.org/download/createrepo-0.10.4.tar.gz
-#RUN tar xC /tmp -zf createrepo-0.10.4.tar.gz
-#RUN cd /tmp/createrepo-0.10.4 && make install
-#RUN ls -l /usr/bin/createrepo
-#RUN /usr/bin/createrepo --help
 
 #   Where was that mirror again???
 ARG THE_CACHE=https://download.opensuse.org/repositories/zypp:/SLE-${SUSE_VERSION}-Branch/openSUSE_Leap_${releasever_major}.${releasever_minor}/zypp:SLE-${SUSE_VERSION}-Branch.repo

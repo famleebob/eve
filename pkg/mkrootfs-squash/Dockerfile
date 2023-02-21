@@ -1,12 +1,12 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f AS build
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 AS build
 
-#* some of the packages are provided as part of the SuSE busybox
-ENV PKGS libarchive13 mtools gptfdisk \
-    squashfs bsdtar
+#* Alpine sfdisk package just provides the utility from util-linux
+#*  which we install, and not found in another package
+ENV PKGS dosfstools libarchive-devel binutils mtools coreutils gptfdisk \
+	xfsprogs e2fsprogs util-linux coreutils multipath-tools squashfs \
+	systemd-sysvinit
 ENV BUILD_PKGS tar bsdtar
 RUN eve-suse-deploy.sh
-RUN zypper --ignore-unknown --non-interactive install --no-confirm --no-recommends --force xfsprogs
-
 
 COPY . /out/
 

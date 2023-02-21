@@ -1,5 +1,5 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as tools
-ENV PKGS qemu-img tar uboot-tools coreutils dosfstools bash
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as tools
+ENV PKGS qemu-tools tar uboot-tools coreutils dosfstools bash
 #* SuSE may not have bash
 SHELL ["/bin/sh", "-c"]
 RUN eve-suse-deploy.sh

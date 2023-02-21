@@ -1,8 +1,8 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:730e183bc9491979108760fa5874d2d1d42c42ff as fscrypt
+FROM lfedge/eve-fscrypt:e3a1627cdc9da9b4d7548cf5e3a700785ee1f67c as fscrypt
 
-FROM lfedge/eve-dom0-ztools:3bcc5a517c79edf4a280cd39603960c668590d6c as zfs
+FROM lfedge/eve-dom0-ztools:0673fa7bcd87c199a4b195a3121b197ee89c1501 as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -13,17 +13,28 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as build
 
 ARG DEV=n
 
-ENV BUILD_PKGS git gcc glibc-devel make pam pam-devel m4 findutils go1.19 util-linux make patch \
-    gettext-tools libuuid-devel libtirpc-devel libblkid-devel libopenssl-devel zlib tar libtasn1-devel
-# SuSE iprout2 busybox version installed
-ENV PKGS libtasn1 pciutils libyajl2 xz bash iptables libxtables12 dhcp-client \
-    coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd ethtool util-linux openssl-1_1 xorriso \
-    qemu-tools jq keyutils ca-certificates hdparm \
-    gettext-runtime libtirpc3 libblkid1 zlib hostname
+ENV BUILD_PKGS git gcc glibc-devel make pam pam-devel m4 findutils go1.19 \
+		util-linux make patch gettext-tools libuuid-devel \
+		libtirpc-devel libblkid-devel libopenssl-devel zlib tar \
+		libtasn1-devel iproute2
+
+ENV PKGS bash coreutils util-linux xz zlib tar curl gettext-runtime netcfg \
+		ethtool bind-utils iputils iproute2 hostname \
+		systemd-sysvinit dhcp dhcp-client \
+		libtasn1 pciutils libyajl2 xz bash iptables libxtables12 \
+		coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd \
+		ethtool util-linux openssl-1_1 xorriso qemu-tools jq \
+		keyutils ca-certificates hdparm gettext-runtime libtirpc3 \
+		libblkid1 zlib hostname
+
+#* dhcp (SuSE dhcp code) pulls in systemd
+#*  I really tried
+#* tk strated pulling in X11 ... needs to be looked through (from isofs commands)
+
 RUN eve-suse-deploy.sh
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
@@ -88,13 +99,13 @@ COPY patches/* /sys-patches/
 # we need zfs files on running system
 COPY --from=zfs /out /out
 
-FROM lfedge/eve-dnsmasq:6129ffa7fd47a804bc979a27a887cfd0e06dfcbd as dnsmasq
-FROM lfedge/eve-strongswan:2b36db9a0b9c1db785154b0186433b5e2c32e12d as strongswan
-FROM lfedge/eve-gpt-tools:9ee6c4ff947631afa2efd243341f944a6a865776 as gpttools
+FROM lfedge/eve-dnsmasq:ffc1417079841c9a22c7a2fe69f0d0d952ebb98b as dnsmasq
+FROM lfedge/eve-strongswan:f6b429a48971fbf8cb0dede34ede3dbd2a49da67 as strongswan
+FROM lfedge/eve-gpt-tools:5ee4420ad1c9edd822507d456f82b0cf51ea33e9 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as collector
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as collector
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 

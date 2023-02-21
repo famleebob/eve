@@ -1,10 +1,12 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as build
 ENV BUILD_PKGS git go1.19
 ENV PKGS coreutils
 RUN eve-suse-deploy.sh
 
 COPY ./  /newlog/.
 WORKDIR /newlog
+
+RUN df .
 
 RUN GO111MODULE=on CGO_ENABLED=0 go build -ldflags "-s -w" -mod=vendor -o /out/usr/bin/newlogd ./cmd
 

@@ -1,5 +1,7 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
-ENV PKGS bash squashfs-tools util-linux e2fsprogs keyutils dosfstools coreutils sgdisk smartmontools
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as build
+
+ENV PKGS bash squashfs util-linux e2fsprogs keyutils dosfstools coreutils \
+	gptfdisk coreutils smartmontools systemd-sysvinit
 RUN eve-suse-deploy.sh
 
 FROM scratch

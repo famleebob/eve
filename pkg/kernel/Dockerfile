@@ -1,14 +1,15 @@
 # This file must be kept as much in sync with pkg/new-kernel/Dockerfile as posisble
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f AS kernel-build-base
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 AS kernel-build-base
 
 #* mpc1 -> mpfr
 ENV BUILD_PKGS \
-    automake bash bc binutils-devel bison gcc libelf-devel libopenssl-1_1-devel \
-    diffutils flex git gmp-devel gpg2 kmod elfutils \
+    automake bash bc binutils-devel bison gcc libelf-devel \
+    libopenssl-1_1-devel diffutils flex git gmp-devel gpg2 kmod elfutils \
     glibc-devel libunwind-devel mpfr-devel ncurses-devel findutils \
-    openssl-1_1-devel patch rsync sed squashfs tar xz xz-devel zlib-devel openssl-1_1 \
-    libattr-devel autoconf file coreutils libtirpc-devel libtool util-linux unzip
-ENV PKGS busybox-unzip
+    openssl-1_1-devel patch rsync sed squashfs tar xz xz-devel zlib-devel \
+    openssl-1_1 libattr-devel autoconf file coreutils libtirpc-devel \
+    libtool util-linux unzip 
+ENV PKGS unzip
 RUN eve-suse-deploy.sh
 
 # set versions for arm64

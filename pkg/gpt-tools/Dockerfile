@@ -1,5 +1,7 @@
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
-ENV BUILD_PKGS gcc make file patch glibc-devel glibc-devel-static util-linux libopenssl-1_1-devel gcc-c++ tar libuuid-devel-static libyaml-devel liblzma5 lzma-devel
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as build
+ENV BUILD_PKGS gcc make file patch glibc-devel glibc-devel-static \
+		util-linux libopenssl-1_1-devel gcc-c++ tar \
+		libuuid-devel-static libyaml-devel liblzma5 lzma-devel
 RUN eve-suse-deploy.sh
 
 ENV POPT_VERSION 1.16

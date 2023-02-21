@@ -1,12 +1,13 @@
 # This file must be kept as much in sync with pkg/kernel/Dockerfile as possible
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as kernel-build-base
+FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as kernel-build-base
 
 ENV BUILD_PKGS \
     automake bash bc binutils-devel bison build-base gcc libelf-devel \
-    diffutils flex git gmp-devel gnupg installkernel kmod elfutils-devel    \
-    linux-headers libunwind-devel mpc1-devel mpfr-devel ncurses-devel findutils \
-    openssl-devel patch rsync sed squashfs tar xz xz-devel zlib-devel openssl \
-    attr-devel autoconf file coreutils libtirpc-devel libtool util-linux-devel
+    diffutils flex git gmp-devel gnupg installkernel kmod elfutils-devel \
+    linux-headers libunwind-devel mpc1-devel mpfr-devel ncurses-devel \
+    findutils openssl-devel patch rsync sed squashfs tar xz xz-devel \
+    zlib-devel openssl attr-devel autoconf file coreutils libtirpc-devel \
+    libtool util-linux-devel
 ENV PKGS busybox
 RUN eve-suse-deploy.sh
 
