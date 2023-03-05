@@ -130,7 +130,7 @@ dir2vfat() {
   (rm -rf /tmp/data
    mkdir -p /tmp/data
    #* why??? works fine in a SuSE container ...
-   touch /tmp/data/MARKER "$IMG"
+   touch /tmp/data/MARKER
    mkfs.vfat "$FORCE_FAT32" -v -n "$LABEL" -C "$IMG" "$2"
    mcopy -i $IMG -s $1/* ::/ ) >&2
   echo $IMG

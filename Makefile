@@ -576,9 +576,10 @@ $(ROOTFS_TAR): images/rootfs-$(HV).yml | $(INSTALLER)
 $(ROOTFS_IMG): $(ROOTFS_TAR) | $(INSTALLER)
 	$(QUIET): $@: Begin
 	./tools/makerootfs.sh imagefromtar -t $(ROOTFS_TAR) -i $@ -f $(ROOTFS_FORMAT) -a $(ZARCH)
+	#* update to more space required on SuSE based device
 	@echo "size of $@ is $$(wc -c < "$@")B"
-	@[ $$(wc -c < "$@") -gt $$(( 250 * 1024 * 1024 )) ] && \
-	        echo "ERROR: size of $@ is greater than 250MB (bigger than allocated partition)" && exit 1 || :
+	@[ $$(wc -c < "$@") -gt $$(( 300 * 1024 * 1024 )) ] && \
+	        echo "ERROR: size of $@ is greater than 300MB (bigger than allocated partition)" && exit 1 || :
 	$(QUIET): $@: Succeeded
 
 $(SBOM): $(ROOTFS_TAR) | $(INSTALLER)

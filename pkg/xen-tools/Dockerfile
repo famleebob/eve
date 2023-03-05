@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:e1da2adba30ebe22f21b919ee4f1bac0455afda0 as uefi-build
+FROM lfedge/eve-uefi:4697ecbfafd958c1d6d0c739d77c161aa2691874 as uefi-build
 
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as runx-build
+FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS make gcc patch libblkid-devel libkmod-devel libcryptsetup-devel \
-		libbsd-devel binutils elfutils which
+		libbsd-devel binutils elfutils which liburing2
 RUN eve-suse-deploy.sh
 
 #* SuSE Linux EVE -- need to build mkinitfs,
@@ -35,7 +35,7 @@ RUN gcc -s -o /hacf /tmp/hacf.c
 
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:c30aba4558a5f755e2875f8cdf48c4e46d31a29f as build
+FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e as build
 ## removed texinfo, pulls in multiple GiBytes of stuff
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \

@@ -56,7 +56,10 @@ do_tar() {
   tar rf ${alt_tarfile} var/lock run/lock etc/ssl/certs var/lib/ca-certificates/pem
   cd -
   mv ${alt_tarfile} ${tarfile}
-  rm -rf ${tmp_workdir}
+  echo ""
+  echo " NEED sudo to clean rootfs work space"
+  echo ""
+  sudo rm -rf ${tmp_workdir}
   #* END ATTEMPTED fix up code
 
 }

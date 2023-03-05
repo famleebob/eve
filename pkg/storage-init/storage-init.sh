@@ -3,6 +3,12 @@
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+my_findfs() {
+    KEY=`echo $1 | sed -e 's/=.*$//'`
+    VAL=`echo $1 | sed -e 's/.*=//'`
+    blkid | grep "${KEY}=\"${VAL}\"" | sed -e 's/:.*$//'
+}
+
 zfs_set_parameter() {
     parameter="$1"
     value="$2"
@@ -78,7 +84,8 @@ SMART_DETAILS_PREVIOUS_FILE=$PERSISTDIR/SMART_details_previous.json
 ln -s "$CONFIGDIR" "/var/$CONFIGDIR"
 ln -s "$PERSISTDIR" "/var/$PERSISTDIR"
 
-if CONFIG=$(findfs PARTLABEL=CONFIG) && [ -n "$CONFIG" ]; then
+#* findfs doesn't seem to work
+if CONFIG=$(my_findfs PARTLABEL=CONFIG) && [ -n "$CONFIG" ]; then
     if ! fsck.vfat -y "$CONFIG"; then
         echo "$(date -Ins -u) fsck.vfat $CONFIG failed"
     fi
@@ -109,6 +116,7 @@ fi
 if grep -q 'eve_install_zfs_with_raid_level' /proc/cmdline; then
    P3_FS_TYPE_DEFAULT=zfs
 fi
+echo "P3 fstype is $P3_FS_TYPE_DEFAULT" >&2
 
 # First lets see if we're running with the disk that hasn't been properly
 # initialized. This could happen when we run in a virtualized cloud
@@ -123,9 +131,10 @@ fi
 # manipulate partition table. The logic here is simple: if we're missing
 # both IMGB and P3 the following code is probably the *least* risky thing
 # we can do.
-P3=$(findfs PARTLABEL=P3)
-IMGA=$(findfs PARTLABEL=IMGA)
-IMGB=$(findfs PARTLABEL=IMGB)
+P3=$(my_findfs PARTLABEL=P3)
+#* findfs not working, script function
+IMGA=$(my_findfs PARTLABEL=IMGA)
+IMGB=$(my_findfs PARTLABEL=IMGB)
 if [ -n "$IMGA" ] && [ -z "$P3" ] && [ -z "$IMGB" ]; then
    DEV=$(echo /sys/block/*/"${IMGA#/dev/}")
    DEV="/dev/$(echo "$DEV" | cut -f4 -d/)"
@@ -183,7 +192,8 @@ if [ -n "$IMGA" ] && [ -z "$P3" ] && [ -z "$IMGB" ]; then
    partx -a --nr "$IMGB_ID:$P3_ID" "$DEV"
 
    # attempt to zero the first and last 5Mb of the P3 (to get rid of any residual prior data)
-   if P3=$(findfs PARTLABEL=P3) && [ -n "$P3" ]; then
+   #* findfs not working
+   if P3=$(my_findfs PARTLABEL=P3) && [ -n "$P3" ]; then
       dd if=/dev/zero of="$P3" bs=512 count=10240 2>/dev/null
       dd if=/dev/zero of="$P3" bs=512 seek=$(( $(blockdev --getsz "$P3") - 10240 )) count=10240 2>/dev/null
    fi
@@ -191,7 +201,7 @@ fi
 
 # We support P3 partition either formatted as ext3/4 or as part of ZFS pool
 # Priorities are: ext3, ext4, zfs
-if P3=$(findfs PARTLABEL=P3) && [ -n "$P3" ]; then
+if P3=$(my_findfs PARTLABEL=P3) && [ -n "$P3" ]; then
     P3_FS_TYPE=$(blkid "$P3"| tr ' ' '\012' | awk -F= '/^TYPE/{print $2;}' | sed 's/"//g')
     if [ "$P3_FS_TYPE" = zfs_member ]; then
        # zfs_member is part of zfs type

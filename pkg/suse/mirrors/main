@@ -572,3 +572,6 @@ rpm-config-SUSE
 libprotobuf20
 libprotoc20
 libmetalink3
+libparted0
+parted
+libexpat1

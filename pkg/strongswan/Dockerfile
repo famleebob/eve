@@ -2,7 +2,7 @@
 # StrongSwan VPN + SuSE Linux
 #
 
-FROM lfedge/eve-suse:8c48adb6dc81928dfc1016e2ee44c4b18cacbeb2 as build
+FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e as build
 
 ENV BUILD_PKGS make patch gawk gcc glibc-devel tar iptables iproute2 \
 		openssl libopenssl-devel tar bzip binutils
