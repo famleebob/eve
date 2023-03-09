@@ -14,5 +14,8 @@ for i in $(cd /sys/class/net || return ; echo eth*) ; do
   ethtool -K "$i" sg off
 done
 
+#* hack to allow go programs that linked to libzfs.4.so to run
+export LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib:/usr/lib"
+
 echo 'Starting device-steps'
 /opt/zededa/bin/device-steps.sh

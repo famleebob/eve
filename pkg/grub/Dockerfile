@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e as grub-build-base
+FROM lfedge/eve-suse:4b46a3406cf79786e2e0aba3cdc60ed16aa20de2 as grub-build-base
 
 ENV BUILD_PKGS automake \
                make \

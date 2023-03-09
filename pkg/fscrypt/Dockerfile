@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e as build
+FROM lfedge/eve-suse:4b46a3406cf79786e2e0aba3cdc60ed16aa20de2 as build
 
 ENV BUILD_PKGS git gcc glibc-devel pam-devel m4 go1.19 make patch \
 		findutils util-linux wget

@@ -116,7 +116,6 @@ fi
 if grep -q 'eve_install_zfs_with_raid_level' /proc/cmdline; then
    P3_FS_TYPE_DEFAULT=zfs
 fi
-echo "P3 fstype is $P3_FS_TYPE_DEFAULT" >&2
 
 # First lets see if we're running with the disk that hasn't been properly
 # initialized. This could happen when we run in a virtualized cloud

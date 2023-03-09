@@ -575,3 +575,6 @@ libmetalink3
 libparted0
 parted
 libexpat1
+wicked
+wicked-service
+sysconfig-netconfig

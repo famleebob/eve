@@ -5,7 +5,7 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e AS build
+FROM lfedge/eve-suse:4b46a3406cf79786e2e0aba3cdc60ed16aa20de2 AS build
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 ENV BUILD_PKGS grep patch libblkid-devel libkmod-devel libcryptsetup-devel \

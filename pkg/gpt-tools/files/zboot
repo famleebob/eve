@@ -14,11 +14,14 @@ makewords() {
 
 rdev () {
     uuid=$(makewords /proc/cmdline | grep PARTUUID | awk -F = '{print $3}')
-    dev=$(lsblk -l -o name,PARTUUID | awk -v uuid="$uuid" '$2==uuid {print $1}')
+    #* SuSE dev=$(lsblk -l -o name,PARTUUID | awk -v uuid="$uuid" '$2==uuid {print $1}')
+    dev=$(blkid | grep ${uuid} | sed -e 's/:.*$//')
     echo $dev
 }
 
-rootdev=$(echo "/dev/"$(rdev))
+#* SuSE works different
+#  rootdev=$(echo "/dev/"$(rdev))
+rootdev=$(echo $(rdev | sed -e 's/ .*$//'))
 rootdsk=$(echo "/dev/"$(lsblk -no pkname ${rootdev}))
 
 usage() {

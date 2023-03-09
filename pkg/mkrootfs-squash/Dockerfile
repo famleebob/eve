@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:1935168cce9da9d6664645f7dab27d23a7ab258e AS build
+FROM lfedge/eve-suse:4b46a3406cf79786e2e0aba3cdc60ed16aa20de2 AS build
 
 #* Alpine sfdisk package just provides the utility from util-linux
 #*  which we install, and not found in another package
