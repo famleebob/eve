@@ -578,8 +578,8 @@ $(ROOTFS_IMG): $(ROOTFS_TAR) | $(INSTALLER)
 	./tools/makerootfs.sh imagefromtar -t $(ROOTFS_TAR) -i $@ -f $(ROOTFS_FORMAT) -a $(ZARCH)
 	#* update to more space required on SuSE based device
 	@echo "size of $@ is $$(wc -c < "$@")B"
-	@[ $$(wc -c < "$@") -gt $$(( 300 * 1024 * 1024 )) ] && \
-	        echo "ERROR: size of $@ is greater than 300MB (bigger than allocated partition)" && exit 1 || :
+	@[ $$(wc -c < "$@") -gt $$(( 450 * 1024 * 1024 )) ] && \
+	        echo "ERROR: size of $@ is greater than 450 (bigger than allocated partition)" && exit 1 || :
 	$(QUIET): $@: Succeeded
 
 $(SBOM): $(ROOTFS_TAR) | $(INSTALLER)
@@ -600,11 +600,11 @@ $(SBOM): $(ROOTFS_TAR) | $(INSTALLER)
 	$(QUIET): $@: Succeeded
 
 $(LIVE).raw: $(BOOT_PART) $(EFI_PART) $(ROOTFS_IMG) $(CONFIG_IMG) $(PERSIST_IMG) | $(INSTALLER)
-	./tools/makeflash.sh -C 350 $| $@ $(PART_SPEC)
+	./tools/makeflash.sh -C 400 $| $@ $(PART_SPEC)
 	$(QUIET): $@: Succeeded
 
 $(INSTALLER).raw: $(BOOT_PART) $(EFI_PART) $(ROOTFS_IMG) $(INITRD_IMG) $(INSTALLER_IMG) $(CONFIG_IMG) $(PERSIST_IMG) | $(INSTALLER)
-	./tools/makeflash.sh -C 350 $| $@ "conf_win installer inventory_win"
+	./tools/makeflash.sh -C 400 $| $@ "conf_win installer inventory_win"
 	$(QUIET): $@: Succeeded
 
 $(INSTALLER).iso: $(EFI_PART) $(ROOTFS_IMG) $(INITRD_IMG) $(INSTALLER_IMG) $(CONFIG_IMG) $(PERSIST_IMG) | $(INSTALLER)

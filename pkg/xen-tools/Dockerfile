@@ -5,7 +5,7 @@ FROM lfedge/eve-uefi:4697ecbfafd958c1d6d0c739d77c161aa2691874 as uefi-build
 FROM lfedge/eve-suse:4b46a3406cf79786e2e0aba3cdc60ed16aa20de2 as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS make gcc patch libblkid-devel libkmod-devel libcryptsetup-devel \
-		libbsd-devel binutils elfutils which liburing2
+		libbsd-devel binutils elfutils
 RUN eve-suse-deploy.sh
 
 #* SuSE Linux EVE -- need to build mkinitfs,
