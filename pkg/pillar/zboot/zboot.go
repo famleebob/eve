@@ -135,7 +135,9 @@ func GetCurrentPartition() string {
 		logrus.Fatalf("zboot curpart: err %v\n", err)
 	}
 
-	partName := string(ret)
+	// MAJOR HACK, force IMGA as root
+	_ = ret
+	partName := "IMGA"
 	partName = strings.TrimSpace(partName)
 	validatePartitionName(partName)
 	currentPartition = partName
