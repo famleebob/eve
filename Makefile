@@ -298,12 +298,24 @@ endif
 # We are currently filtering out a few packages from bulk builds
 # since they are not getting published in Docker HUB
 #* may need to change for SL-EVE
-PKGS_$(ZARCH)=$(shell ls -d pkg/* | grep -Ev "eve|test-microsvcs|alpine")
+#* PKGS_$(ZARCH)=$(shell ls -d pkg/* | grep -Ev "eve|test-microsvcs|alpine")
+PKGS_$(ZARCH)=pkg/measure-config pkg/debug pkg/dnsmasq pkg/dom0-ztools \
+              pkg/edgeview pkg/fscrypt pkg/gpt-tools pkg/storage-init \
+              pkg/strongswan pkg/pillar pkg/kernel pkg/new-kernel pkg/fw \
+              pkg/grub pkg/ipxe pkg/kdump pkg/kexec pkg/kvm-tools pkg/newlog \
+              pkg/rngd pkg/uefi pkg/wlan pkg/xen
+#* SuSE builds for only amd64, some can't build for arm64, need to
+#*  limit the build
+LINUXKIT_BUILD_PLATFORMS_LIST=linux/amd64
+SPECIAL_PKGS=pkg/mkconf pkg/mkimage-iso-efi pkg/mkimage-raw-efi \
+             pkg/mkrootfs-ext4 pkg/mkrootfs-squash 
+
 PKGS_riscv64=pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
              pkg/mkimage-raw-efi pkg/uefi pkg/u-boot pkg/grub pkg/new-kernel \
 	     pkg/debug pkg/dom0-ztools pkg/gpt-tools pkg/storage-init pkg/mkrootfs-squash
 # alpine-base and alpine must be the first packages to build
-PKGS=pkg/alpine $(PKGS_$(ZARCH))
+#* PKGS=pkg/alpine $(PKGS_$(ZARCH))
+PKGS=pkg/suse $(PKGS_$(ZARCH))
 # eve-alpine-base is bootstrap image for eve-alpine
 # to update please see https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
 # if you want to bootstrap eve-alpine again, uncomment the line below
@@ -637,6 +649,13 @@ pkg/xen-tools: pkg/uefi eve-xen-tools
 pkg/%: eve-% FORCE
 	$(QUIET): $@: Succeeded
 
+#* simplify life for all -- we hope
+suse_config:
+	make ZARCH=amd64 LINUXKIT_BUILD_PLATFORMS_LIST=linux/amd64 \
+             $(SPECIAL_PKGS)
+	make ZARCH=amd64 LINUXKIT_BUILD_PLATFORMS_LIST=linux/amd64 \
+             cache-export-docker-load-all
+
 $(RUNME) $(BUILD_YML):
 	cp pkg/eve/$(@F) $@
 
@@ -814,7 +833,7 @@ eve-%: pkg/%/Dockerfile build-tools $(RESCAN_DEPS)
 	$(QUIET): "$@: Begin: LINUXKIT_PKG_TARGET=$(LINUXKIT_PKG_TARGET)"
 	$(eval LINUXKIT_DOCKER_LOAD := $(if $(filter $(PKGS_DOCKER_LOAD),$*),--docker,))
 	$(eval LINUXKIT_BUILD_PLATFORMS_LIST := $(call uniq,linux/$(ZARCH) $(if $(filter $(PKGS_HOSTARCH),$*),linux/$(HOSTARCH),)))
-	$(eval LINUXKIT_BUILD_PLATFORMS := --platforms $(subst $(space),$(comma),$(strip $(LINUXKIT_BUILD_PLATFORMS_LIST))))
+	#$(eval LINUXKIT_BUILD_PLATFORMS := --platforms $(subst $(space),$(comma),$(strip $(LINUXKIT_BUILD_PLATFORMS_LIST))))
 	$(eval LINUXKIT_FLAGS := $(if $(filter manifest,$(LINUXKIT_PKG_TARGET)),,$(FORCE_BUILD) $(LINUXKIT_DOCKER_LOAD) $(LINUXKIT_BUILD_PLATFORMS)))
 	$(QUIET)$(LINUXKIT) $(DASH_V) pkg $(LINUXKIT_PKG_TARGET) $(LINUXKIT_OPTS) $(LINUXKIT_FLAGS) -build-yml $(call get_pkg_build_yml,$*) pkg/$*
 	$(QUIET)if [ -n "$(PRUNE)" ]; then \
