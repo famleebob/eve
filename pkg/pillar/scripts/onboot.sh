@@ -3,6 +3,8 @@
 # Copyright (c) 2022 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
+export LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib:/usr/lib"
+
 WATCHDOG_PID=/run/watchdog/pid
 WATCHDOG_FILE=/run/watchdog/file
 CONFIGDIR=/config
