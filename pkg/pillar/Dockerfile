@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
 FROM lfedge/eve-fscrypt:3354c6b4fb417985c2214d3d6f7e780c1da8a5a2 as fscrypt
@@ -24,7 +25,6 @@ ENV BUILD_PKGS git gcc glibc-devel make pam pam-devel m4 findutils go1.19 \
 
 ENV PKGS bash coreutils util-linux xz zlib tar curl gettext-runtime netcfg \
 		ethtool bind-utils iputils iproute2 hostname \
-		systemd-sysvinit dhcp dhcp-client \
 		libtasn1 pciutils libyajl2 xz bash iptables libxtables12 \
 		coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd \
 		ethtool util-linux openssl-1_1 xorriso qemu-tools jq \
@@ -36,6 +36,25 @@ ENV PKGS bash coreutils util-linux xz zlib tar curl gettext-runtime netcfg \
 #* tk strated pulling in X11 ... needs to be looked through (from isofs commands)
 
 RUN eve-suse-deploy.sh
+
+#* SuSE provides `dhclient`, Alpine `dhcpcd` `pillar` makes extensive
+#*  use of it.  `dhclient` will soon be deprecated.
+#* For now, build it ourselves rather than attempt to use OpenSuSE
+#*  which would bring an unknown set of version conflicts
+ADD --keep-git-dir https://github.com/NetworkConfiguration/dhcpcd.git#dhcpcd-9.4.1 /dhcpcd
+WORKDIR /dhcpcd
+RUN git checkout -b master
+RUN git checkout dhcpcd-9.4.1
+RUN ./configure --prefix=/usr               \
+            --sysconfdir=/etc               \
+            --libexecdir=/usr/lib/dhcpcd    \
+            --dbdir=/var/lib/dhcpcd         \
+            --runstatedir=/run              \
+            --disable-privsep
+RUN make
+RUN make DESTDIR=/out install
+WORKDIR /
+#* end SuSE addition
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
 
@@ -89,12 +108,11 @@ COPY patches/* /sys-patches/
 
 # hadolint ignore=SC1097
 #* SuSE has no dhcpcd package, trying to patch configuration
-#*  files, as such will fail need to get dhcpcd and its config
-#*  files installed -- thought I had it ... sigh!
-#* RUN set -ex && for patch in /sys-patches/*.patch; do \
-#*        echo "Applying $patch"; \
-#*        patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
-#*    done
+#*  files, from our local build here
+RUN set -ex && for patch in /sys-patches/*.patch; do \
+       echo "Applying $patch"; \
+       patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
+   done
 
 # we need zfs files on running system
 COPY --from=zfs /out /out
