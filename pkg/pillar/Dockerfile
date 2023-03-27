@@ -27,7 +27,7 @@ ENV PKGS bash coreutils util-linux xz zlib tar curl gettext-runtime netcfg \
 		ethtool bind-utils iputils iproute2 hostname \
 		libtasn1 pciutils libyajl2 xz bash iptables libxtables12 \
 		coreutils dmidecode libbz2-1 libuuid1 ipset curl radvd \
-		ethtool util-linux openssl-1_1 xorriso qemu-tools jq \
+		ethtool util-linux-systemd openssl-1_1 xorriso qemu-tools jq \
 		keyutils ca-certificates hdparm gettext-runtime libtirpc3 \
 		libblkid1 zlib hostname
 
@@ -45,7 +45,7 @@ ADD --keep-git-dir https://github.com/NetworkConfiguration/dhcpcd.git#dhcpcd-9.4
 WORKDIR /dhcpcd
 RUN git checkout -b master
 RUN git checkout dhcpcd-9.4.1
-RUN ./configure --prefix=/usr               \
+RUN ./configure --enable-ipv6               \
             --sysconfdir=/etc               \
             --libexecdir=/usr/lib/dhcpcd    \
             --dbdir=/var/lib/dhcpcd         \
