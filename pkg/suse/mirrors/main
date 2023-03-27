@@ -578,3 +578,5 @@ libexpat1
 wicked
 wicked-service
 sysconfig-netconfig
+dash
+rpm

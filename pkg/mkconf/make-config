@@ -23,5 +23,5 @@ touch "/conf/origin.$(date +'%Y-%m-%d').$ROOTFS_VERSION"
 echo "mtools_skip_check=1" >> /etc/mtools.conf
 
 dd if=/dev/zero of="$CONFIG_FILE" bs=1024 count="$CONFIG_SIZE_KB"
-mkfs.vfat -n EVE -v "$CONFIG_FILE" "$CONFIG_SIZE_KB"
+LC_ALL=C mkfs.vfat -n EVE -v "$CONFIG_FILE" "$CONFIG_SIZE_KB"
 mcopy -i "$CONFIG_FILE" -s /conf/* ::/
