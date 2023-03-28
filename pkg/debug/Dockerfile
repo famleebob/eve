@@ -1,18 +1,22 @@
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # for debug container we need to build our own copy of musl
 # with -fno-omit-frame-pointer to make sure that perf(1)
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-suse:0e399fa0bfb2afbbe433313c3cd19b0e988ed80c as build
-#* ENV BUILD_PKGS abuild curl tar make linux-headers patch gcc-c++ git gcc ncurses-devel autoconf
-ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc ncurses-devel autoconf gzip
+FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+
+ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc \
+		ncurses-devel autoconf gzip cmake glibc-devel-static
+
 # Feel free to add additional packages here, but be aware that
 # EVE's rootfs image can be no larger than 300Mb (and don't
 # forget to check on all supported architectures: e.g. arm64
 # binaries are typically larger and amd64 ones).
 # RUN apk add --no-cache gdb valgrind
-#* ENV PKGS openssl-1_1 openssh-clients openssh-server util-linux ca-certificates pciutils usbutils vim tcpdump gperf strace iproute2-minimal
-ENV PKGS openssl openssh-clients tcpdump gperf strace lshw
+
+ENV PKGS openssl openssh-clients tcpdump gperf strace lshw openssh-server
+
 #*  remove `tini` as not found in SuSE stuff
 #*  use iproute2 as iproute2-minimal not available in SuSE
 #*  there is an iproute2 that is part of busybox ...
@@ -21,38 +25,14 @@ RUN eve-suse-deploy.sh
 
 ENV LSHW_VERSION 02.19.2
 # setting up building account
-# RUN useradd -G abuild -D builder || :
-#* disable for now
-#RUN su builder -c 'abuild-keygen -a -n'
+#* args don't match up with SuSE
+#*  -D is don't assign a password ...
+#* RUN useradd -G abuild -D builder || :
 
-#* COPY --chown=builder:abuild abuild/ /
-#* ENV MUSL_VERSION v1.2.3
-#* ENV DISTFILES_MIRROR /tmp/mirror
-#* ADD --chown=builder:abuild https://git.musl-libc.org/cgit/musl/snapshot/${MUSL_VERSION}.tar.gz ${DISTFILES_MIRROR}/musl-${MUSL_VERSION}.tar.gz
-#* RUN su builder -c 'cd /musl && abuild checksum && abuild -r'
-
-# now install it locally so we can pick it up later on below
-# hadolint ignore=DL3019,DL3018
-#* RUN apk add -p /out --allow-untrusted /home/builder/packages/*/musl-1.2*.apk
-
+#* SuSE is glibc, has no musl
 # hadolint ignore=DL4006
-# ADD https://www.ezix.org/software/files/lshw-B.${LSHW_VERSION}.tar.gz lshw.tar.gz
-# RUN tar -xzvf lshw.tar.gz
 
-# COPY lshw/ lshw-B.${LSHW_VERSION}/
-
-# WORKDIR /lshw-B.${LSHW_VERSION}
-
-# order is important
-# RUN patch -p1 < fix-musl-sc_long_bit.patch
-# RUN patch -p1 < wrapper-for-basename.patch
-# RUN patch -p1 < 15565229509455527de9ce7cbb9530e2b31d043b.patch
-# RUN patch -p1 < e2b1c730b493d647bbab4854713571458e82a81e7.patch
-
-# RUN for patch in fix-musl-sc_long_bit.patch wrapper-for-basename.patch 15565229509455527de9ce7cbb9530e2b31d043b.patch \
-#  e2b1c730b493d647bbab4854713571458e82a81e7.patch; do patch -p1 < $patch; done && \
-# RUN make -C src RPM_OPT_FLAGS=-DNONLS static &&\
-#  cp src/lshw-static /out/usr/bin/lshw && strip /out/usr/bin/lshw
+#* Use SuSE version of lshw provided
 
 # building hexedit
 WORKDIR /tmp/hexedit/hexedit-1.5
@@ -68,9 +48,17 @@ WORKDIR /out
 COPY ssh.sh spec.sh scripts/ ./usr/bin/
 RUN mkdir -p ./etc/ssh ./root/.ssh && chmod 0700 ./root/.ssh
 RUN cp /etc/passwd /etc/group ./etc/
-# Won't work until openssh-servers can be installed in the
-#  target root environment
-# RUN sed -i -e 's#AllowTcpForwarding.*$#AllowTcpForwarding yes#' ./etc/ssh/sshd_config
+
+RUN sed -i -e 's#AllowTcpForwarding.*$#AllowTcpForwarding yes#' ./etc/ssh/sshd_config
+
+#* tini not provided by SuSE... is found in OpenSuSE
+#*  hard to mix those two without version issues, build it
+ENV TINI_SHA=5aa249684e3b4628df47ad9dc5f93d80301614ae
+ENV TINI_VER=v0.19.0
+ADD --keep-git-dir https://github.com/krallin/tini.git#${TINI_VER} /tini
+WORKDIR /tini
+RUN cmake .
+RUN make DESTDIR=/out install
 
 FROM scratch
 ENTRYPOINT []
@@ -78,5 +66,7 @@ WORKDIR /
 
 COPY --from=build /out/ /
 
-# CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
+#* fails on start with tini set, something in
+#*  one  of the installation scripts?
+#* CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
 CMD ["/usr/bin/ssh.sh"]

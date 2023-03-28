@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:0e399fa0bfb2afbbe433313c3cd19b0e988ed80c as build
+FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
 # Building qemu in strip-down mirovm only mode:
 # qemu 5.1 dependencies: python3 glib-dev pixman-dev
 # qemu 5.2+ dependencies: py3-setuptools bash perl

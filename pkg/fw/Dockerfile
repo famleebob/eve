@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:0e399fa0bfb2afbbe433313c3cd19b0e988ed80c as build
+FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
 
 ENV BUILD_PKGS tar make
 RUN eve-suse-deploy.sh
@@ -46,7 +46,7 @@ ADD ${RPI_BT_FIRMWARE_URL}/${RPI_BT_FIRMWARE_VERSION}/broadcom/BCM4345C0.hcd .
 ADD ${RPI_BT_FIRMWARE_URL}/${RPI_BT_FIRMWARE_VERSION}/broadcom/BCM43430B0.hcd .
 ADD ${RPI_BT_FIRMWARE_URL}/${RPI_BT_FIRMWARE_VERSION}/broadcom/BCM4345C5.hcd .
 
-FROM lfedge/eve-suse:0e399fa0bfb2afbbe433313c3cd19b0e988ed80c as compactor
+FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as compactor
 ENTRYPOINT []
 WORKDIR /
 COPY --from=build /lib/firmware/regulatory* /lib/firmware/

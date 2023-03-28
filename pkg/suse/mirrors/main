@@ -580,3 +580,4 @@ wicked-service
 sysconfig-netconfig
 dash
 rpm
+openssh-server

@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:0e399fa0bfb2afbbe433313c3cd19b0e988ed80c as build-base
+FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build-base
 ENV BUILD_PKGS bash binutils-devel bc bison flex libopenssl-1_1-devel python3 swig gcc
 ENV BUILD_PKGS_amd64 python3-devel python3-pip
 RUN eve-suse-deploy.sh
