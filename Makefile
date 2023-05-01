@@ -413,7 +413,7 @@ $(EFI_PART): PKG=grub
 $(BOOT_PART): PKG=u-boot
 $(INITRD_IMG): PKG=mkimage-raw-efi
 $(INSTALLER_IMG): PKG=mkimage-raw-efi
-$(KERNEL_IMG): PKG=kernel
+$(KERNEL_IMG): PKG=new-kernel
 $(IPXE_IMG): PKG=ipxe
 $(BIOS_IMG): PKG=uefi
 $(UBOOT_IMG): PKG=u-boot
@@ -608,7 +608,7 @@ $(SBOM): $(ROOTFS_TAR) | $(INSTALLER)
 	#*  var/lock needs to be in run/lock as a soft link
 	tar xf $< -C $(TMP_ROOTDIR) --exclude "dev/*"
 	docker run -v $(TMP_ROOTDIR):/rootdir:ro $(SYFT_IMAGE) -o spdx-json /rootdir > $@
-	rm -rf $(TMP_ROOTDIR)
+	sudo rm -rf $(TMP_ROOTDIR)
 	$(QUIET): $@: Succeeded
 
 $(LIVE).raw: $(BOOT_PART) $(EFI_PART) $(ROOTFS_IMG) $(CONFIG_IMG) $(PERSIST_IMG) | $(INSTALLER)
