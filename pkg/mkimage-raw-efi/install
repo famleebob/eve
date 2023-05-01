@@ -89,7 +89,10 @@ root_dev() {
 find_part() {
    local LABEL="$1"
    local BLOCK_DEV="$2"
-   PARTS=$(lsblk -anl -o "NAME,PARTLABEL" /dev/"$BLOCK_DEV" 2>/dev/null | sed -ne "/$LABEL"'$/s#'"[[:space:]]*$LABEL##p")
+   #*  lsblk doesn't appear to provide partition labels at this
+   #*   point in the boot process
+   #*PARTS=$(lsblk -anl -o "NAME,PARTLABEL" /dev/"$BLOCK_DEV" 2>/dev/null | sed -ne "/$LABEL"'$/s#'"[[:space:]]*$LABEL##p")
+   PARTS="$(blkid /dev/${BLOCK_DEV}* | grep "PARTLABEL=\"$LABEL\"" | sed -e "s/^\/dev\/\(.*\):[[:space:]].*$/\1/")"
    for p in $PARTS ; do
       [ -f "/sys/block/$BLOCK_DEV/$p/dev" ] && echo "$p" && exit 0
    done
@@ -443,6 +446,8 @@ mkdir -p "$REPORT"
 dmidecode > "$REPORT/hardwaremodel.txt"
 
 # try to generate model json file
+#* has problem with lspci in debug container, from busybox
+#*  so it doesn't support `-D`
 ctr_run /opt/debug spec.sh > "$REPORT/controller-model.json"
 ctr_run /opt/debug spec.sh -v > "$REPORT/controller-model-verbose.json"
 
@@ -451,6 +456,7 @@ ctr_run /opt/debug spec.sh -v > "$REPORT/controller-model-verbose.json"
 
 # The creation of the 4 key pairs on the TPM below can take significant
 # time. Make sure a hardware watchdog will not fire.
+#* watchdog device is not found
 wdctl
 watchdog -F /dev/watchdog &
 
@@ -552,3 +558,5 @@ else
 
   /run/poweroff -f
 fi
+echo "PULL USB stick out!!"
+sleep 600
