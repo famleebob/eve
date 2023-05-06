@@ -109,13 +109,13 @@ pci_to_ztype() {
         elif [ "${ifname:0:4}" = "wwan" ]; then
             ztype=6
         fi
-    elif lspci -D -s "${pci}" | grep -q USB; then
+    elif /sbin/lspci -D -s "${pci}" | grep -q USB; then
         ztype=2
-    elif lspci -D -s "${pci}" | grep -q Audio; then
+    elif /sbin/lspci -D -s "${pci}" | grep -q Audio; then
         ztype=4
-    elif lspci -D -s "${pci}" | grep -q VGA; then
+    elif /sbin/lspci -D -s "${pci}" | grep -q VGA; then
         ztype=7
-    elif lspci -D -s "${pci}" | grep -q "Non-Volatile memory"; then
+    elif /sbin/lspci -D -s "${pci}" | grep -q "Non-Volatile memory"; then
         ztype=8
     else
         ztype=255
@@ -126,11 +126,11 @@ pci_to_ztype() {
 # add_pci_info($pci) adds information in the verbose case
 add_pci_info() {
     local pci="$1"
-    info=$(lspci -Dnmm -s "$pci")
+    info=$(/sbin/lspci -Dnmm -s "$pci")
     class=$(echo "$info" | cut -f2 -d\ )
     vendor=$(echo "$info" | cut -f3 -d\ )
     device=$(echo "$info" | cut -f4 -d\ )
-    desc=$(lspci -D -s "$pci" | sed "s/$pci //")
+    desc=$(/sbin/lspci -D -s "$pci" | sed "s/$pci //")
     iommu_group=$(pci_iommu_group "$pci")
     cat <<__EOT__
       ,
@@ -176,7 +176,7 @@ __EOT__
 
 #enumerate GPUs
 ID=""
-for VGA in $(lspci -D  | grep VGA | cut -f1 -d\ ); do
+for VGA in $(/sbin/lspci -D  | grep VGA | cut -f1 -d\ ); do
     grp=$(get_assignmentgroup "VGA${ID}" "$VGA")
     cat <<__EOT__
     {
@@ -200,7 +200,7 @@ done
 
 #enumerate USB
 ID=""
-for USB in $(lspci -D  | grep USB | cut -f1 -d\ ); do
+for USB in $(/sbin/lspci -D  | grep USB | cut -f1 -d\ ); do
     grp=$(get_assignmentgroup "USB${ID}" "$USB")
     cat <<__EOT__
     {
@@ -235,7 +235,7 @@ fi
 
 #enumerate NVME
 ID=""
-for NVME in $(lspci -D  | grep "Non-Volatile memory" | cut -f1 -d\ ); do
+for NVME in $(/sbin/lspci -D  | grep "Non-Volatile memory" | cut -f1 -d\ ); do
     grp=$(get_assignmentgroup "NVME${ID}" "$NVME")
     cat <<__EOT__
     {
@@ -347,7 +347,7 @@ __EOT__
 done
 #enumerate Audio
 ID=""
-for audio in $(lspci -D  | grep Audio | cut -f1 -d\ ); do
+for audio in $(/sbin/lspci -D  | grep Audio | cut -f1 -d\ ); do
     grp=$(get_assignmentgroup "Audio${ID}" "$audio")
     cat <<__EOT__
     ${COMMA}
@@ -371,7 +371,7 @@ done
 if [ -n "$verbose" ]; then
     # look for type 255
     ID=0
-    for pci in $(lspci -Dn  | cut -f1 -d\ ); do
+    for pci in $(/sbin/lspci -Dn  | cut -f1 -d\ ); do
         ztype=$(pci_to_ztype "$pci")
         [ "$ztype" == 255 ] || continue
         cat <<__EOT__

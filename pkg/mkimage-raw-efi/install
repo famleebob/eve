@@ -558,5 +558,5 @@ else
 
   /run/poweroff -f
 fi
-echo "PULL USB stick out!!"
-sleep 600
+echo "Manual poweroff and PULL USB stick out!!"
+sleep 900

@@ -15,9 +15,9 @@ ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc \
 # binaries are typically larger and amd64 ones).
 # RUN apk add --no-cache gdb valgrind
 
-ENV PKGS openssl openssh-clients tcpdump gperf strace lshw openssh-server
+ENV PKGS openssl openssh-clients tcpdump gperf strace lshw openssh-server \
+	bash util-linux pciutils
 
-#*  remove `tini` as not found in SuSE stuff
 #*  use iproute2 as iproute2-minimal not available in SuSE
 #*  there is an iproute2 that is part of busybox ...
 
@@ -61,12 +61,13 @@ RUN cmake .
 RUN make DESTDIR=/out install
 
 FROM scratch
-ENTRYPOINT []
+
 WORKDIR /
 
 COPY --from=build /out/ /
 
-#* fails on start with tini set, something in
-#*  one  of the installation scripts?
-#* CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
-CMD ["/usr/bin/ssh.sh"]
+RUN groupadd sshd
+RUN useradd sshd
+
+#* from documentation, looks like tini needs to be a "sub-reaper"
+ENTRYPOINT ["/usr/local/bin/tini", "-s", "-vv", "/usr/bin/ssh.sh"]
