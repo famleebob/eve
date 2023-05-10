@@ -62,6 +62,10 @@ services:
     image: PILLAR_TAG
     cgroupsPath: /eve/services/pillar
     oomScoreAdj: -999
+  - name: xen-tools
+    image: XENTOOLS_TAG
+    cgroupsPath: /eve/services/xen-tools
+    oomScoreAdj: -999
 files:
   - path: /etc/eve-release
     contents: 'EVE_VERSION'

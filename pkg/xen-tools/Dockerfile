@@ -2,7 +2,7 @@
 
 FROM lfedge/eve-uefi:d29780144e4dbf0f667b807956699b4412941626 as uefi-build
 
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as runx-build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS make gcc patch libblkid-devel libkmod-devel libcryptsetup-devel \
 		libbsd-devel binutils elfutils
@@ -35,18 +35,20 @@ RUN gcc -s -o /hacf /tmp/hacf.c
 
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 ## removed texinfo, pulls in multiple GiBytes of stuff
 ENV BUILD_PKGS \
     gcc make glibc-devel dev86 xz-devel perl bash python3-devel \
     gettext-runtime acpica util-linux-devel ncurses-devel libglib-2_0-0 \
     libpixman-1-0-devel libaio-devel libyajl-devel glib2-devel \
     git patch tar libcap-ng-devel bzip2 gettext-tools \
-    libattr-devel flex bison cmake libusb-1_0-devel libuuid-devel
+    libattr-devel flex bison cmake libusb-1_0-devel libuuid-devel \
+    liburing2-devel
 ENV BUILD_PKGS_arm64 dtc-dev
 
 ## remove sudo part of SuSE busybox utils
-ENV PKGS bash libaio1 libbz2-1 libglib-2_0-0 libpixman-1-0 libyajl2 keyutils libusb-1_0-0 xz-devel libuuid1
+ENV PKGS bash libaio1 libbz2-1 libglib-2_0-0 libpixman-1-0 libyajl2 \
+    keyutils libusb-1_0-0 xz-devel libuuid1
 ENV PKGS_arm64 libfdt
 
 RUN eve-suse-deploy.sh
@@ -57,21 +59,24 @@ WORKDIR /
 #* COPY alpine.patch /
 #* RUN patch -p1 < alpine.patch
 
-ENV LIBURING_VERSION 0.7
-ENV LIBURING_SOURCE=https://git.kernel.dk/cgit/liburing/snapshot/liburing-${LIBURING_VERSION}.tar.bz2
+#* ENV LIBURING_VERSION 0.7
+#* ENV LIBURING_SOURCE=https://git.kernel.dk/cgit/liburing/snapshot/liburing-${LIBURING_VERSION}.tar.bz2
 
+#* used SuSE version of liburing (2.x) as there was a problem.
+#*  can fix by adding correct path for pkg-config to find such as
+#*  `ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig` see pkg/wwan/Dockerfile
 # Download and verify liburing
 # hadolint ignore=DL3020
-ADD ${LIBURING_SOURCE} /liburing.tar.bz2
-RUN tar --absolute-names -xj < /liburing.tar.bz2 && mv "/liburing-${LIBURING_VERSION}" /liburing
+#* ADD ${LIBURING_SOURCE} /liburing.tar.bz2
+#* RUN tar --absolute-names -xj < /liburing.tar.bz2 && mv "/liburing-${LIBURING_VERSION}" /liburing
 
-WORKDIR /liburing
-RUN ./configure --prefix=/usr
-RUN make src && make install DESTDIR=/out && make install
+#* WORKDIR /liburing
+#* RUN ./configure --prefix=/usr
+#* RUN make src && make install DESTDIR=/out
 
-# Filter out unneeded stuff
-RUN rm -rf /out/usr/man
-RUN strip /out/usr/lib/* || :
+#* # Filter out unneeded stuff
+#* RUN rm -rf /out/usr/man
+#* RUN strip /out/usr/lib/* || :
 
 # When changing this version, also update SEABIOS_UPSTREAM_REVISION to whatever is in `Config.mk` in the xen source
 ENV XEN_VERSION 4.15.0
@@ -109,6 +114,7 @@ COPY gmp.patch /xen/stubdom
 WORKDIR /xen
 RUN ./configure --prefix=/usr --disable-xen --disable-qemu-traditional --disable-docs --enable-9pfs \
                 --with-system-ovmf=/usr/lib/xen/boot/ovmf.bin --disable-stubdom
+
 RUN make -j "$(getconf _NPROCESSORS_ONLN)" && make dist
 RUN dist/install.sh /out
 
