@@ -1,12 +1,11 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 ENV BUILD_PKGS automake autoconf gettext-runtime gettext-tools git \
-               pkgconfig \
-               libtool glibc-devel gcc make glib2-devel \
-               autoconf-archive patch cmake gtk-doc
-#* could find no sub for ppp
+               pkgconfig libtool glibc-devel gcc make glib2-devel \
+               autoconf-archive patch cmake gtk-doc autogen libslirp-devel
+#* use slirp for SuSE, replacing (I hope) ppp
 #* removed muscl* stuff
-ENV PKGS jq glib2-tools
+ENV PKGS jq glib2-tools libslirp0
 RUN eve-suse-deploy.sh
 
 ENV LIBUBOX_COMMIT=7da66430de3fc235bfc6ebb0b85fb90ea246138d
@@ -15,6 +14,8 @@ ENV INOTIFY_TOOLS_COMMIT=3.20.11.0
 ENV PICOCOM_COMMIT=1acf1ddabaf3576b4023c4f6f09c5a3e4b086fb8
 ENV LIBQMI_COMMIT=1.26.2
 ENV LIBMBIM_COMMIT=1.24.2
+
+ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig
 
 ADD --keep-git-dir=true https://github.com/json-c/json-c.git#${JSONC_COMMIT} /json-c
 WORKDIR /json-c

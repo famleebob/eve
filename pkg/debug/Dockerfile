@@ -16,7 +16,7 @@ ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc \
 # RUN apk add --no-cache gdb valgrind
 
 ENV PKGS openssl openssh-clients tcpdump gperf strace lshw openssh-server \
-	bash util-linux pciutils
+	bash util-linux pciutils util-linux-systemd jq
 
 #*  use iproute2 as iproute2-minimal not available in SuSE
 #*  there is an iproute2 that is part of busybox ...
@@ -48,6 +48,7 @@ WORKDIR /out
 COPY ssh.sh spec.sh scripts/ ./usr/bin/
 RUN mkdir -p ./etc/ssh ./root/.ssh && chmod 0700 ./root/.ssh
 RUN cp /etc/passwd /etc/group ./etc/
+
 
 RUN sed -i -e 's#AllowTcpForwarding.*$#AllowTcpForwarding yes#' ./etc/ssh/sshd_config
 

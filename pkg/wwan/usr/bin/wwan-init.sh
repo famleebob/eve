@@ -4,6 +4,7 @@
 # shellcheck disable=SC2034 # Constants defined here are used by sourced wwan-qmi.sh and wwan-mbim.sh
 # shellcheck disable=SC3043
 # set -x
+export LD_LIBRARY_PATH="/lib64:/usr/lib64:/lib:/usr/lib"
 
 # Currently our message bus is files in /run
 # When we replace it, we should pay attention
