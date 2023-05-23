@@ -48,7 +48,9 @@ ENV BUILD_PKGS_arm64 dtc-dev
 
 ## remove sudo part of SuSE busybox utils
 ENV PKGS bash libaio1 libbz2-1 libglib-2_0-0 libpixman-1-0 libyajl2 \
-    keyutils libusb-1_0-0 xz-devel libuuid1
+         keyutils libusb-1_0-0 xz-devel libuuid1 liburing2 libmount1 \
+         libz1 libgio-2_0-0 libgobject-2_0-0 libgmodule-2_0-0 \
+         libgthread-2_0-0
 ENV PKGS_arm64 libfdt
 
 RUN eve-suse-deploy.sh
@@ -139,6 +141,9 @@ COPY qemu-ifup xen-start /etc/xen/scripts/
 
 # We need to keep a slim profile, which means removing things we don't need
 RUN rm -rf /usr/lib/libxen*.a /usr/lib/libxl*.a /usr/lib/debug /usr/lib/python*
+
+#* need to link xen libraries built into /lib64
+RUN cd /usr/lib64 && for xx in $(ls ../lib/libx*) ; do ln -s ${xx} . ; done
 
 # Adjust /var/run, /var/lib and /var/lock to be shared
 RUN mv /var /var.template && ln -s /run /var && ln -s /run /var.template/run
