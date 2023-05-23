@@ -1,6 +1,6 @@
 # Build watchdogd for alpine
 
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d AS watchdog-build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c AS watchdog-build
 ENV BUILD_PKGS file libtirpc-devel glibc-devel tar util-linux which
 ENV PKGS libsmartcols1
 RUN eve-suse-deploy.sh

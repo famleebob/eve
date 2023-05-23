@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:726133e31515fb3e07d0d5707d557cb0654ab3b0 as fscrypt
+FROM lfedge/eve-fscrypt:e62f09b47f7503f54faa42541d4575b14d754472 as fscrypt
 
-FROM lfedge/eve-dom0-ztools:b88e3a503aaeb8153686b5cbd2f3dcdde9d250ba as zfs
+FROM lfedge/eve-dom0-ztools:ce7e7189f4e87a0e2a69e89cbbd94cc6456eeb2d as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -14,7 +14,7 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 
 ARG DEV=n
 
@@ -41,10 +41,8 @@ RUN eve-suse-deploy.sh
 #*  use of it.  `dhclient` will soon be deprecated.
 #* For now, build it ourselves rather than attempt to use OpenSuSE
 #*  which would bring an unknown set of version conflicts
-ADD --keep-git-dir https://github.com/NetworkConfiguration/dhcpcd.git#dhcpcd-9.4.1 /dhcpcd
+ADD --keep-git-dir https://github.com/NetworkConfiguration/dhcpcd.git#v9.4.1 /dhcpcd
 WORKDIR /dhcpcd
-RUN git checkout -b master
-RUN git checkout dhcpcd-9.4.1
 RUN ./configure --enable-ipv6               \
             --sysconfdir=/etc               \
             --libexecdir=/usr/lib/dhcpcd    \
@@ -117,13 +115,13 @@ RUN set -ex && for patch in /sys-patches/*.patch; do \
 # we need zfs files on running system
 COPY --from=zfs /out /out
 
-FROM lfedge/eve-dnsmasq:f5f7bb87a8e8e1fb82ea906e76ffef7c30d35f3c as dnsmasq
-FROM lfedge/eve-strongswan:138456bb304dc7e4db9c96ef2acfd25b6f57924f as strongswan
-FROM lfedge/eve-gpt-tools:348fdc7c5175e0e88c5e0c624fe90a37d24e4608 as gpttools
+FROM lfedge/eve-dnsmasq:7251028bc5cc2b7adf15c320e1ae7d1db40ee6a6 as dnsmasq
+FROM lfedge/eve-dnsmasq:7251028bc5cc2b7adf15c320e1ae7d1db40ee6a6 as strongswan
+FROM lfedge/eve-gpt-tools:6be408ce118ded2549c2fcb3fc158910d49e2fbe as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as collector
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as collector
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 

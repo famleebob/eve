@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 ENV BUILD_PKGS cairo-devel openjpeg2-devel libjpeg8-devel libpng16-devel gcc make glibc-devel libopenssl-devel gcc file patch gawk libcairo2 nm
 ENV PKGS libtasn1-progs p11-kit libcairo2 openjpeg2 libpng16-16 libvncserver
 RUN eve-suse-deploy.sh

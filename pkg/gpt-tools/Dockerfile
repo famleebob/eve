@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 ENV BUILD_PKGS gcc make file patch glibc-devel glibc-devel-static \
 		util-linux libopenssl-1_1-devel gcc-c++ tar \
 		libuuid-devel-static libyaml-devel liblzma5 lzma-devel

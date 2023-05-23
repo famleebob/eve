@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as tools
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as tools
 ENV PKGS qemu-tools tar uboot-tools coreutils dosfstools bash
 #* SuSE may not have bash
 SHELL ["/bin/sh", "-c"]

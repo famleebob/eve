@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:c055c434cf56a79abfdb33f37e482f7c26efab9d as build
+FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 
 ENV PKGS bash squashfs util-linux e2fsprogs keyutils dosfstools coreutils \
 	gptfdisk coreutils smartmontools systemd-sysvinit parted
