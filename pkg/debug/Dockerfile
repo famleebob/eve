@@ -16,7 +16,7 @@ ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc \
 # RUN apk add --no-cache gdb valgrind
 
 ENV PKGS openssl openssh-clients tcpdump gperf strace lshw openssh-server \
-	bash util-linux pciutils util-linux-systemd jq
+	bash util-linux pciutils util-linux-systemd jq curl
 
 #*  use iproute2 as iproute2-minimal not available in SuSE
 #*  there is an iproute2 that is part of busybox ...

@@ -1,4 +1,5 @@
-#!/bin/busybox sh
+#!/usr/bin/busybox sh
+#* SuSE moved it
 
 # This script is sourced from
 # https://github.com/debian-pi/raspbian-ua-netinst/blob/master/scripts/etc/udhcpc/default.script

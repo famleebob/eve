@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # first make sure busybox gets expanded into the glory that is UNIX
-/bin/busybox --install /bin
+#* SuSE busybox does not support --install, and is at /usr/bin ...
+#* /bin/busybox --install /bin
 
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
@@ -113,8 +114,10 @@ echo "Executing /mount_disk.sh"
 # Commence launch sequence
 source /mnt/environment
 
-echo "Run acpid daemon"
-acpid -l /proc/self/fd/1
+#* for SuSE, need to add package `acpid`
+#*  and install it here
+#* echo "Run acpid daemon"
+#* acpid -l /proc/self/fd/1
 
 cmd=`cat /mnt/cmdline`
 echo "Executing $cmd"

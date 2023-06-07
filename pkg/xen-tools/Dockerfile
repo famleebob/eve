@@ -5,7 +5,8 @@ FROM lfedge/eve-uefi:d29780144e4dbf0f667b807956699b4412941626 as uefi-build
 FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as runx-build
 # ENV BUILD_PKGS mkinitfs gcc e2fsprogs
 ENV BUILD_PKGS make gcc patch libblkid-devel libkmod-devel libcryptsetup-devel \
-		libbsd-devel binutils elfutils
+		libbsd-devel
+ENV PKGS binutils elfutils
 RUN eve-suse-deploy.sh
 
 #* SuSE Linux EVE -- need to build mkinitfs,
@@ -13,27 +14,40 @@ RUN eve-suse-deploy.sh
 WORKDIR /
 ENV MKINITFS_SHA 224826dcee28425a81bae099ade87fad797a5674
 COPY suse.patch /
+#* SuSE Linux EVE -- need to build mkinitfs,
+#*  clone the repo, patch it so it will build here, build/install
+#* also, build container is based on a full strength SuSE Base Container Image
+#*  not the busybox based root file system, but that busybox image is used
+#*  to create /out the supposed target for output ...
 ADD https://gitlab.alpinelinux.org/alpine/mkinitfs.git#${MKINITFS_SHA} /initramfs
-RUN cd /initramfs && patch -p1 < /suse.patch && make all install
+RUN cd /initramfs && patch -p1 < /suse.patch && DESTDIR=/out make all install
 
 #* mkinitfs needs lddtree to function, couldn't find
 #*  a SuSE package that has it, located this script
 #*  so, clone, and use the script.  Added `binutils`
 #*  and `elftools` to help
 ADD https://github.com/ncopa/lddtree.git /lddtree
-RUN cp /lddtree/lddtree.sh /usr/sbin/lddtree
-RUN mkdir -p /etc/apk/keys && touch /etc/apk/keys/kaka
+RUN cp /lddtree/lddtree.sh /out/usr/sbin/lddtree
+RUN chmod a+x /out/usr/sbin/lddtree
+RUN mkdir -p /out/etc/apk/keys && touch /out/etc/apk/keys/kaka
 
-RUN rm -f /sbin/poweroff /etc/mkinitfs/features.d/base.files
-COPY initrd/base.files /etc/mkinitfs/features.d/base.files
-COPY initrd/init-initrd initrd/mount_disk.sh initrd/udhcpc_script.sh /
-COPY initrd/poweroff /sbin/poweroff
+RUN rm -f /out/sbin/poweroff /out/etc/mkinitfs/features.d/base.files
+COPY initrd/base.files /out/etc/mkinitfs/features.d/base.files
+COPY initrd/init-initrd initrd/mount_disk.sh initrd/udhcpc_script.sh /out
+COPY initrd/poweroff /out/sbin/poweroff
 COPY initrd/chroot2.c initrd/hacf.c /tmp/
-COPY initrd/00000080 /etc/acpi/PWRF/
-RUN gcc -s -o /chroot2 /tmp/chroot2.c
-RUN gcc -s -o /hacf /tmp/hacf.c
+COPY initrd/00000080 /out/etc/acpi/PWRF/
+RUN gcc -s -o /out/chroot2 /tmp/chroot2.c
+RUN gcc -s -o /out/hacf /tmp/hacf.c
+COPY initrd/init-initrd /out
 
-RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
+#* checked SuSE busybox BCI, and it is in /sbin,
+#*  need to add the link so it will be added
+RUN cd /out/sbin && ln -s /usr/bin/busybox udhcpc
+
+#* use a chroot to get the SuSE busybox environment
+RUN chroot /out /sbin/mkinitfs -n -F base -i /init-initrd -o /runx-initrd
+RUN cp /out/runx-initrd /
 
 FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
 ## removed texinfo, pulls in multiple GiBytes of stuff
