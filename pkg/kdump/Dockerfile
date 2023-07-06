@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c AS build
+FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a AS build
 
 #* SuSE linux headers come from glibc-devel, libdw* for dwarf info
 ENV BUILD_PKGS patch curl make gcc perl util-linux git mtools glibc-devel xz-devel elfutils libbz2-1 patch libdw-devel

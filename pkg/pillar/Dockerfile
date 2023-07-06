@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
-FROM lfedge/eve-fscrypt:e62f09b47f7503f54faa42541d4575b14d754472 as fscrypt
+FROM lfedge/eve-fscrypt:f6243177fd3a11286d45bbca8c3806c3c71b1dc8 as fscrypt
 
-FROM lfedge/eve-dom0-ztools:ce7e7189f4e87a0e2a69e89cbbd94cc6456eeb2d as zfs
+FROM lfedge/eve-dom0-ztools:2abbc1b56232fe63f415817e311b14626ada8ccf as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -14,7 +14,7 @@ RUN while read -r x; do \
         fi \
     done < /etc/zfs-files
 
-FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as build
+FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a as build
 
 ARG DEV=n
 
@@ -115,13 +115,13 @@ RUN set -ex && for patch in /sys-patches/*.patch; do \
 # we need zfs files on running system
 COPY --from=zfs /out /out
 
-FROM lfedge/eve-dnsmasq:7251028bc5cc2b7adf15c320e1ae7d1db40ee6a6 as dnsmasq
-FROM lfedge/eve-dnsmasq:7251028bc5cc2b7adf15c320e1ae7d1db40ee6a6 as strongswan
-FROM lfedge/eve-gpt-tools:6be408ce118ded2549c2fcb3fc158910d49e2fbe as gpttools
+FROM lfedge/eve-dnsmasq:dd85a2d9789555e989589d6ac641955f2ad22caa as dnsmasq
+FROM lfedge/eve-strongswan:655fa2afcffd0f60c1ebe8bc0f7c27f5dca30f16 as strongswan
+FROM lfedge/eve-gpt-tools:72974305178300d1b0fc4922cdbaa0837dd49ac0 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
-FROM lfedge/eve-suse:5b666917dbdbbbe9ccce73eead47f860ae96473c as collector
+FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a as collector
 
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
