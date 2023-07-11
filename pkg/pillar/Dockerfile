@@ -117,7 +117,7 @@ COPY --from=zfs /out /out
 
 FROM lfedge/eve-dnsmasq:dd85a2d9789555e989589d6ac641955f2ad22caa as dnsmasq
 FROM lfedge/eve-strongswan:655fa2afcffd0f60c1ebe8bc0f7c27f5dca30f16 as strongswan
-FROM lfedge/eve-gpt-tools:72974305178300d1b0fc4922cdbaa0837dd49ac0 as gpttools
+FROM lfedge/eve-gpt-tools:cd416557de33dc6de85131eb88dbd6aa65c468b9 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.

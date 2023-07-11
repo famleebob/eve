@@ -135,7 +135,8 @@ reset() {
 
     # Warning, this does not really play nice with init
     # do not sync, don't go through init
-    /sbin/reboot -n -f
+    #* /sbin/reboot -n -f
+    echo b > /proc/sysrq-trigger #* SuSE won't reboot in chroot
 }
 
 #
@@ -144,7 +145,8 @@ reset() {
 poweroff() {
     # Warning, this does not really play nice with init
     # do not sync, don't go through init
-    /sbin/poweroff -f
+    #* /sbin/poweroff -f
+    echo o > /proc/sysrq-trigger #* SuSE won't poweroff in chroot
 }
 
 if [ $# -eq 0 ]; then

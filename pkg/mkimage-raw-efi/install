@@ -547,16 +547,17 @@ umount /run/INVENTORY 2>/dev/null
 # we need a copy of these in tmpfs so that a block device with rootfs can be yanked
 cp /sbin/poweroff /sbin/reboot /bin/sleep /run
 # we also maybe asked to reboot after install
+#* SuSE won't reboot in chroot/use sysrq
 if grep -q eve_reboot_after_install /proc/cmdline; then
   echo "NOTICE: Device will now reboot." >/dev/console
   /run/sleep 5
 
-  /run/reboot -f
+  #* /run/reboot -f 
+  echo b > /proc/sysrq-trigger #*  reboot with sysrq
 else
   echo "NOTICE: Device will now power off. Remove the USB stick and power it back on to complete the installation." >/dev/console
   /run/sleep 5
 
-  /run/poweroff -f
+  #* /run/poweroff -f
+  echo o > /proc/sysrq-trigger #*  power off sysrq
 fi
-echo "Manual poweroff and PULL USB stick out!!"
-sleep 900

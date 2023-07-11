@@ -924,3 +924,5 @@ exec /usr/bin/busybox switch_root $switch_root_opts $sysroot $chart_init "$KOPT_
 echo "initramfs emergency recovery shell launched"
 exec /usr/bin/busybox sh
 reboot
+echo s > /proc/sysrq-trigger #* SuSE won't reboot in chroot/use sysrq
+echo b > /proc/sysrq-trigger #*  reboot after we sync the filesystems
