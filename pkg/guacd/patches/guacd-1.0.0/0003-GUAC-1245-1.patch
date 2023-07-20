@@ -1,0 +1,184 @@
+From f710e00d265e3bafd52e7d7ff45e4d2fbb452e52 Mon Sep 17 00:00:00 2001
+From: Michael Jumper <mjumper@apache.org>
+Date: Wed, 6 Jan 2021 11:54:01 -0800
+Subject: [PATCH 1/2] GUACAMOLE-1254: Use libuuid rather than OSSP UUID if
+ available.
+
+The libuuid library is widely available (part of util-linux) and much
+more frequently updated. The OSSP UUID library works great, but was last
+updated in 2008 and causes some confusion for users that have libuuid.
+---
+ configure.ac     | 59 ++++++++++++++++++++++++++++++++++++------------
+ src/libguac/id.c | 43 ++++++++++++++++++++++++++---------
+ 2 files changed, 76 insertions(+), 26 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index e74865b84..18c641ce5 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -75,21 +75,50 @@ AC_CHECK_LIB([dl], [dlopen],
+                             AC_MSG_ERROR("libdl is required on systems which do not otherwise provide dlopen()"),
+                             [#include <dlfcn.h>])])
+ 
+-# OSSP UUID
+-AC_CHECK_LIB([ossp-uuid], [uuid_make], [UUID_LIBS=-lossp-uuid],
+-             AC_CHECK_LIB([uuid], [uuid_make], [UUID_LIBS=-luuid],
+-                          AC_MSG_ERROR("The OSSP UUID library is required")))
+-
+-# Check for and validate OSSP uuid.h header
+-AC_CHECK_HEADERS([ossp/uuid.h])
+-AC_CHECK_DECL([uuid_make],,
+-              AC_MSG_ERROR("No OSSP uuid.h found in include path"),
+-              [#ifdef HAVE_OSSP_UUID_H
+-               #include <ossp/uuid.h>
+-               #else
+-               #include <uuid.h>
+-               #endif
+-               ])
++#
++# libuuid
++#
++
++have_libuuid=disabled
++AC_ARG_WITH([libuuid],
++            [AS_HELP_STRING([--with-libuuid],
++                            [use libuuid to generate unique identifiers @<:@default=check@:>@])],
++            [],
++            [with_libuuid=check])
++
++if test "x$with_libuuid" != "xno"
++then
++    have_libuuid=yes
++    AC_CHECK_LIB([uuid], [uuid_generate],
++                 [UUID_LIBS=-luuid]
++                 [AC_DEFINE([HAVE_LIBUUID],, [Whether libuuid is available])],
++                 [have_libuuid=no])
++fi
++
++# OSSP UUID (if libuuid is unavilable)
++if test "x${have_libuuid}" != "xyes"
++then
++
++    AC_CHECK_LIB([ossp-uuid], [uuid_make], [UUID_LIBS=-lossp-uuid],
++                 AC_CHECK_LIB([uuid], [uuid_make], [UUID_LIBS=-luuid],
++                              AC_MSG_ERROR([
++  --------------------------------------------
++   Unable to find libuuid or the OSSP UUID library.
++   Either libuuid (from util-linux) or the OSSP UUID library is required for
++   guacamole-server to be built.
++  --------------------------------------------])))
++
++    # Check for and validate OSSP uuid.h header
++    AC_CHECK_HEADERS([ossp/uuid.h])
++    AC_CHECK_DECL([uuid_make],,
++                  AC_MSG_ERROR("No OSSP uuid.h found in include path"),
++                  [#ifdef HAVE_OSSP_UUID_H
++                   #include <ossp/uuid.h>
++                   #else
++                   #include <uuid.h>
++                   #endif
++                   ])
++fi
+ 
+ # cunit
+ AC_CHECK_LIB([cunit], [CU_run_test], [CUNIT_LIBS=-lcunit])
+diff --git a/src/libguac/id.c b/src/libguac/id.c
+index 27a714c0a..e627f89d8 100644
+--- a/src/libguac/id.c
++++ b/src/libguac/id.c
+@@ -22,7 +22,9 @@
+ #include "guacamole/error.h"
+ #include "id.h"
+ 
+-#ifdef HAVE_OSSP_UUID_H
++#if defined(HAVE_LIBUUID)
++#include <uuid/uuid.h>
++#elif defined(HAVE_OSSP_UUID_H)
+ #include <ossp/uuid.h>
+ #else
+ #include <uuid.h>
+@@ -30,54 +32,73 @@
+ 
+ #include <stdlib.h>
+ 
++/**
++ * The length of a UUID in bytes. All UUIDs are guaranteed to be 36 1-byte
++ * characters long.
++ */
++#define GUAC_UUID_LEN 36
++
+ char* guac_generate_id(char prefix) {
+ 
+     char* buffer;
+     char* identifier;
+-    size_t identifier_length;
+ 
++    /* Prepare object to receive generated UUID */
++#ifdef HAVE_LIBUUID
++    uuid_t uuid;
++#else
+     uuid_t* uuid;
+-
+-    /* Attempt to create UUID object */
+     if (uuid_create(&uuid) != UUID_RC_OK) {
+         guac_error = GUAC_STATUS_NO_MEMORY;
+         guac_error_message = "Could not allocate memory for UUID";
+         return NULL;
+     }
++#endif
+ 
+-    /* Generate random UUID */
++    /* Generate unique identifier */
++#ifdef HAVE_LIBUUID
++    uuid_generate(uuid);
++#else
+     if (uuid_make(uuid, UUID_MAKE_V4) != UUID_RC_OK) {
+         uuid_destroy(uuid);
+         guac_error = GUAC_STATUS_NO_MEMORY;
+         guac_error_message = "UUID generation failed";
+         return NULL;
+     }
++#endif
+ 
+     /* Allocate buffer for future formatted ID */
+-    buffer = malloc(UUID_LEN_STR + 2);
++    buffer = malloc(GUAC_UUID_LEN + 2);
+     if (buffer == NULL) {
++#ifndef HAVE_LIBUUID
+         uuid_destroy(uuid);
++#endif
+         guac_error = GUAC_STATUS_NO_MEMORY;
+-        guac_error_message = "Could not allocate memory for connection ID";
++        guac_error_message = "Could not allocate memory for unique ID";
+         return NULL;
+     }
+ 
+     identifier = &(buffer[1]);
+-    identifier_length = UUID_LEN_STR + 1;
+ 
+-    /* Build connection ID from UUID */
++    /* Convert UUID to string to produce unique identifier */
++#ifdef HAVE_LIBUUID
++    uuid_unparse_lower(uuid, identifier);
++#else
++    size_t identifier_length = GUAC_UUID_LEN + 1;
+     if (uuid_export(uuid, UUID_FMT_STR, &identifier, &identifier_length) != UUID_RC_OK) {
+         free(buffer);
+         uuid_destroy(uuid);
+         guac_error = GUAC_STATUS_INTERNAL_ERROR;
+-        guac_error_message = "Conversion of UUID to connection ID failed";
++        guac_error_message = "Conversion of UUID to unique ID failed";
+         return NULL;
+     }
+ 
++    /* Clean up generated UUID */
+     uuid_destroy(uuid);
++#endif
+ 
+     buffer[0] = prefix;
+-    buffer[UUID_LEN_STR + 1] = '\0';
++    buffer[GUAC_UUID_LEN + 1] = '\0';
+     return buffer;
+ 
+ }
+

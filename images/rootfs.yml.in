@@ -66,6 +66,9 @@ services:
     image: WLAN_TAG
     cgroupsPath: /eve/services/wlan
     oomScoreAdj: -999
+  - name: guacd
+    image: GUACD_TAG
+    cgroupsPath: /eve/servic
   - name: pillar
     image: PILLAR_TAG
     cgroupsPath: /eve/services/pillar
