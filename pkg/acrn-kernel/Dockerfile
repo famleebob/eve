@@ -1,10 +1,11 @@
-FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a as kernel-build
+FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d as kernel-build
 
 ENV BUILD_PKGS \
     argp-standalone automake bash bc binutils-devel bison build-base \
     diffutils flex git gmp-devel gnupg installkernel kmod openssl-devel    \
     glibc-devel ncurses-devel python3 findutils sed squashfs-tools tar  \
-    xz xz-devel zlib-devel openssl lz4 lz4-libs elfutils-libelf elfutils-devel
+    xz xz-devel zlib-devel openssl lz4 lz4-libs elfutils-libelf elfutils-devel \
+    patch gcc
 RUN eve-suse-deploy.sh
 
 

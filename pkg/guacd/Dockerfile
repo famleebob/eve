@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a as build
+FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d as build
 ENV BUILD_PKGS cairo-devel openjpeg2-devel libjpeg8-devel libpng16-devel \
                gcc make glibc-devel libopenssl-devel file patch gawk \
                libcairo2 binutils git cmake autoconf automake

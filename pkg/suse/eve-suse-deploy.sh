@@ -17,8 +17,23 @@
 # the script to indicate the the environment has to be setup with that
 # cached version. E.g.:
 #   eve-suse-deploy.sh 15-SP4
+set -e
 
 SUSE_VERSION=${1:-15-SP4}
+
+#* Zypper return values are more complex, and some
+#*  types of errors we can ignore
+#*  see https://en.opensuse.org/SDB:Zypper_manual_(plain)
+#*  the "EXIT CODES" section
+function check_zypp_error () {
+    local rval=$1
+    if [ $rval -ge 100 ] && [ $rval -ne 105 ] && [ $rval -ne 101 ]
+    then
+        echo "Zypper rval=${rval}, swizzle to 0" >&2
+        rval=0
+    fi
+    return $rval
+}
 
 case "$(uname -m)" in
    x86_64) BUILD_PKGS="$BUILD_PKGS $BUILD_PKGS_amd64"
@@ -39,19 +54,27 @@ esac
 
 zypper --terse --non-interactive modifyrepo --no-refresh --keep-packages --all
 
-[ "$BUILD_PKGS" == " " ] || zypper --verbose --ignore-unknown \
-				--non-interactive install --no-confirm \
-				--no-recommends --force-resolution $BUILD_PKGS
+if [ "$BUILD_PKGS" != " " ]
+then
+   set +e
+   zypper --verbose --ignore-unknown --non-interactive install --no-confirm \
+	  --no-recommends --force-resolution $BUILD_PKGS
+   z_rel=$?
+   set -e
+fi
+check_zypp_error $z_rel
 
 rm -rf /out
 mkdir /out
 tar -C "/mirror/$SUSE_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
-[ "$PKGS" == " " ] || zypper --verbose --ignore-unknown --installroot /out \
-			--no-refresh --non-interactive install --no-confirm \
-			--no-recommends --force-resolution $PKGS
-
-# Utilizes the default location for the package cache
-#  sometimes, zypper returns an error code even when
-#  the message indicates that evrything installed ...
-echo "Results is $? <<<======="
+if [ "$PKGS" != " " ]
+then
+    set +e
+    zypper --verbose --ignore-unknown --installroot /out \
+           --no-refresh --non-interactive install --no-confirm \
+           --no-recommends --force-resolution $PKGS
+    z_rel=$?
+    set -e
+fi
+check_zypp_error $z_rel

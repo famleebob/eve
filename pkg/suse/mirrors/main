@@ -602,3 +602,11 @@ python3-Pygments
 docbook_4
 docbook-xsl-stylesheets
 libwrap0
+vim-small
+vim-data-common
+zypper
+libhidapi-hidraw0
+libopenssl3
+libopenssl-3-devel
+libiw30
+logrotate

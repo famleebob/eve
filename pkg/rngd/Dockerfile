@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a as build
+FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d as build
 ENV BUILD_PKGS go1.19 gcc glibc-devel-static
 RUN eve-suse-deploy.sh
 

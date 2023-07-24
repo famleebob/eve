@@ -1,4 +1,4 @@
-FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a as kernel-build
+FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d as kernel-build
 
 ENV BUILD_PKGS automake bash bc binutils-devel bison \
                diffutils flex git gmp-devel gnupg installkernel kmod \

@@ -1,5 +1,5 @@
 # This file must be kept as much in sync with pkg/new-kernel/Dockerfile as posisble
-FROM lfedge/eve-suse:8f41da0470c198d5da94d2d05eefebcaa72cd75a AS kernel-build-base
+FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d AS kernel-build-base
 
 #* mpc1 -> mpfr
 ENV BUILD_PKGS \
