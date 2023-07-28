@@ -18,12 +18,10 @@ ENV BUILD_PKGS curl tar make gawk glibc-devel patch gcc-c++ git gcc \
 ENV PKGS openssl openssh-clients tcpdump gperf strace lshw openssh-server \
 	bash util-linux pciutils util-linux-systemd jq curl socat
 
-#*  use iproute2 as iproute2-minimal not available in SuSE
-#*  there is an iproute2 that is part of busybox ...
-
 RUN eve-suse-deploy.sh
 
 ENV LSHW_VERSION 02.19.2
+ENV UE_VERSION 4.2.5
 # setting up building account
 #* args don't match up with SuSE
 #*  -D is don't assign a password ...
@@ -49,8 +47,17 @@ COPY ssh.sh spec.sh scripts/ ./usr/bin/
 RUN mkdir -p ./etc/ssh ./root/.ssh && chmod 0700 ./root/.ssh
 RUN cp /etc/passwd /etc/group ./etc/
 
-
 RUN sed -i -e 's#AllowTcpForwarding.*$#AllowTcpForwarding yes#' ./etc/ssh/sshd_config
+
+#* add uemacs NOTE:DESTDIR doesn't work!
+WORKDIR /
+ADD https://github.com/rfivet/uemacs.git#${UE_VERSION} /uemacs
+WORKDIR /uemacs
+RUN sed -i -e's/lcurses/lncurses/' Makefile
+RUN make install
+RUN cp /usr/bin/ue /out/usr/bin
+RUN cp /usr/lib/emacs.hlp /usr/lib/.emacsrc /out/usr/lib
+WORKDIR /
 
 #* tini not provided by SuSE... is found in OpenSuSE
 #*  hard to mix those two without version issues, build it
