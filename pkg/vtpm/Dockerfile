@@ -9,7 +9,7 @@
 FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d as build
 ENV BUILD_PKGS glibc-devel git gcc gcc-c++ autoconf automake libtool \
 		doxygen make openssl-devel protobuf-devel gnupg \
-		curl-devel patch tar
+		curl-devel patch tar xz
 RUN eve-suse-deploy.sh
 
 WORKDIR /
@@ -55,15 +55,27 @@ RUN cp tools/.libs/tpm2_* /out/usr/bin/
 #The vTPM server
 COPY ./ /vtpm_server
 WORKDIR /vtpm_server
+#* SuSE needs pthread requested specifically
+#*  might better be a patch
+RUN sed -i -e's/lprotobuf/lprotobuf -lpthread/' Makefile
 RUN make && cp vtpm_server /out/usr/bin/
 
 # install dependencies
-WORKDIR /usr/lib
-RUN cp libstdc++.so.6 libgcc_s.so.1 libprotobuf.so.29.0.1 /out/usr/lib/
-RUN ln -s libprotobuf.so.29.0.1 /out/usr/lib/libprotobuf.so.29
+#* SuSE is different
+#* WORKDIR /usr/lib
+#* RUN cp libstdc++.so.6 libgcc_s.so.1 libprotobuf.so.29.0.1 /out/usr/lib/
+#* RUN ln -s libprotobuf.so.29.0.1 /out/usr/lib/libprotobuf.so.29
+WORKDIR /
+#* SuSE we end up with libprotobuf v20 not v29
+#*  and all the support libs are in different places
+#*  Will we get everything needed?
+RUN cp /lib64/libgcc_s.so.1 /out/lib64
+RUN cp /usr/lib64/libstdc++.so.6* /usr/lib64/libprotobuf.so* /out/usr/lib64
+
 WORKDIR /usr/local/lib
 RUN cp libtss2-tctildr.so.0 libtss2-rc.so.0 libtss2-mu.so.0 libtss2-esys.so.0 \
-       libtss2-sys.so.0.0.0 libtss2-sys.so.0 libtss2-tcti-device.so.0 /out/usr/local/lib/
+       libtss2-sys.so.0.0.0 libtss2-sys.so.0 libtss2-tcti-device.so.0 \
+          /out/usr/local/lib64/
 
 #Pull a selected set of artifacts into the final stage.
 FROM scratch
