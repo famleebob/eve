@@ -1,7 +1,7 @@
 # Build watchdogd for alpine
 
 FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d AS watchdog-build
-ENV BUILD_PKGS file libtirpc-devel glibc-devel tar util-linux which
+ENV BUILD_PKGS file libtirpc-devel glibc-devel tar util-linux patch gcc
 ENV PKGS libsmartcols1
 RUN eve-suse-deploy.sh
 
@@ -38,7 +38,8 @@ RUN \
 FROM scratch
 WORKDIR /
 COPY --from=watchdog-build /out/ /
-COPY --from=watchdog-build /bin/wdctl /bin/wdctl
+COPY --from=watchdog-build /usr/bin/wdctl /bin/wdctl
+COPY --from=watchdog-build /usr/bin/wdctl /usr/bin/wdctl
 COPY init.sh /
 COPY watchdog.conf.seed /etc/
 COPY watchdog-report.sh /sbin/

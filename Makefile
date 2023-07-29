@@ -304,7 +304,7 @@ PKGS_$(ZARCH)=pkg/measure-config pkg/debug pkg/dnsmasq pkg/dom0-ztools \
               pkg/strongswan pkg/pillar pkg/kernel pkg/new-kernel pkg/fw \
               pkg/grub pkg/ipxe pkg/kdump pkg/kexec pkg/kvm-tools pkg/newlog \
               pkg/rngd pkg/uefi pkg/wlan pkg/xen pkg/xen-tools pkg/wlan \
-              pkg/wwan pkg/guacd pkg/vtpm
+              pkg/wwan pkg/guacd pkg/vtpm pkg/watchdog
 #* SuSE builds for only amd64, some can't build for arm64, need to
 #*  limit the build
 LINUXKIT_BUILD_PLATFORMS_LIST=linux/amd64
