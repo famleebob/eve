@@ -1,0 +1,11 @@
+bash
+make
+findutils
+file
+util-linux
+procps-ng
+libpkgconf
+glib-networking
+tar
+gzip
+vim-minimal
