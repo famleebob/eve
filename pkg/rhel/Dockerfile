@@ -1,6 +1,5 @@
 # updating per https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
-#** for RHEL not SuSE or Alpine -- the cardboard tree hanging from rear view
-#**                                mirror now has a lizard attached
+#** RELEVE builder container image
 
 FROM registry.access.redhat.com/ubi9/ubi-init as base_rootfs
 FROM registry.access.redhat.com/ubi9/ubi as cache
@@ -17,13 +16,33 @@ ENV RHEL_VERSION=${releasever_major}.${releasever_minor}
 COPY Dockerfile /etc/
 COPY mirrors /tmp/mirrors/
 COPY build-cache.sh /bin/
-COPY add.files /
+COPY repo.config /
 
 # add the expected/required version of go language
 RUN mkdir /eve
+RUN mv /repo.config /eve
+RUN ls /eve
 RUN echo "${GOVER}" > /eve/gover
+RUN echo "${TARGETARCH}" > /eve/target_arch
 
 ADD https://go.dev/dl/go${GOVER}.linux-${TARGETARCH}.tar.gz /eve
+
+#** Need to enable the full repos access through RH subscription manager
+RUN dnf -y --nodocs --setopt=install_weak_deps=False --allowerasing \
+        install curl
+
+#** if blank, need to add vaild RH credentials
+ENV RHEL_RHSM_USERNAME
+ENV RHEL_RHSM_PASSWORD
+
+ENV SMDEV_CONTAINER_OFF=1
+RUN subscription-manager register \
+       --username $RHEL_RHSM_USERNAME \
+       --password $RHEL_RHSM_PASSWORD --auto-attach
+RUN subscription-manager repos \
+     --enable codeready-builder-for-rhel-9-x86_64-rpms
+RUN dnf update -y
+#** updated repo connection
 
 #** working initial assumption is that the current working environment
 #**  is the BUILDARCH, the architecture of the machine where this runs
@@ -31,7 +50,7 @@ ADD https://go.dev/dl/go${GOVER}.linux-${TARGETARCH}.tar.gz /eve
 #**  Ensure that we can load both this working environment and that of
 #**  of the target
 ENV THIS_ARCH=${BUILDARCH}
-RUN export THIS_ARCH="$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)"\
+RUN THIS_ARCH="$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)"\
         && echo "${THIS_ARCH}" > /eve/this_arch
 ADD https://go.dev/dl/go${GOVER}.linux-${THIS_ARCH}.tar.gz / 
 RUN if [ "${THIS_ARCH}" = "${TARGETARCH}" ]; then \
@@ -52,7 +71,6 @@ RUN echo "keepcache=1" >> /etc/dnf/dnf.conf
 RUN echo "install_weak_deps=False" >> /etc/dnf/dnf.conf
 RUN echo "keepcache=True" >> /etc/dnf.conf
 #** must create the cache, creates the directory structure used for the cache
-RUN dnf makecache
 
 #** repo id                 repo name
 #** ubi-9-appstream-rpms    Red Hat Universal Base Image 9 (RPMs) - AppStream
@@ -64,7 +82,7 @@ RUN dnf makecache
 #**  enumerated in mirrors/* {appstream-rpms | baseos-rpms | codeready-builder}
 #**  and any strong (that is not weak) dependencies.  Such that, the
 #**  remaining linuxkit builds of `pkg` container package installs work only
-#**  from that package cache. NOTE: package list file names MUST match the
+#**  from that package cache. NOTE: package list file names should match the
 #**  section names.
 RUN for repo in baseos-rpms appstream-rpms codeready-builder; do \
       for p in "$repo"; do \
@@ -75,25 +93,26 @@ RUN for repo in baseos-rpms appstream-rpms codeready-builder; do \
       done \
     done
 
-#** HACK alert, allows us to directly add to the above packages
-#**  entries takes the form of "<section> <package name>"
-#**  for example, "appstream-rpms  kernel-headers" one per line
-RUN while read -r REPO PACKAGE; do \
-      this_cache="$(find /var/cache/dnf -type d -print | grep ubi-9-${REPO} | grep packages | grep -v packages/package | head -1)" ; \
-      dnf download -y --nodocs --setopt=install_weak_deps=False \
-          --destdir=${this_cache} ${PACKAGE} ; \
-    done < /add.files
+RUN dnf makecache
+RUN du -hs /var/cache/dnf
+RUN cd /var/cache/dnf && \
+       tar -czf /eve/repo.cache.tgz rhel-9-* codeready-builder-* && \
+       cd -
+#** end of sesion with RHEL subscription manager for package access
+RUN subscription-manager unregister
+
+RUN cd /var/cache/dnf && tar xzf /eve/repo.cache.tgz && cd -
+RUN cp /eve/repo.config /etc/yum.repos.d/cache.repo
 
 RUN mkdir -p /mirror/${RHEL_VERSION}/rootfs
 COPY --from=base_rootfs / /mirror/${RHEL_VERSION}/rootfs
 
 FROM registry.access.redhat.com/ubi9/ubi as compactor
 
-ENV GOVER=1.20.1
-RUN export GOVER="$(cat /eve/gover)"
 COPY --from=cache /mirror /mirror/
 COPY --from=cache /var/cache/dnf /var/cache/dnf
 COPY --from=cache /etc/dnf /etc/dnf
+COPY --from=cache /etc/yum.repos.d /etc/yum.repos.d
 COPY --from=cache /var/lib/dnf /var/lib/dnf
 COPY --from=cache /eve /eve
 COPY eve-rhel-deploy.sh go-compile.sh /bin/

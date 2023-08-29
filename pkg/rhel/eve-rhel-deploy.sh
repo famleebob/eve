@@ -38,14 +38,8 @@ case "$(uname -m)" in
            ;;
 esac
 
-#** keep track of dnf configuration for now
-#**  HACK remove or debug only at some point
-cat /etc/dnf/dnf.conf
-
-#** my debug list of cache contents, side effect of section
-#**  as part of the path name
-#find /var/cache/dnf -name \*.rpm
-#dnf -v makecache
+#** pull packages from the cache, and install them
+#**  special care to install selected version of go language
 DOGO=
 if [ "$BUILD_PKGS" != " " ]
 then
@@ -55,7 +49,7 @@ then
       #** should check for go${GOVER} only as allow, with error out
       #**  if the go version requested is not the expected
       #**  I can be as opinionated as linuxkit
-      if [ "${xpkg}" = "go" ] || [ "${xpkg}" = "go[0-9]\.[0-9][0-9]*\.[0-9]*" ]
+      if [ "${xpkg}" = "go" ] || [ "${xpkg}" = "golang*" ]
       then
          DOGO="true"
       else
@@ -65,31 +59,34 @@ then
    #** should work with --cacheonly (-C) set, need to fully populate
    #**  the package cache and try again, just appears to ignore it
    #**  will also try higher debug and error reporting levels
-   dnf -v -C --nodocs --assumeyes --setopt=install_weak_deps=False \
-         --allowerasing install ${LCL_PKGS}
+   dnf -C --nodocs --assumeyes --setopt=install_weak_deps=False \
+         --cacheonly --allowerasing install ${LCL_PKGS}
 fi
 
 gover="$(cat /eve/gover)"
 if [ "${DOGO}" = "true" ]; then
    this_arch="$(cat /eve/this_arch)"
    tar -C /usr/local -xzf /eve/go${gover}.linux-${this_arch}.tar.gz
-   ls -lr /usr/local/go /usr/local/go/bin
    cd /usr/bin && ln -s /usr/local/go/bin/go .
    cd /usr/bin && ln -s /usr/local/go/bin/gofmt .
    cd /
 fi
 
+#** expect minimal rootfs in /mirror
 rm -rf /out
 mkdir /out
 tar -C "/mirror/$RHEL_VERSION/rootfs" -cf- . | tar -C /out -xf-
 
-if [ "$PKGS" != " " ]
-then
+#** and install target/runtime packages in this minimal root image
+#** NOTE: needed to create symlink to get a valid package cache
+#**  `--installroot` is more like a `chroot` not just an alternate
+#**  location to install
+if [ "$PKGS" != " " ]; then
    LCL_PKGS=
    for xpkg in $PKGS
    do
       #** see comment above, craete a shell function for this??
-      if [ "${xpkg}" = "go" ] || [ "${xpkg}" = "go[0-9]\.[0-9][0-9]*\.[0-9]*" ]
+      if [ "${xpkg}" = "go" ] || [ "${xpkg}" = "golang*" ]
       then
          targetarch="$(cat /eve/targetarch)"
          tar -C /out/usr/local -xzf /eve/go${gover}.linux-${targetarch}.tar.gz
@@ -100,7 +97,21 @@ then
          LCL_PKGS="${LCL_PKGS} ${xpkg}"
       fi
    done
-   dnf -C --nodocs --installroot /out --cacheonly \
+
+   cd /out/var/cache && mv dnf dnf.save && ln -s /var/cache/dnf dnf
+   if [ -e /out/etc/yum.repos.d ]; then
+      cd /out/etc && mv yum.repos.d save.repos.d && \
+                        ln -s /etc/yum.repos.d yum.repos.d
+   fi
+   cd /
+   find /out/var/cache/dnf -name core\*.rpm
+   dnf --nodocs --assumeyes --installroot /out -C \
        --setopt=install_weak_deps=False \
            --allowerasing install $PKGS
+   cd /out/var/cache && rm dnf && mv dnf.save dnf
+   rm -f /out/etc/yum.repos.d
+   if [ -e /out/etc/save.repos.d ]; then
+      mv /out/etc/save.repos.d /out/etc/yum.repos.d
+   fi 
+   cd /
 fi

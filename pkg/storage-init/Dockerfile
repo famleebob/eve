@@ -1,6 +1,7 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
-ENV PKGS alpine-baselayout musl-utils bash glib squashfs-tools util-linux e2fsprogs e2fsprogs-extra keyutils dosfstools coreutils sgdisk smartmontools
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:62fdc6097dac8f1936bd28f85ef29a2cb7582c03-dirty-c07b0bc as build
+ENV PKGS bash glib2 squashfs-tools util-linux e2fsprogs keyutils dosfstools \
+         coreutils gdisk smartmontools pam-devel
+RUN eve-rhel-deploy.sh
 
 FROM scratch
 COPY --from=build /out/ /

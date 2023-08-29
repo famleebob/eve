@@ -2,10 +2,13 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb AS build
+FROM lfedge/eve-rhel:62fdc6097dac8f1936bd28f85ef29a2cb7582c03-dirty-c07b0bc AS build
 
-ENV BUILD_PKGS git gcc make libc-dev linux-pam-dev m4 findutils go util-linux make patch
-RUN eve-alpine-deploy.sh
+#** Alpine pam package is linux-pam-dev, SuSE pam-devel, RHEL pam-devel
+ENV BUILD_PKGS git gcc make glibc-devel pam-devel m4 findutils util-linux \
+               make patch go file
+RUN cp /eve/repo.config /etc/yum.repos.d/cache.repo
+RUN eve-rhel-deploy.sh
 
 ENV FSCRYPT_COMMIT=b41569d397d3e66099cde07d8eef36b2f42dd0ec
 WORKDIR /go/src/github.com/google/fscrypt

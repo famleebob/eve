@@ -9,14 +9,20 @@ bail() {
 [ "$#" -gt 2 ] || bail "Usage: $0 <os version> <path to the cache> [packages...]"
 
 DNF_CACHE_LOC=/var/cache/dnf
-#** file name must match the package section name
+#** file name should match the package section name
+#**  otherwise might get misplaced in the cache
 RHEL_PKG_SECT=$1
-DNF_CACHE="$(find "${DNF_CACHE_LOC}" -type d -print | \
-          grep "${rhel_product}-${releasever_major}-${RHEL_PKG_SECT}" | \
+DNF_save="$(find "${DNF_CACHE_LOC}" -type d -print | \
+          grep "rhel-${releasever_major}" | \
+          grep "${RHEL_PKG_SECT}" | \
           grep -v repodata )"
 #** the packages directory does not exist until the first download
 #**  even `dnf makecache` doesn't create the packages directory
-DNF_CACHE="${DNF_CACHE}"/packages
+if [ ! $(echo "$DNF_save" | grep packages) ] ; then
+    DNF_CACHE="${DNF_save}"/packages
+else
+    DNF_CACHE="${DNF_save}"
+fi
 shift 2
 
 # ensure package cache exists
@@ -29,6 +35,7 @@ fi
 for p in "$@"; do
   [ -f "$(echo "${DNF_CACHE}/${p}"-[0-9]*)" ] || PKGS="$PKGS $p"
 done
+set +x
 
 # fetch the missing packages
 # shellcheck disable=SC2086
@@ -37,8 +44,8 @@ if [ -n "$PKGS" ]; then
    touch in_output
    #  Get packages and dependencies.  Following should
    #   download the set of packages needed
-   dnf --assumeyes --nodocs --downloadonly \
-            --setopt=install_weak_deps=False install $PKGS 2>&1 | \
+   dnf --assumeyes --nodocs --downloadonly --setopt=install_weak_deps=False  \
+             --allowerasing install $PKGS 2>&1 | \
        tee in_output
 
    #** download packages already installed, so they are in the cache
@@ -47,15 +54,14 @@ if [ -n "$PKGS" ]; then
    if [ -n "${fix_list}" ]; then
       for xpkg in ${fix_list}
       do
-         echo "cache=\"${DNF_CACHE}\" xpkg = \"${xpkg}\""
-         # --resolve should pull in dependencies
+         #** --resolve should pull in dependencies
          dnf download --resolve --setopt=install_weak_deps=False \
              --assumeyes --destdir="${DNF_CACHE}" ${xpkg}
       done
    fi
    rm -f in_output
 
-   # attempt to keep metadata especially the checksum up to date
+   #** attempt to keep metadata especially the checksum up to date
    dnf makecache
 
    PKG_CNT="$(find "${DNF_CACHE}" -name \*.rpm | wc -l)"
