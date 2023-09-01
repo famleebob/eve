@@ -39,3 +39,8 @@ dosfstools
 smartmontools
 coreutils
 lshw
+gettext-devel
+xz
+acpica-tools
+glibc-gconv-extra
+mtools

@@ -65,10 +65,14 @@ fi
 
 gover="$(cat /eve/gover)"
 if [ "${DOGO}" = "true" ]; then
-   this_arch="$(cat /eve/this_arch)"
-   tar -C /usr/local -xzf /eve/go${gover}.linux-${this_arch}.tar.gz
-   cd /usr/bin && ln -s /usr/local/go/bin/go .
-   cd /usr/bin && ln -s /usr/local/go/bin/gofmt .
+   this_arch="$(< /eve/this_arch)"
+   tar -C /usr/local -xzf /eve/go${gover}.linux-"$(< /eve/this_arch)".tar.gz
+   tar -C /usr/local -xzf /eve/golibs.tgz
+   cd /usr/bin
+   ln -s /usr/local/go/bin/go .
+   ln -s /usr/local/go/bin/gofmt .
+   ln -s /usr/local/go/bin/golint .
+   ln -s /usr/local/go/bin/ineffasign .
    cd /
 fi
 
@@ -112,6 +116,6 @@ if [ "$PKGS" != " " ]; then
    rm -f /out/etc/yum.repos.d
    if [ -e /out/etc/save.repos.d ]; then
       mv /out/etc/save.repos.d /out/etc/yum.repos.d
-   fi 
+   fi
    cd /
 fi

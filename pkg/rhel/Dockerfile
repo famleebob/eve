@@ -16,14 +16,18 @@ ENV RHEL_VERSION=${releasever_major}.${releasever_minor}
 COPY Dockerfile /etc/
 COPY mirrors /tmp/mirrors/
 COPY build-cache.sh /bin/
-COPY repo.config /
+RUN mkdir /eve
+COPY repo.config /eve
+RUN if grep -q x86_64 /eve/repo.config ; then \
+        sed -i s/x86_64/$(uname -m)/g /eve/repo.config ; \
+    fi
+RUN cat /eve/repo.config
 
 # add the expected/required version of go language
-RUN mkdir /eve
-RUN mv /repo.config /eve
-RUN ls /eve
 RUN echo "${GOVER}" > /eve/gover
 RUN echo "${TARGETARCH}" > /eve/target_arch
+RUN echo "$(uname -m | sed -e s/x86_64/amd64/ -e s/aarch64/arm64/)" > \
+             /eve/this_arch
 
 ADD https://go.dev/dl/go${GOVER}.linux-${TARGETARCH}.tar.gz /eve
 
@@ -31,38 +35,59 @@ ADD https://go.dev/dl/go${GOVER}.linux-${TARGETARCH}.tar.gz /eve
 RUN dnf -y --nodocs --setopt=install_weak_deps=False --allowerasing \
         install curl
 
-#** if blank, need to add vaild RH credentials
-ENV RHEL_RHSM_USERNAME
-ENV RHEL_RHSM_PASSWORD
-
+#** connect with RHEL via the subscription manager
+#**  with secret credentials
+RUN mkdir -p /var/secret
 ENV SMDEV_CONTAINER_OFF=1
-RUN subscription-manager register \
-       --username $RHEL_RHSM_USERNAME \
-       --password $RHEL_RHSM_PASSWORD --auto-attach
+#** RUN --mount=type=secret,id=rhellogin,target=/var/secret/rhellogin \
+#**     --mount=type=secret,id=rhelpass,target=/var/secret/rhelpass \
+#**     subscription-manager register --username $(< /var/secret/rhellogin) \
+#**                 --password $(< /var/secret/rhelpass) --auto-attach
+#** else
+#**    code for direct inclusion, must clear for public viewing
+ENV RHEL_LOGIN ""
+ENV RHEL_PASS ""
+RUN subscription-manager register --username ${RHEL_LOGIN} \
+                --password ${RHEL_PASS} --auto-attach
+
 RUN subscription-manager repos \
-     --enable codeready-builder-for-rhel-9-x86_64-rpms
+     --enable codeready-builder-for-rhel-9-$(uname -m)-rpms
+RUN dnf clean all
 RUN dnf update -y
 #** updated repo connection
+#**  need wget to fetch the THIS_ARCH go tar file
+RUN dnf -y --nodocs --setopt=install_weak_deps=False --allowerasing \
+        install wget
 
-#** working initial assumption is that the current working environment
-#**  is the BUILDARCH, the architecture of the machine where this runs
+#**  BUILDARCH, is the architecture of the machine where this runs.
 #**  However, sometimes the working environment is another arch emulated
 #**  Ensure that we can load both this working environment and that of
 #**  of the target
-ENV THIS_ARCH=${BUILDARCH}
-RUN THIS_ARCH="$(uname -m | sed s/aarch64/arm64/ | sed s/x86_64/amd64/)"\
-        && echo "${THIS_ARCH}" > /eve/this_arch
-ADD https://go.dev/dl/go${GOVER}.linux-${THIS_ARCH}.tar.gz / 
-RUN if [ "${THIS_ARCH}" = "${TARGETARCH}" ]; then \
-        rm /go${GOVER}.linux-"${THIS_ARCH}".tar.gz ;\
+
+#** ADD https://go.dev/dl/go${GOVER}.linux-$(< /eve/this_arch).tar.gz /
+RUN cd / && \
+      wget -q https://go.dev/dl/go${GOVER}.linux-$(< /eve/this_arch).tar.gz && \
+      cd -
+
+RUN if [ $(< /eve/this_arch) = "${TARGETARCH}" ]; then \
+        rm /go${GOVER}.linux-$(< /eve/this_arch).tar.gz ;\
      else \
-        mv /go${GOVER}.linux-"${THIS_ARCH}".tar.gz /eve ;\
+        mv /go${GOVER}.linux-$(< /eve/this_arch).tar.gz /eve ;\
      fi
+
+RUN tar -C /usr/local -xzf /eve/go${GOVER}.linux-"$(< /eve/this_arch)".tar.gz
+RUN cd /usr/bin && ln -s /usr/local/go/bin/go . && \
+                   ln -s /usr/local/go/bin/gofmt .
+
+RUN go install golang.org/x/lint/golint@latest
+RUN go install github.com/gordonklaus/ineffassign@latest
+RUN cd /root && tar czf /eve/golibs.tgz go
 
 # create all the mirrors
 WORKDIR /tmp/mirrors
 
 #   Where was that mirror again???
+
 ARG THE_CACHE=https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9
 
 RUN sed -i 's/enabled=1/enabled=0/' /etc/dnf/plugins/subscription-manager.conf

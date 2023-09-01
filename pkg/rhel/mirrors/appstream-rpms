@@ -70,3 +70,14 @@ perf
 pam-devel
 gdisk
 cmake
+perl-Thread-Queue
+perl-threads-shared
+flex
+perl-threads
+gettext-common-devel
+bison
+automake
+libtool
+gettext-devel
+libuuid-devel
+qemu-img
