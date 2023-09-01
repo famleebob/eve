@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as grub-build-base
+FROM lfedge/eve-rhel:f44980896e5d50c64588fd998cc681762cb3df81-dirty-3eb39b4 as grub-build-base
 ENV BUILD_PKGS automake \
                make \
                bison \
@@ -9,18 +9,18 @@ ENV BUILD_PKGS automake \
                gcc \
                git \
                libtool \
-               libc-dev \
-               linux-headers \
+               glibc-devel \
+               kernel-headers \
                python3 \
                autoconf \
                pkgconf \
                patch \
-               gettext-dev \
+               gettext-devel \
                bash \
                gawk
 ENV BUILD_PKGS_arm64 coreutils
 ENV BUILD_PKGS_riscv64 coreutils
-RUN eve-alpine-deploy.sh
+RUN eve-rhel-deploy.sh
 
 # list of grub modules that are portable between x86_64 and aarch64
 ENV GRUB_MODULES_PORT="part_gpt fat ext2 iso9660 squash4 gzio linux acpi normal cpio crypto disk boot crc64 \

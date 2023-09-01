@@ -1,7 +1,7 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
+FROM lfedge/eve-rhel:f44980896e5d50c64588fd998cc681762cb3df81-dirty-20af27f as build
 ENV BUILD_PKGS git go
-ENV PKGS alpine-baselayout musl-utils
-RUN eve-alpine-deploy.sh
+#** ENV PKGS alpine-baselayout musl-utils
+RUN eve-rhel-deploy.sh
 
 COPY src/  /measure-config/.
 COPY go.mod /measure-config/.
@@ -12,7 +12,9 @@ ARG GOPKGVERSION
 WORKDIR /measure-config
 
 ENV CGO_ENABLED=0
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+#** neither ash nor dash are found in RHEL packages, at least after 4
+#** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 # hadolint ignore=SC2046
 RUN echo "Running go vet" && go vet ./... && echo "Running go fmt" && \
     ERR=$(gofmt -e -l -s $(find . -name \*.go | grep -v /vendor/)) && \
