@@ -1,7 +1,8 @@
-FROM lfedge/eve-alpine:f49b278bcb18b5f17a997c7b61df95bb53b2fa31 AS build
+FROM lfedge/eve-rhel:0be024f2e7fea299d8de2d33aceaa40f38b7c4da-dirty-8ca61fa AS build
 
-ENV PKGS dosfstools libarchive-tools binutils mtools xorriso
-RUN eve-alpine-deploy.sh
+#** bsdcpio can't be found (for libarchive-tools replacement)
+ENV PKGS dosfstools bsdtar binutils mtools xorriso
+RUN eve-rhel-deploy.sh
 
 RUN echo "mtools_skip_check=1" >> /out/etc/mtools.conf
 

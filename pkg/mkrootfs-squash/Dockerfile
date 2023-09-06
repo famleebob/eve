@@ -1,8 +1,9 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb AS build
+FROM lfedge/eve-rhel:0be024f2e7fea299d8de2d33aceaa40f38b7c4da-dirty-8ca61fa AS build
 
-ENV PKGS dosfstools libarchive-tools binutils mtools sfdisk sgdisk \
-    xfsprogs e2fsprogs util-linux coreutils multipath-tools squashfs-tools
-RUN eve-alpine-deploy.sh
+ENV PKGS dosfstools bsdtar binutils mtools util-linux-ng gdisk \
+    xfsprogs e2fsprogs util-linux coreutils device-mapper-multipath \
+    squashfs-tools
+RUN eve-rhel-deploy.sh
 
 COPY . /out/
 

@@ -81,3 +81,6 @@ libtool
 gettext-devel
 libuuid-devel
 qemu-img
+bsdtar
+util-linux-ng
+xorriso

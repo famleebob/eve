@@ -44,3 +44,5 @@ xz
 acpica-tools
 glibc-gconv-extra
 mtools
+device-mapper-multipath
+xfsprogs

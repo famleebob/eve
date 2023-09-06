@@ -64,10 +64,11 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False --allowerasing \
 #**  Ensure that we can load both this working environment and that of
 #**  of the target
 
+#** need to wget tar file, can't progamatically set ADD URI
 #** ADD https://go.dev/dl/go${GOVER}.linux-$(< /eve/this_arch).tar.gz /
 RUN cd / && \
-      wget -q https://go.dev/dl/go${GOVER}.linux-$(< /eve/this_arch).tar.gz && \
-      cd -
+      wget -q https://go.dev/dl/go${GOVER}.linux-$(< /eve/this_arch).tar.gz
+
 
 RUN if [ $(< /eve/this_arch) = "${TARGETARCH}" ]; then \
         rm /go${GOVER}.linux-$(< /eve/this_arch).tar.gz ;\
@@ -121,12 +122,12 @@ RUN for repo in baseos-rpms appstream-rpms codeready-builder; do \
 RUN dnf makecache
 RUN du -hs /var/cache/dnf
 RUN cd /var/cache/dnf && \
-       tar -czf /eve/repo.cache.tgz rhel-9-* codeready-builder-* && \
-       cd -
+       tar -czf /eve/repo.cache.tgz rhel-9-* codeready-builder-*
+
 #** end of sesion with RHEL subscription manager for package access
 RUN subscription-manager unregister
 
-RUN cd /var/cache/dnf && tar xzf /eve/repo.cache.tgz && cd -
+RUN cd /var/cache/dnf && tar xzf /eve/repo.cache.tgz
 RUN cp /eve/repo.config /etc/yum.repos.d/cache.repo
 
 RUN mkdir -p /mirror/${RHEL_VERSION}/rootfs
