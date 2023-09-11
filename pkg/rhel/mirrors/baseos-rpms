@@ -46,3 +46,10 @@ glibc-gconv-extra
 mtools
 device-mapper-multipath
 xfsprogs
+cryptsetup-libs
+kmod-libs
+cpio
+kmod
+bc
+libtirpc
+rsync

@@ -1,3 +1,6 @@
 glibc-static
 nasm
 uuid-devel
+cryptsetup-devel
+kmod-devel
+libtirpc-devel
