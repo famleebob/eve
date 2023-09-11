@@ -5,18 +5,25 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb AS build
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
-ENV BUILD_PKGS grep patch git make gcc linux-headers musl-dev autoconf automake pkgconfig kmod-dev util-linux-dev cryptsetup-dev lddtree libgcc
-ENV PKGS mtools dosfstools libarchive-tools sgdisk e2fsprogs util-linux squashfs-tools coreutils tar dmidecode \
-    kmod-libs cryptsetup-libs libblkid
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:e4e622342e3b174764195ffc7e632b779fa0c3fc-dirty-8ccca04 AS build
+#** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+#** lddtree not available, libarchive-tools => bsdtar
+ENV BUILD_PKGS grep patch git make gcc kernel-headers glibc-devel autoconf \
+               automake pkgconfig kmod-devel util-linux cryptsetup-devel \
+               libgcc cpio
+ENV PKGS mtools dosfstools bsdtar gdisk e2fsprogs util-linux squashfs-tools \
+         coreutils tar dmidecode kmod-libs cryptsetup-libs \
+         libblkid cpio
+RUN eve-rhel-deploy.sh
 
 # get mkinitfs source from git and build it locally
 # it depends on mod-libs cryptsetup-libs libblkid at runtime and lddtree to run mkinitfs itself
 # we could build APK file ourselves but 'apk add' would failed because networking is disabled for almost all linuxkit images
 WORKDIR /tmp/mkinitfs
 ADD https://github.com/alpinelinux/mkinitfs.git#3.8.1 /tmp/mkinitfs
+#** compile fix, strlcpy not available use strncpy
+RUN sed -i 's/strlcpy/strncpy/' nlplug-findfs/nlplug-findfs.c
 RUN make -j "$(getconf _NPROCESSORS_ONLN)"
 WORKDIR /
 RUN make -C /tmp/mkinitfs install
@@ -25,6 +32,17 @@ WORKDIR /out
 RUN echo "mtools_skip_check=1" >> etc/mtools.conf
 RUN mkdir -p efifs parts root bits config persist opt/pillar opt/debug lib/modules run sys
 COPY make-raw install grub.cfg.in UsbInvocationScript.txt ./
+
+#** mkinitfs needs lddtree to function, couldn't find
+#**  a SuSE package that has it, located this script
+#**  so, clone, and use the script.  Added `binutils`
+#**  and `elftools` to help
+ADD https://github.com/ncopa/lddtree.git /lddtree
+RUN cp /lddtree/lddtree.sh /usr/sbin/lddtree
+RUN chmod a+x /usr/sbin/lddtree
+
+#** needed for the initramfs list of "base" files
+RUN mkdir -p /etc/apk/keys && touch /etc/apk/keys/kaka
 
 # Before changing something here please take a look into the
 # images/rootfs.yml.in onboot section: the installer should
@@ -54,6 +72,7 @@ RUN if ! grep -q -w /sbin/nlplug-findfs  /etc/mkinitfs/features.d/base.files; th
     fi
 
 RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
+
 RUN mkinitfs -n -o /out/initrd.img
 
 FROM scratch
