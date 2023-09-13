@@ -1,6 +1,9 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
-ENV BUILD_PKGS gcc make file patch libc-dev util-linux-dev linux-headers openssl-dev g++ tar
-RUN eve-alpine-deploy.sh
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
+FROM lfedge/eve-rhel:23bdff317de5f35418a50f1888a2ab95fbd17588-dirty-1aea12d as build
+ENV BUILD_PKGS gcc make file patch glibc-devel util-linux kernel-headers \
+               openssl-devel gcc-c++ tar libuuid-devel xz-devel libyaml-devel
+ENV PKGS xz libuuid libyaml
+RUN eve-rhel-deploy.sh
 
 ENV POPT_VERSION 1.16
 ENV GPTFDISK_VERSION 1.0.3
@@ -36,7 +39,8 @@ RUN set -e && for patch in ../patches/sgdisk-*.patch; do \
         echo "Applying $patch"; \
         patch -p1 < "$patch"; \
     done
-RUN make LDFLAGS=-static sgdisk
+#** RUN make LDFLAGS=-static sgdisk
+RUN make sgdisk
 RUN strip sgdisk
 RUN cp sgdisk /out/sgdisk
 
@@ -51,7 +55,8 @@ RUN tar xvzf vboot_reference-${VBOOT_COMMIT}.tar.gz
 
 WORKDIR /vboot_reference
 RUN [ -d host/arch/riscv64 ] || cp -r host/arch/arm host/arch/riscv64
-RUN make cgpt LDFLAGS=-static CFLAGS=-Wno-error=address-of-packed-member
+#** RUN make cgpt LDFLAGS=-static CFLAGS=-Wno-error=address-of-packed-member
+RUN make cgpt CFLAGS="-Wno-error=address-of-packed-member -D_GNU_SOURCE"
 RUN cp build/cgpt/cgpt /out/cgpt
 
 FROM scratch
