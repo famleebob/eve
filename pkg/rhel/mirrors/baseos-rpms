@@ -53,3 +53,11 @@ kmod
 bc
 libtirpc
 rsync
+diffutils
+libyaml
+iptables
+libnfnetlink
+iptables-libs
+iptables-nft
+libnftnl
+libnetfilter_conntrack

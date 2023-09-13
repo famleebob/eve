@@ -94,3 +94,4 @@ zlib-devel
 elfutils-devel
 elfutils-libelf-devel
 binutils-devel
+e2fsprogs-devel
