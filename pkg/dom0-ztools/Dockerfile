@@ -1,8 +1,10 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as zfs
-ENV BUILD_PKGS git patch ca-certificates util-linux build-base gettext-dev libtirpc-dev automake autoconf \
-    libtool linux-headers attr-dev e2fsprogs-dev glib-dev openssl-dev util-linux-dev coreutils
-ENV PKGS ca-certificates util-linux libintl libuuid libtirpc libblkid libcrypto1.1 zlib
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:23bdff317de5f35418a50f1888a2ab95fbd17588-dirty-c16842c as zfs
+ENV BUILD_PKGS git patch ca-certificates util-linux gettext-devel \
+               libtirpc-devel automake autoconf libtool kernel-headers \
+               e2fsprogs openssl-devel util-linux zlib-devel libuuid-devel \
+               coreutils libblkid-devel e2fsprogs-devel
+ENV PKGS ca-certificates util-linux libuuid libtirpc libblkid openssl zlib
+RUN eve-rhel-deploy.sh
 
 COPY /patches /
 
@@ -50,9 +52,24 @@ RUN rm -rf /tmp/zfs-out/usr/share && rm -rf /tmp/zfs-out/usr/src && \
 # make the list of files built from zfs to reuse later
 # hadolint ignore=DL4006
 RUN find /tmp/zfs-out -mindepth 1|sed 's@/tmp/zfs-out@@'>/out/etc/zfs-files
-RUN cp -r /tmp/zfs-out/* /out
+
+#** symlinks in the cloud container image to save space, not so busy box
+#**  gets everthing confused, so for the top level directories linked
+#**  to its counerpart in /usr, do an explicit copy
+RUN cp -r /tmp/zfs-out/etc /out/etc
+RUN cp -r /tmp/zfs-out/lib /out/usr/lib
+RUN cp -r /tmp/zfs-out/sbin /out/usr/sbin
+RUN cp -r /tmp/zfs-out/usr /out/usr
 
 FROM scratch
 COPY --from=zfs /out/ /
 # hadolint ignore=DL3020
-ADD rootfs/ /
+#** ADD rootfs/ /
+#** see above: same symlinks blow up the ADD command...
+RUN mkdir /tmp/trash
+ADD rootfs/ /tmp/trash
+RUN cd /tmp/trash && cp -r bin/* /usr/bin && cp -r etc/* /etc && \
+     cp -r usr/* /usr && cp -r persist / && cp -r config /
+#** can't find /bin/sh after using this set of tar commands, so ls
+#**  at the end just dies.
+#** RUN cd /tmp/trash && tar cf - ./* | $( cd / && tar xf -)
