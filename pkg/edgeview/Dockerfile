@@ -1,7 +1,7 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
+FROM lfedge/eve-rhel:23bdff317de5f35418a50f1888a2ab95fbd17588-dirty-b08e0f4 as build
 ENV BUILD_PKGS git go
-ENV PKGS alpine-baselayout musl-utils iproute2 iptables
-RUN eve-alpine-deploy.sh
+ENV PKGS glibc-devel iproute iptables
+RUN eve-rhel-deploy.sh
 
 COPY src/  /edge-view/.
 COPY go.mod /edge-view/.
@@ -11,7 +11,8 @@ ARG GOPKGVERSION
 WORKDIR /edge-view
 
 ENV CGO_ENABLED=0
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+#** ash not found in RHEL
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 # hadolint ignore=SC2046
 RUN echo "Running go vet" && go vet ./... && echo "Running go fmt" && \
     ERR=$(gofmt -e -l -s $(find . -name \*.go | grep -v /vendor/)) && \
