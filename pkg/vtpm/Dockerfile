@@ -10,6 +10,7 @@ FROM lfedge/eve-suse:54c6e6238e27f66068f42fc0ef33e8b611a7b64d as build
 ENV BUILD_PKGS glibc-devel git gcc gcc-c++ autoconf automake libtool \
 		doxygen make openssl-devel protobuf-devel gnupg \
 		curl-devel patch tar xz
+ENV PKGS libz1
 RUN eve-suse-deploy.sh
 
 WORKDIR /

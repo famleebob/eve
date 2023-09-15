@@ -4,7 +4,7 @@ ENV BUILD_PKGS cairo-devel openjpeg2-devel libjpeg8-devel libpng16-devel \
                gcc make glibc-devel libopenssl-devel file patch gawk \
                libcairo2 binutils git cmake autoconf automake
 #* libvncserver not provided by SuSE, build here
-ENV PKGS libtasn1-progs p11-kit libcairo2 openjpeg2 libpng16-16
+ENV PKGS libtasn1-progs p11-kit libcairo2 openjpeg2 libpng16-16 libopenssl1_1
 RUN eve-suse-deploy.sh
 
 ENV GUACD_VERSION=1.0.0
@@ -45,7 +45,7 @@ FROM scratch
 
 COPY --from=build /out/ /
 COPY --from=build /usr/sbin/guacd /usr/sbin/guacd
-COPY --from=build /usr/lib/libguac.so.* /usr/lib/libuuid.so.* /usr/lib/libguac-client-vnc* /usr/lib/
+COPY --from=build /usr/lib/libguac.so.* /usr/lib/libuuid.so.* /usr/lib/libguac-client-vnc* /usr/lib64/
 COPY --from=build /usr/local/lib/libvncserver* /usr/local/lib64
 
 ENTRYPOINT []
