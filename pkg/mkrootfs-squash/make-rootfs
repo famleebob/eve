@@ -20,7 +20,7 @@ IMGFILE=/rootfs.img
   mkdir -p /tmp/rootfs
   cd /tmp/rootfs
 
-  [ -t 0 ] || bsdtar xzf -
+  [ -t 0 ] || tar xf -
 
   # This _filesystem_ UUID will be later reused as the _partition_
   # UUID when creating the final image. This will allow us to have

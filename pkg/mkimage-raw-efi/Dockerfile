@@ -5,7 +5,7 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-rhel:e4e622342e3b174764195ffc7e632b779fa0c3fc-dirty-8ccca04 AS build
+FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-b08e0f4 AS build
 #** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 #** lddtree not available, libarchive-tools => bsdtar
@@ -75,8 +75,11 @@ RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
 
 RUN mkinitfs -n -o /out/initrd.img
 
+RUN ln -s /usr/sbin/sgdisk /out/usr/bin/sgdisk
+
 FROM scratch
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+#** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 COPY --from=build /out/ /
 

@@ -355,8 +355,13 @@ ifeq ($(HV),kubevirt)
         ROOTFS_MAXSIZE_MB=450
 else
         #kube container will not be in non-kubevirt builds
-        PKGS_$(ZARCH)=$(shell find pkg -maxdepth 1 -type d | grep -Ev "eve|test-microsvcs|alpine|sources|kube|verification$$")
-        ROOTFS_MAXSIZE_MB=250
+        #** PKGS_$(ZARCH)=$(shell find pkg -maxdepth 1 -type d | grep -Ev "eve|test-microsvcs|alpine|sources|kube|verification$$")
+	PKGS_$(ZARCH)=pkg/new-kernel pkg/rngd pkg/storage-init pkg/uefi \
+	              pkg/grub pkg/measure-config pkg/newlog pkg/dnsmasq \
+	              pkg/edgeview pkg/gpt-tools pkg/dom0-ztools \
+	              pkg/mkrootfs-squash pkg/mkrootfs-ext4 \
+	              pkg/mkimage-raw-efi pkg/mkimage-raw-efi
+        ROOTFS_MAXSIZE_MB=450
 endif
 
 PKGS_riscv64=pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
@@ -364,7 +369,8 @@ PKGS_riscv64=pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
 	     pkg/debug pkg/dom0-ztools pkg/gpt-tools pkg/storage-init pkg/mkrootfs-squash \
 	     pkg/bsp-imx pkg/optee-os
 # alpine-base and alpine must be the first packages to build
-PKGS=pkg/alpine $(PKGS_$(ZARCH))
+#** PKGS=pkg/alpine $(PKGS_$(ZARCH))
+PKGS=pkg/rhel $(PKGS_$(ZARCH))
 # eve-alpine-base is bootstrap image for eve-alpine
 # to update please see https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
 # if you want to bootstrap eve-alpine again, uncomment the line below
@@ -464,7 +470,7 @@ $(BOOT_PART): PKG=u-boot
 $(INITRD_IMG): PKG=mkimage-raw-efi
 $(INSTALLER_IMG): PKG=mkimage-raw-efi
 $(VERIFICATION_IMG): PKG=mkverification-raw-efi
-$(KERNEL_IMG): PKG=kernel
+$(KERNEL_IMG): PKG=new-kernel
 $(IPXE_IMG): PKG=ipxe
 $(BIOS_IMG): PKG=uefi
 $(UBOOT_IMG): PKG=u-boot
