@@ -1,12 +1,12 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
+FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-b08e0f4 as build
 
 ENV BUILD_PKGS tar make
-RUN eve-alpine-deploy.sh
+RUN eve-rhel-deploy.sh
 
 ENV WIRELESS_REGDB_VERSION 2022.06.06
 ENV WIRELESS_REGDB_REPO https://mirrors.edge.kernel.org/pub/software/network/wireless-regdb/wireless-regdb
 ADD ${WIRELESS_REGDB_REPO}-${WIRELESS_REGDB_VERSION}.tar.gz /wireless-regdb.tar.gz
-RUN mkdir /wireless-regdb &&\
+RUN mkdir /wireless-regdb && mkdir -p /lib/firmware && \
     tar -xz --strip-components=1 -C /wireless-regdb -f /wireless-regdb.tar.gz &&\
     cp /wireless-regdb/regulatory.db /wireless-regdb/regulatory.db.p7s /lib/firmware
 
