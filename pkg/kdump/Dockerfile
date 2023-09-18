@@ -1,9 +1,9 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb AS build
+FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-c32886c AS build
 
-ENV BUILD_PKGS patch curl make gcc perl util-linux-dev git mtools linux-headers musl-dev xz-dev elfutils-dev libbz2
-ENV PKGS xz-libs elfutils-dev libbz2
+ENV BUILD_PKGS patch make gcc util-linux git mtools kernel-headers glibc-devel xz-devel elfutils-devel bzip2-devel
+ENV PKGS xz-libs elfutils-devel bzip2-libs
 
-RUN eve-alpine-deploy.sh
+RUN eve-rhel-deploy.sh
 
 # Build makedumpfile
 WORKDIR /tmp/makedumpfile/makedumpfile-1.7.1
