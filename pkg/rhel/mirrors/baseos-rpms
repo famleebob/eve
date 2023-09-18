@@ -61,3 +61,7 @@ iptables-libs
 iptables-nft
 libnftnl
 libnetfilter_conntrack
+glibc-gconv-extra
+bzip2
+bzip2-libs
+hostname

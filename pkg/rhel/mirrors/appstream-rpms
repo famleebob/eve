@@ -95,3 +95,4 @@ elfutils-devel
 elfutils-libelf-devel
 binutils-devel
 e2fsprogs-devel
+bzip2-devel
