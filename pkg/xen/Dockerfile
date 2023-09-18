@@ -1,11 +1,12 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as kernel-build
+FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-267c021 as kernel-build
 
-ENV BUILD_PKGS argp-standalone automake bash bc binutils-dev bison build-base \
-               diffutils flex git gmp-dev gnupg installkernel kmod \
-               elfutils-dev openssl-dev linux-headers ncurses-dev python3 \
-               sed squashfs-tools tar xz xz-dev zlib-dev libunwind-dev
+ENV BUILD_PKGS automake bash bc binutils-devel bison \
+               diffutils flex git gmp-devel gnupg kmod \
+               elfutils-devel openssl-devel kernel-headers ncurses-devel \
+               python3 patch make hostname gcc \
+               sed squashfs-tools tar xz xz-devel zlib-devel
 ENV BUILD_PKGS_arm64 u-boot-tools
-RUN eve-alpine-deploy.sh
+RUN eve-rhel-deploy.sh
 
 ENV XEN_UBOOT_ADDR 0x81000000
 ENV XEN_VERSION 4.15.0
