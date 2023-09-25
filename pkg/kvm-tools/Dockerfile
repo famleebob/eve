@@ -1,15 +1,17 @@
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
+FROM lfedge/eve-rhel:3d3201eb93f971787ca2d612d60d77186232ee5f-dirty-4013163 as build
 # Building qemu in strip-down mirovm only mode:
 # qemu 5.1 dependencies: python3 glib-dev pixman-dev
 # qemu 5.2+ dependencies: py3-setuptools bash perl
 # ninja dependencies: cmake g++
-ENV BUILD_PKGS gcc make libc-dev binutils-dev patch libaio-dev zlib-dev zlib-static linux-headers libvncserver-dev python3 glib-dev pixman-dev py3-setuptools bash perl cmake g++
+ENV BUILD_PKGS gcc make glibc-devel binutils-devel patch libaio-devel \
+               zlib-devel zlib-static kernel-headers python3 glib2-devel \
+               pixman-devel bash perl cmake gcc-c++ xz bzip2 diffutils
 ENV BUILD_PKGS_arm64 dtc dtc-dev
 # libgcc, pixman and glib are required for qemu
 # it maybe possible to get rid of libgcc & pixman
-ENV PKGS libgcc pixman glib libvncserver libaio musl-utils
+ENV PKGS libgcc pixman glib2 libaio
 ENV PKGS_arm64 libfdt libstdc++
-RUN eve-alpine-deploy.sh
+RUN eve-rhel-deploy.sh
 
 ENV KVMTOOL_VERSION=90b2d3adadf218dfc6bdfdfcefe269843360223c
 
@@ -79,8 +81,10 @@ COPY --from=build /usr/bin/lkvm /usr/bin/lkvm
 COPY --from=build /qemu-5.2.0/build/qemu-system-* /usr/bin/
 COPY --from=build /bios /usr/share/qemu
 RUN ln -sf lkvm /usr/bin/vm
-RUN ldd /usr/bin/lkvm
-RUN ldd /usr/bin/qemu-system-$(uname -m)
+#** SuSE env "not found", seems informational,
+#*   ignoring for now, same as SuSE work
+#** RUN ldd /usr/bin/lkvm
+#** RUN ldd /usr/bin/qemu-system-$(uname -m)
 
 ENTRYPOINT ["/bin/sh", "-c", "while true; do sleep 100000; done"]
 #CMD ["/usr/sbin/vm",]
