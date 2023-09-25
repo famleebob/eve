@@ -5,3 +5,8 @@ cryptsetup-devel
 kmod-devel
 libtirpc-devel
 libyaml-devel
+zlib-static
+yajl-devel
+texinfo
+libusb-devel
+cryptsetup-devel

@@ -96,3 +96,16 @@ elfutils-libelf-devel
 binutils-devel
 e2fsprogs-devel
 bzip2-devel
+glib2-devel
+perl
+libaio
+libaio-devel
+pixman
+pixman-devel
+gdb
+libattr-devel
+python3-devel
+yajl
+libcap-ng
+libusb
+zstd
