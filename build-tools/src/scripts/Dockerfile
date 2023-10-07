@@ -19,7 +19,7 @@ ARG GID
 # this must be an ARG so it doesn't carry through post-build phase
 ARG all_proxy
 # hadolint ignore=DL3018
-RUN yum -y install openssh-clients git gcc kernel-headers glibc-devel \
+RUN dnf -y install openssh-clients git gcc kernel-headers glibc-devel \
            util-linux libpcap-devel bash vim make sudo tar curl \
            patch dnsmasq --allowerasing
 # hadolint ignore=DL3018
@@ -29,7 +29,7 @@ RUN groupadd -g ${GID} ${GROUP} && useradd -d /home/${USER} -g ${GROUP} -M -u ${
 RUN echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USER}
 # dep is deprecated and probably should be gotten rid of; no need to parametrize the version, as there will be no further releases
 # hadolint ignore=SC2086,DL4006
-RUN OS="$(uname -o | tr '[:upper:]' '[:lower:]')" && PLATFORM="$(go version | sed 's#^.*'${OS}'/##g')" && curl -o /usr/local/bin/dep -L "https://github.com/golang/dep/releases/download/v0.5.4/dep-${OS}-${PLATFORM}" && chmod +x /usr/local/bin/dep
+RUN OS="$(uname -s | tr '[:upper:]' '[:lower:]')" && PLATFORM="$(go version | sed 's#^.*'${OS}'/##g')" && curl -o /usr/local/bin/dep -L "https://github.com/golang/dep/releases/download/v0.5.4/dep-${OS}-${PLATFORM}" && chmod +x /usr/local/bin/dep
 
 RUN go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 RUN go install gotest.tools/gotestsum@v1.7.0

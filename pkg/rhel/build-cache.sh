@@ -8,14 +8,17 @@ bail() {
 
 [ "$#" -gt 2 ] || bail "Usage: $0 <os version> <path to the cache> [packages...]"
 
+export SMDEV_CONTAINER_OFF=1
 DNF_CACHE_LOC=/var/cache/dnf
 #** file name should match the package section name
 #**  otherwise might get misplaced in the cache
 RHEL_PKG_SECT=$1
 DNF_save="$(find "${DNF_CACHE_LOC}" -type d -print | \
+          sort -u | \
           grep "rhel-${releasever_major}" | \
           grep "${RHEL_PKG_SECT}" | \
-          grep -v repodata )"
+          grep -v repodata | \
+          head -1 )"
 #** the packages directory does not exist until the first download
 #**  even `dnf makecache` doesn't create the packages directory
 if [ ! $(echo "$DNF_save" | grep packages) ] ; then
@@ -35,7 +38,6 @@ fi
 for p in "$@"; do
   [ -f "$(echo "${DNF_CACHE}/${p}"-[0-9]*)" ] || PKGS="$PKGS $p"
 done
-set +x
 
 # fetch the missing packages
 # shellcheck disable=SC2086

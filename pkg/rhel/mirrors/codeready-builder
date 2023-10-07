@@ -10,3 +10,4 @@ yajl-devel
 texinfo
 libusb-devel
 cryptsetup-devel
+libstdc++-static

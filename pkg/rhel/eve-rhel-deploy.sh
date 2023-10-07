@@ -20,6 +20,7 @@
 set -e
 
 RHEL_VERSION=${1:-9.2}
+export SMDEV_CONTAINER_OFF=1
 
 case "$(uname -m)" in
    x86_64) BUILD_PKGS="$BUILD_PKGS $BUILD_PKGS_amd64"

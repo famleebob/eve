@@ -82,3 +82,14 @@ elfutils
 xz-libs
 libzstd
 libuuid
+libtasn1
+hdparm
+ethtool
+ipset
+ipset-libs
+glibc
+glibc-common
+glibc-minimal-langpack
+libstdc++
+python3
+python3-libs
