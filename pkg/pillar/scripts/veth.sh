@@ -33,7 +33,9 @@ if [ "$VIF_MAC" ]; then
    try nsenter -t "$VIF_NS" -n ifconfig "$VIF_CTR" hw ether "$VIF_MAC"
 fi
 
-try brctl addif "$VIF_BRIDGE" "$VIF_NAME"
+#** SuSE and RHEL do not provide `brctl` use ip instead
+#** try brctl addif "$VIF_BRIDGE" "$VIF_NAME"
+try ip link set dev "$VIF_NAME" master "$VIF_BRIDGE"
 
 try nsenter -t "$VIF_NS" -n ip link set "$VIF_CTR" up
 try ip link set "$VIF_NAME" up

@@ -56,10 +56,10 @@ RUN find /tmp/zfs-out -mindepth 1|sed 's@/tmp/zfs-out@@'>/out/etc/zfs-files
 #** symlinks in the cloud container image to save space, not so busy box
 #**  gets everthing confused, so for the top level directories linked
 #**  to its counerpart in /usr, do an explicit copy
-RUN cp -r /tmp/zfs-out/etc /out/etc
-RUN cp -r /tmp/zfs-out/lib /out/usr/lib
-RUN cp -r /tmp/zfs-out/sbin /out/usr/sbin
-RUN cp -r /tmp/zfs-out/usr /out/usr
+RUN cp -r /tmp/zfs-out/etc/* /out/etc
+RUN cp -r /tmp/zfs-out/lib/* /out/usr/lib
+RUN cp -r /tmp/zfs-out/sbin/* /out/usr/sbin
+RUN cp -r /tmp/zfs-out/usr/* /out/usr
 
 FROM scratch
 COPY --from=zfs /out/ /

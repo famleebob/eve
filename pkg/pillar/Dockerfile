@@ -1,16 +1,18 @@
+# syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 # Copyright (c) 2018 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
 # use the same set of packages for simplicity
-ARG BUILD_PKGS_BASE="git gcc linux-headers libc-dev make linux-pam-dev m4 findutils go util-linux make patch \
-                     libintl libuuid libtirpc libblkid libcrypto1.1 zlib tar"
+ARG BUILD_PKGS_BASE="git gcc kernel-headers glibc-devel make pam-devel m4 findutils go util-linux make patch go \
+                     libuuid libtirpc libblkid zlib tar"
 
 # we use the same image in several places
-ARG EVE_ALPINE_IMAGE=lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb
+ARG EVE_RHEL_IMAGE=lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa
 
-FROM lfedge/eve-dom0-ztools:417d4ff6a57d2317c9e65166274b0ea6f6da16e2 as zfs
+FROM lfedge/eve-dom0-ztools:c4891491af3637e2f61435863889f360c530e51c as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
+RUN find / -name libzfsbootenv.h
 RUN while read -r x; do \
         if [ -d "$x" ]; then \
           mkdir -p "/out/$x"; \
@@ -20,49 +22,35 @@ RUN while read -r x; do \
     done < /etc/zfs-files
 
 # hadolint ignore=DL3006
-FROM ${EVE_ALPINE_IMAGE} as build-native
+FROM ${EVE_RHEL_IMAGE} as build
 ARG BUILD_PKGS_BASE
-RUN BUILD_PKGS="${BUILD_PKGS_BASE}" eve-alpine-deploy.sh
+RUN BUILD_PKGS="${BUILD_PKGS_BASE}" eve-rhel-deploy.sh
 
-# hadolint ignore=DL3006,DL3029
-FROM --platform=${BUILDPLATFORM} ${EVE_ALPINE_IMAGE} as build-cross
-ARG BUILD_PKGS_BASE
-RUN BUILD_PKGS="${BUILD_PKGS_BASE}" eve-alpine-deploy.sh
+#* SuSE/RHEL provides `dhclient`, Alpine `dhcpcd` `pillar` makes extensive
+#*  use of it.  `dhclient` will soon be deprecated.
+#* For now, build it ourselves rather than attempt to use OpenSuSE
+#*  which would bring an unknown set of version conflicts
+ADD --keep-git-dir https://github.com/NetworkConfiguration/dhcpcd.git#v9.4.1 /dhcpcd
+WORKDIR /dhcpcd
+RUN ./configure --enable-ipv6               \
+            --sysconfdir=/etc               \
+            --libexecdir=/usr/lib/dhcpcd    \
+            --dbdir=/var/lib/dhcpcd         \
+            --runstatedir=/run              \
+            --disable-privsep
 
-# hadolint ignore=DL3029
-FROM --platform=${BUILDPLATFORM} lfedge/eve-cross-compilers:2a1d062fce410865e7024a83de327a68e52db26c AS cross-compilers
+RUN make
+RUN set -x ; make DESTDIR=/out install
+WORKDIR /
+#* end SuSE/RHEL addition
 
-# will use several packages from target arch and copy them to sysroot
-# hadolint ignore=DL3006
-FROM ${EVE_ALPINE_IMAGE} AS cross-compile-libs
-ENV PKGS musl-dev libgcc libintl libuuid libtirpc libblkid
-RUN eve-alpine-deploy.sh
 # we need zfs files during build
-COPY --from=zfs / /
+#** Need to be specific because of directory symlinks used by RHEL
+COPY --from=zfs /etc /etc
+COPY --from=zfs /lib /usr/lib
+COPY --from=zfs /sbin /usr/sbin
+COPY --from=zfs /usr /usr
 
-# adjust EVE_TARGET_ARCH for cross-compiler
-FROM build-cross AS build-cross-target-arm64
-ENV EVE_TARGET_ARCH=aarch64
-FROM build-cross AS build-cross-target-amd64
-ENV EVE_TARGET_ARCH=x86_64
-
-# hadolint ignore=DL3006
-FROM build-cross-target-${TARGETARCH} AS build-cross-target
-ENV CROSS_COMPILE_ENV="${EVE_TARGET_ARCH}"-alpine-linux-musl-
-COPY --from=cross-compilers /packages /packages
-# hadolint ignore=DL3018
-RUN apk add --no-cache --allow-untrusted -X /packages build-base-"${EVE_TARGET_ARCH}"
-COPY --from=cross-compile-libs /out/ /usr/"${EVE_TARGET_ARCH}"-alpine-linux-musl/
-
-# cross-compilers
-FROM build-cross-target AS target-arm64-build-amd64
-FROM build-cross-target AS target-amd64-build-arm64
-# native
-FROM build-native AS target-amd64-build-amd64
-FROM build-native AS target-arm64-build-arm64
-
-# hadolint ignore=DL3006
-FROM target-${TARGETARCH}-build-${BUILDARCH} AS build
 ARG DEV=n
 ARG TARGETARCH
 
@@ -71,8 +59,14 @@ ARG RSTATS=n
 ARG RSTATS_ENDPOINT=
 ARG RSTATS_TAG=
 
+#** why? did a copy from zfs / to build,
+#**      only to over-write it here
 # we need zfs files during build
-COPY --from=zfs /out /
+#** Need to be specific because of directory symlinks used by RHEL
+COPY --from=zfs /out/etc /etc
+COPY --from=zfs /out/lib /usr/lib
+COPY --from=zfs /out/sbin /usr/sbin
+COPY --from=zfs /out/usr /usr
 
 ADD ./  /pillar/
 
@@ -84,7 +78,7 @@ ENV GO111MODULE=on
 ENV CGO_ENABLED=1
 ENV GOOS=linux
 ENV GOARCH=${TARGETARCH}
-ENV CC=${CROSS_COMPILE_ENV}gcc
+ENV CC=gcc
 ARG GOPKGVERSION
 
 COPY pillar-patches/* /patches/
@@ -112,22 +106,32 @@ RUN --mount=type=cache,target=/root/.cache/go-build if [ ${DEV} = "y" ]; then \
     cp dlv /final/opt/ ; \
 fi
 
-FROM lfedge/eve-fscrypt:0b7cc0d9d620e47fc54e21d56cb8a5cd224f9c9b as fscrypt
-FROM lfedge/eve-dnsmasq:3af908d86a95a627c729e09b1b125bf8de7fadcb as dnsmasq
-FROM lfedge/eve-gpt-tools:51ecda7bc185c655c1d0423228dc83e29d4c674d as gpttools
+FROM lfedge/eve-fscrypt:dde103f50768429f2af649e91973eb0d71756359 as fscrypt
+FROM lfedge/eve-dnsmasq:16d19f2b95a024bed8c0a3206fd2b127d6813191 as dnsmasq
+FROM lfedge/eve-gpt-tools:903d9e3b48ce2857ecd255b1a5cc623e9074d702 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
 # hadolint ignore=DL3006
-FROM ${EVE_ALPINE_IMAGE} as collector
+FROM ${EVE_RHEL_IMAGE} as collector
 ENV BUILD_PKGS patch
-ENV PKGS alpine-baselayout musl-utils libtasn1-progs pciutils yajl xz bash iptables ip6tables iproute2 dhcpcd \
-    coreutils dmidecode libbz2 libuuid ipset curl radvd ethtool util-linux e2fsprogs libcrypto1.1 xorriso \
-    qemu-img jq e2fsprogs-extra keyutils ca-certificates ip6tables-openrc iptables-openrc ipset-openrc hdparm \
-    libintl libtirpc libblkid zlib
-RUN eve-alpine-deploy.sh
+ENV PKGS libtasn1-tools pciutils yajl xz bash iptables iproute \
+    coreutils dmidecode bzip2-libs libuuid ipset radvd ethtool util-linux e2fsprogs xorriso \
+    qemu-img jq keyutils ca-certificates hdparm \
+    libtirpc libblkid zlib
+RUN eve-rhel-deploy.sh
+#** THERE BE DRAGONS HERRE!!
+#**  copy all the dhcpcd files to the local /out
+#**  from the build /out.  Know all the files,
+#**  if something changes in dhcpcd this MUST
+#**  be verified!!
+COPY --from=build /out/usr/lib/dhcpcd /out/usr/lib/dhcpcd
+COPY --from=build /out/usr/sbin/dhcpcd /out/usr/sbin
+COPY --from=build /out/etc/dhcpcd.conf /out/etc
+RUN ls -l /out/usr/lib/dhcpcd
 
-SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+#** ash not available in RHEL (or SuSE)
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 WORKDIR /
 
@@ -138,9 +142,19 @@ RUN set -e && for patch in /sys-patches/*.patch; do \
         patch -p0 --no-backup-if-mismatch -r /tmp/deleteme.rej < "$patch"; \
     done
 
-COPY --from=zfs /out /out
+#** We KNOW what to copy, and which are the directory symlinks
+#**  exist at the top level
+COPY --from=zfs /out/["etc","usr"] /out
+COPY --from=zfs /out/lib /out/usr/lib
+COPY --from=zfs /out/sbin /out/usr/sbin
+
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
-COPY --from=gpttools / /out
+
+#** We KNOW what to copy, and which are the directory symlinks
+#**  exist at the top level
+COPY --from=gpttools /usr/bin/sgdisk /out/usr/bin/sgdisk
+COPY --from=gpttools /usr/bin/cgpt /out/usr/bin/cgpt
+
 COPY --from=dnsmasq /usr/sbin/dnsmasq /out/opt/zededa/bin/dnsmasq
 # we use final directory and move the line to the bottom
 # to avoid conflicts and speedup re-builds
@@ -161,12 +175,13 @@ ADD conf/lisp.config.base /out/var/tmp/zededa/lisp.config.base
 COPY rootfs/ /out
 
 # We will start experimenting with stripping go binaries on ARM only for now
-RUN if [ "$(uname -m)" = "aarch64" ] ; then                                             \
-       apk add --no-cache findutils binutils file                                      ;\
-       find /out -type f -executable -exec file {} \; | grep 'not stripped' | cut -f1 -d: |\
-       xargs strip                                                                     ;\
-       apk del findutils binutils file                                                 ;\
-    fi
+#** safe for now, but will need update to run arm64 EVE
+#** RUN if [ "$(uname -m)" = "aarch64" ] ; then                                             \
+#**        apk add --no-cache findutils binutils file                                      ;\
+#**        find /out -type f -executable -exec file {} \; | grep 'not stripped' | cut -f1 -d: |\
+#**        xargs strip                                                                     ;\
+#**        apk del findutils binutils file                                                 ;\
+#**     fi
 
 FROM scratch
 
