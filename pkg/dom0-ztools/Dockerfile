@@ -1,8 +1,8 @@
-FROM lfedge/eve-rhel:23bdff317de5f35418a50f1888a2ab95fbd17588-dirty-c16842c as zfs
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as zfs
 ENV BUILD_PKGS git patch ca-certificates util-linux gettext-devel \
                libtirpc-devel automake autoconf libtool kernel-headers \
                e2fsprogs openssl-devel util-linux zlib-devel libuuid-devel \
-               coreutils libblkid-devel e2fsprogs-devel
+               coreutils libblkid-devel e2fsprogs-devel glibc-devel
 ENV PKGS ca-certificates util-linux libuuid libtirpc libblkid openssl zlib
 RUN eve-rhel-deploy.sh
 

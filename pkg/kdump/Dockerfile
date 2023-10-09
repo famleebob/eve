@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-c32886c AS build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
 
 ENV BUILD_PKGS patch make gcc util-linux git mtools kernel-headers glibc-devel xz-devel elfutils-devel bzip2-devel
 ENV PKGS xz-libs elfutils-devel bzip2-libs

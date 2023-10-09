@@ -1,8 +1,8 @@
-FROM lfedge/eve-rhel:e4e622342e3b174764195ffc7e632b779fa0c3fc-dirty-a632dff AS build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
 
 ENV PKGS dosfstools bsdtar binutils mtools util-linux-ng gdisk \
     xfsprogs e2fsprogs util-linux coreutils device-mapper-multipath \
-    squashfs-tools
+    squashfs-tools glibc-devel
 RUN eve-rhel-deploy.sh
 
 COPY . /out/

@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:62fdc6097dac8f1936bd28f85ef29a2cb7582c03-dirty-c07b0bc as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
 ENV PKGS bash glib2 squashfs-tools util-linux e2fsprogs keyutils dosfstools \
          coreutils gdisk smartmontools pam-devel
 RUN eve-rhel-deploy.sh

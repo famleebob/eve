@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:23bdff317de5f35418a50f1888a2ab95fbd17588-dirty-b08e0f4 as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
 ENV BUILD_PKGS git go
 ENV PKGS glibc-devel iproute iptables
 RUN eve-rhel-deploy.sh

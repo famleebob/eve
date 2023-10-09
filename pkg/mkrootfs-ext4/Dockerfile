@@ -1,8 +1,9 @@
-FROM lfedge/eve-rhel:0be024f2e7fea299d8de2d33aceaa40f38b7c4da-dirty-8ca61fa AS build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
 
 #** bsdcpio missing, for libarchive-tools matching
 ENV PKGS dosfstools bsdtar binutils mtools gdisk xfsprogs e2fsprogs \
-          util-linux coreutils device-mapper-multipath squashfs-tools
+          util-linux coreutils device-mapper-multipath squashfs-tools \
+          glibc-devel
 RUN eve-rhel-deploy.sh
 
 COPY . /out/

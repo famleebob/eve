@@ -10,10 +10,10 @@
 #   git clone https://git.linaro.org/uefi/uefi-tools.git
 #   ./uefi-tools/edk2-build.sh -b DEBUG -b RELEASE all
 #
-FROM lfedge/eve-rhel:f44980896e5d50c64588fd998cc681762cb3df81-dirty-20af27f as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
 #** util-linux-devel doesn't seem to exit, 
-ENV BUILD_PKGS make gcc gcc-c++ python3 libuuid-devel nasm bash git \
-               util-linux patch
+ENV BUILD_PKGS python3 make gcc gcc-c++ libuuid-devel nasm bash git \
+               util-linux patch glibc-devel
 ENV BUILD_PKGS_amd64 iasl
 ENV BUILD_PKGS_arm64 iasl
 RUN eve-rhel-deploy.sh

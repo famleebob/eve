@@ -4,7 +4,7 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-rhel:62fdc6097dac8f1936bd28f85ef29a2cb7582c03-dirty-d8ecdc9 as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
 #** removed abuild
 #ENV BUILD_PKGS curl tar make kernel-headers patch gcc-c++ git gcc \
 #               ncurses-devel autoconf
@@ -94,4 +94,8 @@ WORKDIR /
 
 COPY --from=build /out/ /
 
-CMD ["/sbin/tini", "/usr/bin/ssh.sh"]
+RUN groupadd sshd
+RUN useradd sshd -g sshd
+
+#* from documentation, looks like tini needs to be a "sub-reaper"
+ENTRYPOINT ["/usr/local/bin/tini", "-s", "-vv", "/usr/bin/ssh.sh"]

@@ -1,6 +1,6 @@
-FROM lfedge/eve-rhel:f44980896e5d50c64588fd998cc681762cb3df81-dirty-a1e5388 AS build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
 
-ENV PKGS mtools dosfstools
+ENV PKGS mtools dosfstools glibc-devel
 RUN eve-rhel-deploy.sh
 
 COPY make-config /out/

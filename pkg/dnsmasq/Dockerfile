@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:f44980896e5d50c64588fd998cc681762cb3df81-dirty-3eb39b4 as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
 ENV BUILD_PKGS gcc make patch glibc-devel kernel-headers tar
 RUN eve-rhel-deploy.sh
 

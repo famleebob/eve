@@ -5,7 +5,7 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-b08e0f4 AS build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
 #** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 #** lddtree not available, libarchive-tools => bsdtar
@@ -14,7 +14,7 @@ ENV BUILD_PKGS grep patch git make gcc kernel-headers glibc-devel autoconf \
                libgcc cpio
 ENV PKGS mtools dosfstools bsdtar gdisk e2fsprogs util-linux squashfs-tools \
          coreutils tar dmidecode kmod-libs cryptsetup-libs \
-         libblkid cpio
+         libblkid cpio glibc-devel
 RUN eve-rhel-deploy.sh
 
 # get mkinitfs source from git and build it locally

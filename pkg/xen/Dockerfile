@@ -1,9 +1,9 @@
-FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-267c021 as kernel-build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as kernel-build
 
 ENV BUILD_PKGS automake bash bc binutils-devel bison \
                diffutils flex git gmp-devel gnupg kmod \
                elfutils-devel openssl-devel kernel-headers ncurses-devel \
-               python3 patch make hostname gcc \
+               python3 patch make hostname gcc glibc-devel \
                sed squashfs-tools tar xz xz-devel zlib-devel
 ENV BUILD_PKGS_arm64 u-boot-tools
 RUN eve-rhel-deploy.sh

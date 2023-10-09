@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:53a24df70027df048546cea191c4809fa0f9916b-dirty-b08e0f4 as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
 
 ENV BUILD_PKGS tar make
 RUN eve-rhel-deploy.sh

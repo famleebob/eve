@@ -1,13 +1,13 @@
 # This file must be kept as much in sync with pkg/kernel/Dockerfile as possible
 # use the same set of packages for simplicity
-FROM lfedge/eve-rhel:e4e622342e3b174764195ffc7e632b779fa0c3fc-dirty-f1f51a3 as kernel-build-base
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as kernel-build-base
 
 ENV BUILD_PKGS \
     automake bash bc binutils-devel bison diffutils flex git gmp-devel \
     gnupg kmod elfutils-devel libuuid-devel kernel-headers mpfr-devel \
     ncurses-devel findutils libblkid-devel openssl-devel patch rsync \
     sed squashfs-tools tar xz xz-devel zlib-devel openssl autoconf file \
-    coreutils libtirpc-devel libtool util-linux
+    coreutils libtirpc-devel libtool util-linux glibc-devel
 
 RUN eve-rhel-deploy.sh
 

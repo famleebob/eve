@@ -2,12 +2,11 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-rhel:62fdc6097dac8f1936bd28f85ef29a2cb7582c03-dirty-c07b0bc AS build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
 
 #** Alpine pam package is linux-pam-dev, SuSE pam-devel, RHEL pam-devel
 ENV BUILD_PKGS git gcc make glibc-devel pam-devel m4 findutils util-linux \
                make patch go file
-RUN cp /eve/repo.config /etc/yum.repos.d/cache.repo
 RUN eve-rhel-deploy.sh
 
 ENV FSCRYPT_COMMIT=b41569d397d3e66099cde07d8eef36b2f42dd0ec
