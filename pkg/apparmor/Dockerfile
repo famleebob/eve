@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-alpine:862d6db0e2e938d11ef83e83fe9c7a8c83631517 as build
-ENV BUILD_PKGS linux-headers musl-dev musl-utils musl-libintl git gcc g++ \
-               autoconf automake libtool make flex bison bash sed gettext
-ENV PKGS alpine-baselayout
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:9fafd760e614d4d1361fe11db41281c0e922e852-dirty-67d1c3f as build
+ENV BUILD_PKGS kernel-headers git gcc gcc-c++ perl-Pod-Checker \
+               autoconf automake libtool make flex bison bash sed gettext \
+               glibc-devel libstdc++-static diffutils perl-Pod-Html
+RUN eve-rhel-deploy.sh
 
 ADD https://gitlab.com/apparmor/apparmor.git#v3.1.4 /apparmor
 WORKDIR /apparmor/libraries/libapparmor
