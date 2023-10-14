@@ -74,7 +74,7 @@ services:
             - run:/run
         networks:
             - eve
-#
+
 #    wwan:
 #        image: ${WWAN_TAG}
 #        privileged: true
@@ -141,36 +141,36 @@ services:
 #        networks:
 #            - eve
 #
-#    kvm-tools:
-#        image: ${KVMTOOLS_TAG}
-#        privileged: true
-#        volumes:
-#            - persist:/persist
-#            - config:/config
-#            - run:/run
-#        networks:
-#            - eve
-#
-#    pillar:
-#        image: ${PILLAR_TAG}
-#        # privileged: true
-#        volumes:
-#            - persist:/persist
-#            - config:/config
-#            - run:/run
-#            - type: bind
-#              source: CURDIR/images/version.yml
-#              target: /opt/zededa/bin/versioninfo
-#            - type: bind
-#              source: CURDIR/images/version.yml
-#              target: /etc/eve-release
-#            - type: bind
-#              source: CURDIR/tools/fake-zboot.sh
-#              target: /usr/bin/zboot
-#        # network_mode: host
-#        networks:
-#            - eve
-#
+    kvm-tools:
+        image: ${KVMTOOLS_TAG}
+        privileged: true
+        volumes:
+            - persist:/persist
+            - config:/config
+            - run:/run
+        networks:
+            - eve
+
+    pillar:
+        image: ${PILLAR_TAG}
+        # privileged: true
+        volumes:
+            - persist:/persist
+            - config:/config
+            - run:/run
+            - type: bind
+              source: CURDIR/images/version.yml
+              target: /opt/zededa/bin/versioninfo
+            - type: bind
+              source: CURDIR/images/version.yml
+              target: /etc/eve-release
+            - type: bind
+              source: CURDIR/tools/fake-zboot.sh
+              target: /usr/bin/zboot
+        # network_mode: host
+        networks:
+            - eve
+
     sshd:
         image: linuxkit/sshd:v0.5
         privileged: true

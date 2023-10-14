@@ -93,3 +93,4 @@ glibc-minimal-langpack
 libstdc++
 python3
 python3-libs
+net-tools

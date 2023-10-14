@@ -113,3 +113,4 @@ libtasn1-tools
 jq
 radvd
 perl-Pod-Checker
+liburing

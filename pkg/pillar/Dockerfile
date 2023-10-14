@@ -7,12 +7,11 @@ ARG BUILD_PKGS_BASE="git gcc kernel-headers glibc-devel make pam-devel m4 findut
                      libuuid libtirpc libblkid zlib tar"
 
 # we use the same image in several places
-ARG EVE_RHEL_IMAGE=lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa
+ARG EVE_RHEL_IMAGE=lfedge/eve-rhel:a92fee204de8f5b9f2f5bdae6cee96a0f973e917-dirty-6a3c7b7
 
 FROM lfedge/eve-dom0-ztools:c4891491af3637e2f61435863889f360c530e51c as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
-RUN find / -name libzfsbootenv.h
 RUN while read -r x; do \
         if [ -d "$x" ]; then \
           mkdir -p "/out/$x"; \
@@ -39,17 +38,17 @@ RUN ./configure --enable-ipv6               \
             --runstatedir=/run              \
             --disable-privsep
 
-RUN make
-RUN set -x ; make DESTDIR=/out install
+RUN make && make DESTDIR=/out install
 WORKDIR /
 #* end SuSE/RHEL addition
 
 # we need zfs files during build
 #** Need to be specific because of directory symlinks used by RHEL
-COPY --from=zfs /etc /etc
-COPY --from=zfs /lib /usr/lib
-COPY --from=zfs /sbin /usr/sbin
-COPY --from=zfs /usr /usr
+COPY --from=zfs /etc/ /etc
+COPY --from=zfs /lib/ /usr/lib
+COPY --from=zfs /lib64/ /usr/lib64
+COPY --from=zfs /sbin/ /usr/sbin
+COPY --from=zfs /usr/ /usr
 
 ARG DEV=n
 ARG TARGETARCH
@@ -63,10 +62,11 @@ ARG RSTATS_TAG=
 #**      only to over-write it here
 # we need zfs files during build
 #** Need to be specific because of directory symlinks used by RHEL
-COPY --from=zfs /out/etc /etc
-COPY --from=zfs /out/lib /usr/lib
-COPY --from=zfs /out/sbin /usr/sbin
-COPY --from=zfs /out/usr /usr
+COPY --from=zfs /out/etc/ /out/etc
+COPY --from=zfs /out/lib/ /out/usr/lib
+#COPY --from=zfs /out/lib64/ /out/usr/lib64
+COPY --from=zfs /out/sbin/ /out/usr/sbin
+COPY --from=zfs /out/usr /out/usr
 
 ADD ./  /pillar/
 
@@ -108,7 +108,7 @@ fi
 
 FROM lfedge/eve-fscrypt:dde103f50768429f2af649e91973eb0d71756359 as fscrypt
 FROM lfedge/eve-dnsmasq:16d19f2b95a024bed8c0a3206fd2b127d6813191 as dnsmasq
-FROM lfedge/eve-gpt-tools:903d9e3b48ce2857ecd255b1a5cc623e9074d702 as gpttools
+FROM lfedge/eve-gpt-tools:b2a0f7a66f9e6ee45629bf99f9c9131dd6fa6569 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.
@@ -116,9 +116,10 @@ FROM lfedge/eve-gpt-tools:903d9e3b48ce2857ecd255b1a5cc623e9074d702 as gpttools
 FROM ${EVE_RHEL_IMAGE} as collector
 ENV BUILD_PKGS patch
 ENV PKGS libtasn1-tools pciutils yajl xz bash iptables iproute \
-    coreutils dmidecode bzip2-libs libuuid ipset radvd ethtool util-linux e2fsprogs xorriso \
+    coreutils dmidecode bzip2-libs libuuid ipset radvd ethtool \
+    util-linux e2fsprogs xorriso \
     qemu-img jq keyutils ca-certificates hdparm \
-    libtirpc libblkid zlib
+    libtirpc libblkid zlib net-tools kmod
 RUN eve-rhel-deploy.sh
 #** THERE BE DRAGONS HERRE!!
 #**  copy all the dhcpcd files to the local /out
@@ -128,7 +129,6 @@ RUN eve-rhel-deploy.sh
 COPY --from=build /out/usr/lib/dhcpcd /out/usr/lib/dhcpcd
 COPY --from=build /out/usr/sbin/dhcpcd /out/usr/sbin
 COPY --from=build /out/etc/dhcpcd.conf /out/etc
-RUN ls -l /out/usr/lib/dhcpcd
 
 #** ash not available in RHEL (or SuSE)
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
@@ -144,9 +144,11 @@ RUN set -e && for patch in /sys-patches/*.patch; do \
 
 #** We KNOW what to copy, and which are the directory symlinks
 #**  exist at the top level
-COPY --from=zfs /out/["etc","usr"] /out
-COPY --from=zfs /out/lib /out/usr/lib
-COPY --from=zfs /out/sbin /out/usr/sbin
+#** COPY --from=zfs /out/["etc","usr"] /out
+COPY --from=zfs /out/etc /out
+COPY --from=zfs /out/usr/ /out/usr
+COPY --from=zfs /out/lib /out/usr
+COPY --from=zfs /out/sbin/ /out/usr/sbin
 
 COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
 
@@ -154,6 +156,7 @@ COPY --from=fscrypt /opt/zededa/bin /out/opt/zededa/bin
 #**  exist at the top level
 COPY --from=gpttools /usr/bin/sgdisk /out/usr/bin/sgdisk
 COPY --from=gpttools /usr/bin/cgpt /out/usr/bin/cgpt
+COPY --from=gpttools /usr/bin/zboot /out/usr/bin/zboot
 
 COPY --from=dnsmasq /usr/sbin/dnsmasq /out/opt/zededa/bin/dnsmasq
 # we use final directory and move the line to the bottom
