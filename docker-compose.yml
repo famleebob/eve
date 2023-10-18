@@ -130,17 +130,17 @@ services:
 #        networks:
 #            - eve
 #
-#    xen-tools:
-#        image: ${XENTOOLS_TAG}
-#        privileged: true
-#        volumes:
-#            - persist:/persist
-#            - config:/config
-#            - run:/run
-#        # network_mode: host
-#        networks:
-#            - eve
-#
+    xen-tools:
+        image: ${XENTOOLS_TAG}
+        privileged: true
+        volumes:
+            - persist:/persist
+            - config:/config
+            - run:/run
+        # network_mode: host
+        networks:
+            - eve
+
     kvm-tools:
         image: ${KVMTOOLS_TAG}
         privileged: true

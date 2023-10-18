@@ -1,10 +1,30 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:d821658883d6748d8bbf0d6640c62288e3ce8c6f as uefi-build
+FROM lfedge/eve-uefi:50280cd8a8b531649eeb9089701f029dae106ebc as uefi-build
 
-FROM lfedge/eve-alpine:0f4e313d0d84ac313ea35e966def9ef96f61aafb as runx-build
-ENV BUILD_PKGS mkinitfs gcc musl-dev e2fsprogs chrony
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-b27a91a as runx-build
+#** mkinitfs not found in RHEL (or SuSE)
+ENV BUILD_PKGS make gcc patch glib2 e2fsprogs chrony kmod-libs libblkid-devel \
+               kmod-devel cryptsetup-devel cpio binutils elfutils glibc-devel
+RUN eve-rhel-deploy.sh
+
+#* Redhat Enterprise Linux EVE -- need to build mkinitfs,
+#*  clone the repo, patch it so it will build here, build/install
+WORKDIR /
+ENV MKINITFS_SHA 224826dcee28425a81bae099ade87fad797a5674
+COPY rhel.patch /
+ADD https://gitlab.alpinelinux.org/alpine/mkinitfs.git#${MKINITFS_SHA} /initramfs
+RUN cd /initramfs && patch -p1 < /rhel.patch && DESTDIR=/out make all install
+RUN cd /initramfs && make install
+
+#* mkinitfs needs lddtree to function, couldn't find
+#*  a SuSE package that has it, located this script
+#*  so, clone, and use the script.  Added `binutils`
+#*  and `elftools` to help
+ADD https://github.com/ncopa/lddtree.git /lddtree
+RUN cp /lddtree/lddtree.sh /usr/sbin/lddtree
+RUN chmod a+x /usr/sbin/lddtree
+RUN mkdir -p /etc/apk/keys && touch /etc/apk/keys/kaka
 
 RUN rm -f /sbin/poweroff /etc/mkinitfs/features.d/base.files
 COPY initrd/base.files /etc/mkinitfs/features.d/base.files
@@ -14,29 +34,34 @@ COPY initrd/chroot2.c initrd/hacf.c /tmp/
 COPY initrd/00000080 /etc/acpi/PWRF/
 RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
+
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-alpine:d32cf7889da970a42fdf5c1c5454a311356cb8f8 as build
+FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-b27a91a as build
+#** removed dev86 for initial build, not found at all in RHEL9 (maybe 5)
+#**  liburing-devel shows up in the web page, but not available yet
 ENV BUILD_PKGS \
-    gcc make libc-dev dev86 xz-dev perl bash python3-dev \
-    gettext iasl util-linux-dev ncurses-dev glib-dev \
-    pixman-dev libaio-dev yajl-dev argp-standalone \
-    linux-headers git patch texinfo tar libcap-ng-dev \
-    attr-dev flex bison cmake libusb-dev zstd-dev
-ENV BUILD_PKGS_arm64 dtc-dev
+    gcc make glibc-devel  xz-devel perl bash python3-devel \
+    gettext iasl util-linux ncurses-devel glib2-devel bzip2 \
+    pixman-devel libaio-devel yajl-devel libuuid-devel \
+    kernel-headers git patch texinfo tar libcap-ng-devel diffutils \
+    libattr-devel flex bison cmake libusb-devel libzstd-devel
+#** RHEL no dtc-devel package
+ENV BUILD_PKGS_arm64 dtc
 
-ENV PKGS alpine-baselayout musl-utils bash libaio libbz2 glib pixman yajl keyutils libusb xz-libs libuuid sudo zstd-libs
+ENV PKGS bash libaio bzip2-libs glib2 pixman yajl \
+         keyutils libusb xz-libs libuuid libzstd
 ENV PKGS_arm64 libfdt
 
-RUN eve-alpine-deploy.sh
+RUN eve-rhel-deploy.sh
 
 # Alpine linux defines all 64bit integer types as long. Patch
 # /usr/include/bits/alltypes.h to fix compilation with -m32
 WORKDIR /
-COPY alpine.patch /
-RUN patch -p1 < alpine.patch
+#** COPY alpine.patch /
+#** RUN patch -p1 < alpine.patch
 
-ENV LIBURING_VERSION 0.7
+ENV LIBURING_VERSION 2.3
 ENV LIBURING_SOURCE=https://git.kernel.dk/cgit/liburing/snapshot/liburing-${LIBURING_VERSION}.tar.bz2
 
 # Download and verify liburing
@@ -47,6 +72,14 @@ RUN tar --absolute-names -xj < /liburing.tar.bz2 && mv "/liburing-${LIBURING_VER
 WORKDIR /liburing
 RUN ./configure --prefix=/usr
 RUN make src && make install DESTDIR=/out && make install
+
+#** RHEL, copy libs from /usr/lib to /usr/lib64 so they can be found
+RUN cp /usr/lib/liburing* /usr/lib64
+RUN mkdir -p /usr/lib64/pkgconfig
+RUN cp /usr/lib/pkgconfig/liburing.pc /usr/lib64/pkgconfig/
+RUN cp /out/usr/lib/liburing* /out/usr/lib64
+RUN mkdir -p /out/usr/lib64/pkgconfig
+RUN cp /out/usr/lib/pkgconfig/liburing.pc /out/usr/lib64/pkgconfig/
 
 # Filter out unneeded stuff
 RUN rm -rf /out/usr/man

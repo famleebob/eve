@@ -1,3 +1,6 @@
 #!/bin/sh
 ifconfig "$1" 0.0.0.0 up
-brctl addif "$2" "$1" || true
+#** SuSE nor RHEL do not provide `brctl`
+#** from opendev "Replace deprecated brctl with ip commands"
+#** brctl addif "$2" "$1" || true
+ip link set dev "$1" master "$2" || true
