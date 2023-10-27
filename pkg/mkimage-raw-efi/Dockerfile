@@ -5,17 +5,30 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa AS build
+FROM lfedge/eve-rhel:f804ccb6c9dff1dae6342cf87a6d7531882e2cc9-dirty-b0079c4 AS build
 #** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 #** lddtree not available, libarchive-tools => bsdtar
 ENV BUILD_PKGS grep patch git make gcc kernel-headers glibc-devel autoconf \
                automake pkgconfig kmod-devel util-linux cryptsetup-devel \
-               libgcc cpio
+               libgcc cpio diffutils bzip2 binutils elfutils perl-Pod-Html
 ENV PKGS mtools dosfstools bsdtar gdisk e2fsprogs util-linux squashfs-tools \
          coreutils tar dmidecode kmod-libs cryptsetup-libs \
          libblkid cpio glibc-devel
 RUN eve-rhel-deploy.sh
+
+#** get the same version of busy box that Alpine uses
+ENV BB_VERSION=1_35_0
+
+#ADD --keep-git-dir git://git@github.com:mirror/busybox.git#${BB_VERSION} /busybox
+ADD --keep-git-dir https://github.com/mirror/busybox.git#${BB_VERSION} /busybox
+
+WORKDIR /busybox
+RUN mkdir /bb-out
+RUN git branch
+#** possibly create a custom config to generate only what we need?
+RUN make defconfig && make && make install CONFIG_PREFIX=/bb-out
+RUN cp /bb-out/bin/busybox /bin/busybox
 
 # get mkinitfs source from git and build it locally
 # it depends on mod-libs cryptsetup-libs libblkid at runtime and lddtree to run mkinitfs itself
@@ -78,7 +91,6 @@ RUN mkinitfs -n -o /out/initrd.img
 RUN ln -s /usr/sbin/sgdisk /out/usr/bin/sgdisk
 
 FROM scratch
-#** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 
 COPY --from=build /out/ /

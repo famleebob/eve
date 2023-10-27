@@ -114,3 +114,4 @@ jq
 radvd
 perl-Pod-Checker
 liburing
+libusbx-devel

@@ -4,7 +4,7 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
+FROM lfedge/eve-rhel:f804ccb6c9dff1dae6342cf87a6d7531882e2cc9-dirty-b0079c4 as build
 #** removed abuild
 #ENV BUILD_PKGS curl tar make kernel-headers patch gcc-c++ git gcc \
 #               ncurses-devel autoconf

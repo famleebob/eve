@@ -281,7 +281,12 @@ RUN subscription-manager unregister
 RUN cd /var/cache/dnf && tar xzf /eve/repo.cache.tgz
 RUN cp /eve/repo.config /etc/yum.repos.d/cache.repo
 
+#** need mount points for actual file systems required by EVE
+WORKDIR /base_rootfs
+RUN mkdir -p persist config conf
+
 RUN mkdir -p /mirror/${RHEL_VERSION}/rootfs
+
 COPY --from=base_rootfs / /mirror/${RHEL_VERSION}/rootfs
 
 FROM registry.access.redhat.com/ubi9/ubi as compactor

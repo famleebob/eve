@@ -2,7 +2,7 @@
 
 FROM lfedge/eve-uefi:50280cd8a8b531649eeb9089701f029dae106ebc as uefi-build
 
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-b27a91a as runx-build
+FROM lfedge/eve-rhel:f804ccb6c9dff1dae6342cf87a6d7531882e2cc9-dirty-b0079c4 as runx-build
 #** mkinitfs not found in RHEL (or SuSE)
 ENV BUILD_PKGS make gcc patch glib2 e2fsprogs chrony kmod-libs libblkid-devel \
                kmod-devel cryptsetup-devel cpio binutils elfutils glibc-devel
@@ -37,7 +37,7 @@ RUN gcc -s -o /hacf /tmp/hacf.c
 
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-b27a91a as build
+FROM lfedge/eve-rhel:f804ccb6c9dff1dae6342cf87a6d7531882e2cc9-dirty-b0079c4 as build
 #** removed dev86 for initial build, not found at all in RHEL9 (maybe 5)
 #**  liburing-devel shows up in the web page, but not available yet
 ENV BUILD_PKGS \
@@ -45,12 +45,12 @@ ENV BUILD_PKGS \
     gettext iasl util-linux ncurses-devel glib2-devel bzip2 \
     pixman-devel libaio-devel yajl-devel libuuid-devel \
     kernel-headers git patch texinfo tar libcap-ng-devel diffutils \
-    libattr-devel flex bison cmake libusb-devel libzstd-devel
+    libattr-devel flex bison cmake libusbx-devel libzstd-devel
 #** RHEL no dtc-devel package
 ENV BUILD_PKGS_arm64 dtc
 
-ENV PKGS bash libaio bzip2-libs glib2 pixman yajl \
-         keyutils libusb xz-libs libuuid libzstd
+ENV PKGS bash libaio bzip2-libs glib2 pixman yajl net-tools iproute \
+         keyutils libusbx xz-libs libuuid libzstd cpio
 ENV PKGS_arm64 libfdt
 
 RUN eve-rhel-deploy.sh
@@ -93,7 +93,6 @@ ENV EXTRA_QEMUU_CONFIGURE_ARGS="--enable-libusb --enable-linux-aio \
     --enable-vhost-user --enable-linux-io-uring --enable-zstd"
 
 WORKDIR /
-
 # Download and verify xen
 #TODO: verify Xen
 # hadolint ignore=DL3020
@@ -146,6 +145,9 @@ COPY qemu-ifup xen-start /etc/xen/scripts/
 
 # We need to keep a slim profile, which means removing things we don't need
 RUN rm -rf /usr/lib/libxen*.a /usr/lib/libxl*.a /usr/lib/debug /usr/lib/python*
+
+#* need to link xen libraries built into /lib64
+RUN cd /usr/lib64 && for xx in $(ls ../lib/libx*) ; do ln -s ${xx} . ; done
 
 # Adjust /var/run, /var/lib and /var/lock to be shared
 RUN mv /var /var.template && ln -s /run /var && ln -s /run /var.template/run
