@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as zfs
+FROM lfedge/eve-rhel:4674a13751d79662864d09faa4065afb11d9c726-dirty-02ed405 as zfs
 ENV BUILD_PKGS git patch ca-certificates util-linux gettext-devel \
                libtirpc-devel automake autoconf libtool kernel-headers \
                e2fsprogs openssl-devel util-linux zlib-devel libuuid-devel \
