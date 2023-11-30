@@ -1,8 +1,7 @@
 # updating per https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
 #** RELEVE builder container image
-
-FROM registry.access.redhat.com/ubi9/ubi-init as base_rootfs
-FROM registry.access.redhat.com/ubi9/ubi as cache
+FROM registry.access.redhat.com/ubi9/ubi-init:9.2-12 as base_rootfs
+FROM registry.access.redhat.com/ubi9/ubi:9.2-722.1692769367 as cache
 
 ARG TARGETARCH
 ARG BUILDARCH
@@ -48,7 +47,7 @@ ENV SMDEV_CONTAINER_OFF=1
 ENV RHEL_LOGIN ""
 ENV RHEL_PASS ""
 RUN subscription-manager register --username ${RHEL_LOGIN} \
-                --password ${RHEL_PASS} --auto-attach
+                --password ${RHEL_PASS} --force
 
 RUN subscription-manager repos \
      --enable codeready-builder-for-rhel-9-$(uname -m)-rpms

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as build
+FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as build
 ENV BUILD_PKGS gcc make file patch glibc-devel util-linux kernel-headers \
                openssl-devel gcc-c++ tar libuuid-devel xz-devel libyaml-devel
 ENV PKGS xz libuuid libyaml

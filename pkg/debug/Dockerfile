@@ -4,7 +4,7 @@
 # has a fast path for stack unwinding. This also happens
 # to be a perfect place to put any other kind of debug info
 # into the package: see abuild/etc/abuild.conf.
-FROM lfedge/eve-rhel:f804ccb6c9dff1dae6342cf87a6d7531882e2cc9-dirty-b0079c4 as build
+FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as build
 #** removed abuild
 #ENV BUILD_PKGS curl tar make kernel-headers patch gcc-c++ git gcc \
 #               ncurses-devel autoconf
@@ -20,7 +20,7 @@ ENV BUILD_PKGS curl tar make kernel-headers patch gcc-c++ git gcc \
 #         perf strace iproute curl tar
 ENV PKGS openssl openssh-clients openssh-server util-linux \
          ca-certificates pciutils vim-minimal lshw \
-         strace iproute curl tar
+         strace iproute libcurl curl tar
 RUN eve-rhel-deploy.sh
 
 #** this version provided by RHEL 9.2

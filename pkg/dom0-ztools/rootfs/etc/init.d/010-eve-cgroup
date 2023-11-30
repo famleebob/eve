@@ -15,7 +15,8 @@ case $hv in
             EVESERVICES="sshd edgeview wwan wlan lisp guacd pillar vtpm watchdog xen-tools newlogd kube "
             ;;
           *)
-            default_cgroup_memory_limit=838860800 #800M
+            #** elevate both in case RHEL needs more room to breethe
+            default_cgroup_memory_limit=8388608000 #80G
             EVESERVICES="sshd edgeview wwan wlan lisp guacd pillar vtpm watchdog xen-tools newlogd "
             ;;
 esac

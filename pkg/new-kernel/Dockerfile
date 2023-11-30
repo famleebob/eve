@@ -1,6 +1,6 @@
 # This file must be kept as much in sync with pkg/kernel/Dockerfile as possible
 # use the same set of packages for simplicity
-FROM lfedge/eve-rhel:fd11ea87f91a90596f75c4f2aba61b13704f7fa0-dirty-399c4aa as kernel-build-base
+FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as kernel-build-base
 
 ENV BUILD_PKGS \
     automake bash bc binutils-devel bison diffutils flex git gmp-devel \

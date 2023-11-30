@@ -1,4 +1,4 @@
-FROM lfedge/eve-rhel:a92fee204de8f5b9f2f5bdae6cee96a0f973e917-dirty-6a3c7b7 as tools
+FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as tools
 #ENV PKGS qemu-img tar u-boot-tools coreutils dosfstools
 ENV PKGS qemu-img tar coreutils dosfstools
 RUN eve-rhel-deploy.sh

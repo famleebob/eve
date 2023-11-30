@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM registry.access.redhat.com/ubi9/ubi
+FROM registry.access.redhat.com/ubi9/ubi:9.2-722.1692769367
 
 ARG GOVER=1.20.1
 ARG BUILDARCH
@@ -19,7 +19,7 @@ ARG GID
 # this must be an ARG so it doesn't carry through post-build phase
 ARG all_proxy
 # hadolint ignore=DL3018
-RUN yum -y install openssh-clients git gcc kernel-headers glibc-devel \
+RUN dnf -y install openssh-clients git gcc kernel-headers glibc-devel \
            util-linux libpcap-devel bash vim make sudo tar curl \
            patch dnsmasq --allowerasing
 # hadolint ignore=DL3018

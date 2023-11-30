@@ -1,9 +1,9 @@
-# Build watchdogd for alpine
+# Build watchdogd for RHEL EVE
 
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb AS watchdog-build
-ENV BUILD_PKGS build-base file libtirpc-dev linux-headers tar util-linux
-ENV PKGS alpine-baselayout musl-utils libsmartcols
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c AS watchdog-build
+ENV BUILD_PKGS file libtirpc-devel kernel-headers tar util-linux patch gcc
+ENV PKGS libsmartcols
+RUN eve-rhel-deploy.sh
 
 # Version 5.15
 ENV WATCHDOGD_VERSION 5.15

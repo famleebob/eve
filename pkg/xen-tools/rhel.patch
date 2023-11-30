@@ -1,0 +1,26 @@
+diff --git a/Makefile b/Makefile
+index 96f9c36..b99c2af 100644
+--- a/Makefile
++++ b/Makefile
+@@ -108,7 +108,7 @@ CRYPTSETUP_CFLAGS := $(shell $(PKGCONF) --cflags libcryptsetup)
+ CRYPTSETUP_LIBS	:= $(shell $(PKGCONF) --libs libcryptsetup)
+ 
+ CFLAGS		+= $(BLKID_CFLAGS) $(LIBKMOD_CFLAGS) $(CRYPTSETUP_CFLAGS)
+-LIBS		= $(BLKID_LIBS) $(LIBKMOD_LIBS) $(CRYPTSETUP_LIBS)
++LIBS		= $(BLKID_LIBS) $(LIBKMOD_LIBS) $(CRYPTSETUP_LIBS) -lpthread 
+ 
+ %.o: %.c
+ 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ -c $<
+diff --git a/nlplug-findfs/nlplug-findfs.c b/nlplug-findfs/nlplug-findfs.c
+index 06bca77..aad8f7f 100644
+--- a/nlplug-findfs/nlplug-findfs.c
++++ b/nlplug-findfs/nlplug-findfs.c
+@@ -41,6 +41,8 @@
+ #include <blkid.h>
+ #include <libcryptsetup.h>
+ 
++#define strlcpy(d, s, sz) strncpy(d, s, sz)
++
+ #define MAX_EVENT_TIMEOUT	5000
+ #define DEFAULT_EVENT_TIMEOUT	250
+ /* usb mass storage needs 1 sec to settle */
