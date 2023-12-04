@@ -5,7 +5,7 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-rhel:f804ccb6c9dff1dae6342cf87a6d7531882e2cc9-dirty-b0079c4 AS build
+FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c AS build
 #** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 #** lddtree not available, libarchive-tools => bsdtar
@@ -13,8 +13,8 @@ ENV BUILD_PKGS grep patch git make gcc kernel-headers glibc-devel autoconf \
                automake pkgconfig kmod-devel util-linux cryptsetup-devel \
                libgcc cpio diffutils bzip2 binutils elfutils perl-Pod-Html
 ENV PKGS mtools dosfstools bsdtar gdisk e2fsprogs util-linux squashfs-tools \
-         coreutils tar dmidecode kmod-libs cryptsetup-libs \
-         libblkid cpio glibc-devel
+         coreutils tar dmidecode kmod-libs kmod cryptsetup-libs \
+         libblkid cpio glibc-devel watchdog
 RUN eve-rhel-deploy.sh
 
 #** get the same version of busy box that Alpine uses
@@ -24,10 +24,13 @@ ENV BB_VERSION=1_35_0
 ADD --keep-git-dir https://github.com/mirror/busybox.git#${BB_VERSION} /busybox
 
 WORKDIR /busybox
+#** --insstall applet not found ... sigh!
+COPY /bb.config .config
 RUN mkdir /bb-out
 RUN git branch
 #** possibly create a custom config to generate only what we need?
-RUN make defconfig && make && make install CONFIG_PREFIX=/bb-out
+#** RUN make defconfig && make && make install CONFIG_PREFIX=/bb-out
+RUN make && make install CONFIG_PREFIX=/bb-out
 RUN cp /bb-out/bin/busybox /bin/busybox
 
 # get mkinitfs source from git and build it locally
@@ -45,6 +48,8 @@ WORKDIR /out
 RUN echo "mtools_skip_check=1" >> etc/mtools.conf
 RUN mkdir -p efifs parts root bits config persist opt/pillar opt/debug lib/modules run sys
 COPY make-raw install grub.cfg.in UsbInvocationScript.txt ./
+RUN ln -s /usr/sbin/sgdisk ./usr/bin/sgdisk
+RUN find / -name libzfs.so.4
 
 #** mkinitfs needs lddtree to function, couldn't find
 #**  a SuSE package that has it, located this script
@@ -86,9 +91,9 @@ RUN if ! grep -q -w /sbin/nlplug-findfs  /etc/mkinitfs/features.d/base.files; th
 
 RUN echo /bin/grep >> /etc/mkinitfs/features.d/base.files
 
+RUN cd /bin && rm sh && ln -s busybox sh
 RUN mkinitfs -n -o /out/initrd.img
-
-RUN ln -s /usr/sbin/sgdisk /out/usr/bin/sgdisk
+RUN cd /bin && rm sh && ln -s ../usr/bin/bash sh
 
 FROM scratch
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]

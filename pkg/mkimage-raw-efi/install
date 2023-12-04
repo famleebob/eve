@@ -90,7 +90,9 @@ root_dev() {
 find_part() {
    local LABEL="$1"
    local BLOCK_DEV="$2"
-   PARTS=$(lsblk -anl -o "NAME,PARTLABEL" /dev/"$BLOCK_DEV" 2>/dev/null | sed -ne "/$LABEL"'$/s#'"[[:space:]]*$LABEL##p")
+   #** PARTS=$(lsblk -anl -o "NAME,PARTLABEL" /dev/"$BLOCK_DEV" 2>/dev/null | sed -ne "/$LABEL"'$/s#'"[[:space:]]*$LABEL##p")
+   PARTS="$(blkid /dev/${BLOCK_DEV}* | grep "PARTLABEL=\"$LABEL\"" | sed -e "s/^\/dev\/\(.*\):[[:space:]].*$/\1/")"
+echo "PARTS is $PARTS" >&2
    for p in $PARTS ; do
       [ -f "/sys/block/$BLOCK_DEV/$p/dev" ] && echo "$p" && exit 0
    done
@@ -126,7 +128,7 @@ ctr_run() {
 pillar_run() {
   binary="$1"
   shift
-  LD_LIBRARY_PATH=/opt/pillar/lib:/opt/pillar/usr/lib /opt/pillar/opt/zededa/bin/"$binary" "$@"
+  LD_LIBRARY_PATH=/opt/pillar/lib64:/opt/pillar/lib:/opt/pillar/usr/lib64:/opt/pillar/usr/lib /opt/pillar/opt/zededa/bin/"$binary" "$@"
 }
 
 # collect_black_box FOLDER_TO_PUT_BLACK_BOX
@@ -269,7 +271,7 @@ if [ -e "$CONFIG_PART" ]; then
    dd if="$CONFIG_PART" of=/parts/config.img bs=1M
 else
    mkfs.vfat -v -n CONFIG -C /parts/config.img 1024
-   mcopy -i /parts/config.img -s /config/* ::/
+   [ -z "$(ls -A /config)" ] || mcopy -i /parts/config.img -s /config/* ::/
 fi
 # the only thing we override in /config for now is server
 tr ' ' '\012' < /proc/cmdline | sed -ne '/^eve_install_server=/s#^.*=##p' > /parts/eve_install_server
@@ -493,6 +495,8 @@ dmidecode > "$REPORT/hardwaremodel.txt"
 ctr_run /opt/debug spec.sh > "$REPORT/controller-model.json"
 ctr_run /opt/debug spec.sh -v > "$REPORT/controller-model-verbose.json"
 
+wdctl > "$REPORT/wdctl-out.txt"
+
 # Save to help figure out if RTC is not in UTC
 (hwclock -v -u; date -Is -u ) > "$REPORT/clock"
 
@@ -592,10 +596,12 @@ if grep -q eve_reboot_after_install /proc/cmdline; then
   echo "NOTICE: Device will now reboot." >/dev/console
   /run/sleep 5
 
-  /run/reboot -f
+  #** /run/reboot -f
+  echo b > /proc/sysrq-trigger #*  reboot with sysrq
 else
   echo "NOTICE: Device will now power off. Remove the USB stick and power it back on to complete the installation." >/dev/console
   /run/sleep 5
 
   /run/poweroff -f
+  echo o > /proc/sysrq-trigger #*  power off sysrq
 fi

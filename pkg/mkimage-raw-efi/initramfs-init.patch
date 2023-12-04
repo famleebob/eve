@@ -1,24 +1,60 @@
 --- a/usr/share/mkinitfs/initramfs-init
 +++ b/usr/share/mkinitfs/initramfs-init
 @@ -1,7 +1,7 @@
- #!/bin/sh
+-#!/bin/sh
++#!/bin/busybox sh
  
  # this is the init script version
 -VERSION=3.8.1
-+VERSION=3.8.1-EVE
++VERSION=9.2-EVE
  SINGLEMODE=no
  sysroot="$ROOT"/sysroot
  splashfile=/.splash.ctrl
-@@ -375,7 +375,7 @@ myopts="alpine_dev autodetect autoraid chart cryptroot cryptdm cryptheader crypt
- 	cryptdiscards cryptkey debug_init dma init init_args keep_apk_new modules ovl_dev
- 	pkgs quiet root_size root usbdelay ip alpine_repo apkovl alpine_start splash
- 	blacklist overlaytmpfs overlaytmpfsflags rootfstype rootflags nbd resume s390x_net
+@@ -341,6 +341,15 @@
+ /bin/busybox --install -s
+ export PATH="$PATH:/usr/bin:/bin:/usr/sbin:/sbin"
+ 
++# fix some broken lib symlinks
++for xlib in /lib64/*
++do
++    if [ ! -e ${xlib} ]
++    then
++        mv ${xlib} /usr/lib64
++    fi
++done
++
+ # Make sure /dev/null is a device node. If /dev/null does not exist yet, the command
+ # mounting the devtmpfs will create it implicitly as an file with the "2>" redirection.
+ # The -c check is required to deal with initramfs with pre-seeded device nodes without
+@@ -371,11 +380,11 @@
+ #  acpi_osi="!Windows 2006" xen-pciback.hide=(01:00.0)
+ set -- $(cat "$ROOT"/proc/cmdline)
+ 
+-myopts="alpine_dev autodetect autoraid chart cryptroot cryptdm cryptheader cryptoffset
+-	cryptdiscards cryptkey debug_init dma init init_args keep_apk_new modules ovl_dev
+-	pkgs quiet root_size root usbdelay ip alpine_repo apkovl alpine_start splash
+-	blacklist overlaytmpfs overlaytmpfsflags rootfstype rootflags nbd resume s390x_net
 -	dasd ssh_key BOOTIF zfcp uevent_buf_size"
-+	dasd ssh_key BOOTIF zfcp uevent_buf_size find_boot"
++myopts="alpine_dev autodetect autoraid chart cryptroot cryptdm cryptheader cryptoffset  
++        cryptdiscards cryptkey debug_init dma init init_args keep_apk_new modules ovl_dev
++        pkgs quiet root_size root usbdelay ip alpine_repo apkovl alpine_start splash    
++        blacklist overlaytmpfs overlaytmpfsflags rootfstype rootflags nbd resume s390x_net      
++        dasd ssh_key BOOTIF zfcp find_boot"
  
  for opt; do
  	case "$opt" in
-@@ -533,13 +533,64 @@ fi
+@@ -400,8 +409,8 @@
+ 	done
+ done
+ 
+-echo "Alpine Init $VERSION" > "$ROOT"/dev/kmsg
+-[ "$KOPT_quiet" = yes ] || echo "Alpine Init $VERSION"
++echo "RHEL Init $VERSION" > "$ROOT"/dev/kmsg
++[ "$KOPT_quiet" = yes ] || echo "RHEL Init $VERSION"
+ 
+ # enable debugging if requested
+ [ -n "$KOPT_debug_init" ] && set -x
+@@ -533,14 +542,81 @@
  # zpool reports /dev/zfs missing if it can't read /etc/mtab
  ln -s /proc/mounts "$ROOT"/etc/mtab
  
@@ -28,6 +64,10 @@
 +		# NOTE that we may require up to 3 tries with
 +		# 30 seconds pauses between them to accomodate
 +		# really slow controllers (such as bad USB sticks)
++		#** HACK, nlplug-findfs doesn't seem to return,
++		#**  so running it in the background, and kill
++		#**  the process so it doesn't get in the way
++		last_nlplug=0
 +		for i in 0 1 2; do
 +				ebegin "Attempt $i to find and mount boot media"
 +				MEDIA_ID=$(grep -l "$KOPT_find_boot" /media/*/boot/.uuid 2>/dev/null)
@@ -37,13 +77,25 @@
 +						break
 +				fi
 +				sleep $(( i * 30 ))
-+				$MOCK nlplug-findfs $cryptopts -p /sbin/mdev ${KOPT_debug_init:+-d} \
++			#** hack code
++			if [ last_nlplug != 0 ]; then
++				kill $(( last_nlplug ))
++				last_nlplug=0
++			fi
++			#** end hack
++			$MOCK nlplug-findfs $cryptopts -p /sbin/mdev ${KOPT_debug_init:+-d} \
 +					${KOPT_usbdelay:+-t $(( $KOPT_usbdelay * 1000 ))} \
 +					${KOPT_uevent_buf_size:+-U $KOPT_uevent_buf_size} \
-+					-n -b $repofile -a /tmp/apkovls
++					-n -b $repofile -a /tmp/apkovls &
++					last_nlplug=$!
 +				eend $?
 +		done
-+
++		#** hack code
++		if [ last_nlplug != 0 ]; then
++			kill $(( last_nlplug ))
++			last_nlplug=0
++		fi
++		#** end hack
 +		# if we didn't find anything, but were asked to -- treat it
 +		# as an error condition (it maybe transient, but it needs to
 +		# be corrected
@@ -74,7 +126,7 @@
 +							LOSETUP_EXTRA_OPTS="-o$OFFSET"
 +					fi
 +			fi
-+
+ 
 +			KOPT_root=$(losetup -f)
 +			losetup $LOSETUP_EXTRA_OPTS -r -f "$LOOP_IMG"
 +	else
@@ -83,10 +135,11 @@
 +				$KOPT_root
 +	fi
 +
- 
++
  	if [ "$SINGLEMODE" = "yes" ]; then
  		echo "Entering single mode. Type 'exit' to continue booting."
-@@ -573,13 +624,15 @@ if [ -n "$KOPT_root" ]; then
+ 		sh
+@@ -573,13 +649,15 @@
  		$MOCK mount ${KOPT_rootfstype:+-t $KOPT_rootfstype} -o $rootflags \
  			$KOPT_root /media/root-ro
  		# Mount writable overlay tmpfs
@@ -104,7 +157,7 @@
  	else
  		if [ "$rootfstype" = "zfs" ]; then
  			prepare_zfs_root
-@@ -590,7 +643,7 @@ if [ -n "$KOPT_root" ]; then
+@@ -590,7 +668,7 @@
  	fi
  
  	eend $?

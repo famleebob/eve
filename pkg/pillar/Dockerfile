@@ -108,7 +108,7 @@ fi
 
 FROM lfedge/eve-fscrypt:d3b323267d0570b8f3e6fa89f4043b97b7b1eead as fscrypt
 FROM lfedge/eve-dnsmasq:f7a82af81040551f02fce388bcee78b968840de0 as dnsmasq
-FROM lfedge/eve-gpt-tools:813a0f9053817b0a166eb41f755b423c133632d2 as gpttools
+FROM lfedge/eve-gpt-tools:ee7a4274f1db70a753890749a95e43365a2c2111 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.

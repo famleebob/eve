@@ -352,16 +352,20 @@ endif
 # since they are not getting published in Docker HUB
 ifeq ($(HV),kubevirt)
         PKGS_$(ZARCH)=$(shell find pkg -maxdepth 1 -type d | grep -Ev "eve|test-microsvcs|alpine|sources|verification$$")
-        ROOTFS_MAXSIZE_MB=450
+        ROOTFS_MAXSIZE_MB=800
 else
         #kube container will not be in non-kubevirt builds
         #** PKGS_$(ZARCH)=$(shell find pkg -maxdepth 1 -type d | grep -Ev "eve|test-microsvcs|alpine|sources|kube|verification$$")
 	PKGS_$(ZARCH)=pkg/new-kernel pkg/rngd pkg/storage-init pkg/uefi \
 	              pkg/grub pkg/measure-config pkg/newlog pkg/dnsmasq \
 	              pkg/edgeview pkg/gpt-tools pkg/dom0-ztools \
+	              pkg/debug pkg/kdump pkg/watchdog pkg/apparmor \
+	              pkg/fscrypt pkg/fw pkg/xen pkg/xen-tools \
+	              pkg/pillar pkg/kexec \
+	              pkg/mkconf \
 	              pkg/mkrootfs-squash pkg/mkrootfs-ext4 \
 	              pkg/mkimage-raw-efi pkg/mkimage-raw-efi
-        ROOTFS_MAXSIZE_MB=450
+        ROOTFS_MAXSIZE_MB=800
 endif
 
 PKGS_riscv64=pkg/ipxe pkg/mkconf pkg/mkimage-iso-efi pkg/grub     \
@@ -735,12 +739,12 @@ publish_sources: $(COLLECTED_SOURCES)
 
 $(LIVE).raw: $(BOOT_PART) $(EFI_PART) $(ROOTFS_IMG) $(CONFIG_IMG) $(PERSIST_IMG) $(BSP_IMX_PART) | $(INSTALLER)
 	./tools/prepare-platform.sh "$(PLATFORM)" "$(BUILD_DIR)" "$(INSTALLER)" || :
-	./tools/makeflash.sh "mkimage-raw-efi" -C 559 $| $@ $(PART_SPEC)
+	./tools/makeflash.sh "mkimage-raw-efi" -C 700 $| $@ $(PART_SPEC)
 	$(QUIET): $@: Succeeded
 
 $(INSTALLER).raw: $(BOOT_PART) $(EFI_PART) $(ROOTFS_IMG) $(INITRD_IMG) $(INSTALLER_IMG) $(CONFIG_IMG) $(PERSIST_IMG) $(BSP_IMX_PART) | $(INSTALLER)
 	./tools/prepare-platform.sh "$(PLATFORM)" "$(BUILD_DIR)" "$(INSTALLER)" || :
-	./tools/makeflash.sh "mkimage-raw-efi" -C 592 $| $@ "conf_win installer inventory_win"
+	./tools/makeflash.sh "mkimage-raw-efi" -C 832 $| $@ "conf_win installer inventory_win"
 	$(QUIET): $@: Succeeded
 
 $(INSTALLER).iso: $(EFI_PART) $(ROOTFS_IMG) $(INITRD_IMG) $(INSTALLER_IMG) $(CONFIG_IMG) $(PERSIST_IMG) | $(INSTALLER)
