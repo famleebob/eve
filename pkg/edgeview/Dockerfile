@@ -1,6 +1,6 @@
 FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as build
 ENV BUILD_PKGS git go
-ENV PKGS glibc-devel iproute iptables
+ENV PKGS glibc-devel iproute iptables procps-ng
 RUN eve-rhel-deploy.sh
 
 COPY src/  /edge-view/.

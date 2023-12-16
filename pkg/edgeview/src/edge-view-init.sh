@@ -1,5 +1,23 @@
 #!/bin/sh
 
+#** impedence match for RHEL pgrep vs Alpine
+my_pgrep () {
+  all_pids=""
+  for lcl_pid in $(pgrep "${1##*/}")
+  do
+    if [ "$(readlink /proc/"${lcl_pid}"/exe)" = "$1" ]
+    then
+      if [ -n "${all_pids}" ]
+      then
+        all_pids="$(printf "%s\n%s" "$lcl_pid" "${all_pids}")"
+      else
+        all_pids="$lcl_pid"
+      fi
+    fi
+  done
+  echo "${all_pids}"
+}
+
 if [ -z "$EDGEVIEW_CLIENT" ]; then
   [ -f /config/hosts ] && cat /config/hosts >> /etc/hosts
 
@@ -7,7 +25,7 @@ if [ -z "$EDGEVIEW_CLIENT" ]; then
   while true;
   do
     sleep 10
-    PID=$(pgrep /usr/bin/edge-view)
+    PID=$(my_pgrep /usr/bin/edge-view)
     if [ -n "$PID" ]; then
       PID=$(echo "$PID" | tr '\n' ' ')
     fi
@@ -33,7 +51,7 @@ if [ -z "$EDGEVIEW_CLIENT" ]; then
             /usr/bin/edge-view -server -inst "$a" -token "$TOKEN" &
           done
         fi
-        sleep 2 && PID=$(pgrep /usr/bin/edge-view)
+        sleep 2 && PID=$(my_pgrep /usr/bin/edge-view)
         PID=$(echo "$PID" | tr '\n' ' ')
         echo "started edge-view with pid $PID"
       else
