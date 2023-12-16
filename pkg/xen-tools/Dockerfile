@@ -2,10 +2,11 @@
 
 FROM lfedge/eve-uefi:60dccdf354ac9faa923953751cd2d26336c3a2af as uefi-build
 
-FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as runx-build
+FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 as runx-build
 #** mkinitfs not found in RHEL (or SuSE)
 ENV BUILD_PKGS make gcc patch glib2 e2fsprogs chrony kmod-libs libblkid-devel \
-               kmod-devel cryptsetup-devel cpio binutils elfutils glibc-devel
+               kmod-devel cryptsetup-devel cpio binutils elfutils glibc-devel \
+               git diffutils
 RUN eve-rhel-deploy.sh
 
 #* Redhat Enterprise Linux EVE -- need to build mkinitfs,
@@ -26,6 +27,21 @@ RUN cp /lddtree/lddtree.sh /usr/sbin/lddtree
 RUN chmod a+x /usr/sbin/lddtree
 RUN mkdir -p /etc/apk/keys && touch /etc/apk/keys/kaka
 
+#** need to build busy box as RHEL has removed it
+#** get the same version of busy box that Alpine uses
+ENV BB_VERSION=1_35_0
+
+ADD --keep-git-dir https://github.com/mirror/busybox.git#${BB_VERSION} /busybox
+
+WORKDIR /busybox
+COPY /xtbb.config .config
+RUN mkdir /bb-out
+RUN git branch
+#** created a custom config to generate only what we need/want
+#**  a work in progress
+RUN make && make install CONFIG_PREFIX=/bb-out
+RUN cp /bb-out/bin/busybox /bin/busybox
+
 RUN rm -f /sbin/poweroff /etc/mkinitfs/features.d/base.files
 COPY initrd/base.files /etc/mkinitfs/features.d/base.files
 COPY initrd/init-initrd initrd/mount_disk.sh initrd/udhcpc_script.sh /
@@ -35,9 +51,11 @@ COPY initrd/00000080 /etc/acpi/PWRF/
 RUN gcc -s -o /chroot2 /tmp/chroot2.c
 RUN gcc -s -o /hacf /tmp/hacf.c
 
+RUN cd /bin && rm sh && ln -s busybox sh
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
+RUN cd /bin && rm sh && ln -s bash sh
 
-FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as build
+FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 as build
 #** removed dev86 for initial build, not found at all in RHEL9 (maybe 5)
 #**  liburing-devel shows up in the web page, but not available yet
 ENV BUILD_PKGS \
@@ -50,7 +68,7 @@ ENV BUILD_PKGS \
 ENV BUILD_PKGS_arm64 dtc
 
 ENV PKGS bash libaio bzip2-libs glib2 pixman yajl net-tools iproute \
-         keyutils libusbx xz-libs libuuid libzstd cpio
+         keyutils libusbx xz-libs libuuid libzstd cpio iputils
 ENV PKGS_arm64 libfdt
 
 RUN eve-rhel-deploy.sh
