@@ -111,3 +111,4 @@ libgcc
 elfutils-libs
 elfutils-libelf
 elfutils-debuginfod-client
+iputils

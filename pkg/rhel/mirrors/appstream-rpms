@@ -116,3 +116,4 @@ perl-Pod-Checker
 liburing
 libusbx-devel
 watchdog
+socat

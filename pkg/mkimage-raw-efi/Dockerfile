@@ -28,8 +28,8 @@ WORKDIR /busybox
 COPY /bb.config .config
 RUN mkdir /bb-out
 RUN git branch
-#** possibly create a custom config to generate only what we need?
-#** RUN make defconfig && make && make install CONFIG_PREFIX=/bb-out
+#** created a custom config to generate only what we need/need
+#**  a work in progress
 RUN make && make install CONFIG_PREFIX=/bb-out
 RUN cp /bb-out/bin/busybox /bin/busybox
 
