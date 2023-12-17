@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:60dccdf354ac9faa923953751cd2d26336c3a2af as uefi-build
+FROM lfedge/eve-uefi:08e0ebf6f05e7886d4d65d166f8e461d7c8b162a as uefi-build
 
 FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 as runx-build
 #** mkinitfs not found in RHEL (or SuSE)

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-rhel:8c785ecb375912be79d40433553247b0a17b879e-dirty-91c7b8c as build
+FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 as build
 ENV BUILD_PKGS kernel-headers git gcc gcc-c++ perl-Pod-Checker \
                autoconf automake libtool make flex bison bash sed gettext \
                glibc-devel libstdc++-static diffutils perl-Pod-Html
