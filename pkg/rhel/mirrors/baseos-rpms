@@ -112,3 +112,6 @@ elfutils-libs
 elfutils-libelf
 elfutils-debuginfod-client
 iputils
+libpng
+p11-kit
+ed

@@ -117,3 +117,10 @@ liburing
 libusbx-devel
 watchdog
 socat
+cairo
+cairo-devel
+libjpeg
+libjpeg-devel
+libpng-devel
+graphite2-devel
+libcurl-devel
