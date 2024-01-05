@@ -14,3 +14,5 @@ libstdc++-static
 protobuf-devel
 doxygen
 tpm2-tss-devel
+ppp-devel
+gtk-doc

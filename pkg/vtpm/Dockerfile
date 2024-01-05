@@ -8,12 +8,13 @@
 #    and the server
 
 #Build TPM2-TSS and TPM2-TOOLS
-FROM lfedge/eve-alpine:c114cf1d3ea51534f061f9aa949beb6ac5c12fb3 as build
-ENV BUILD_PKGS linux-headers git gcc g++ autoconf automake libtool doxygen make \
-               openssl-dev protobuf-dev gnupg curl-dev patch json-c json-c-dev \
-               util-linux-dev libcurl curl-dev
-ENV PKGS alpine-baselayout musl-utils libcurl
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:98c5f9394f3fdafbbf45671ff81b6e31058f64d1-dirty-8b4675c as build
+ENV BUILD_PKGS kernel-headers git gcc g++ autoconf automake libtool doxygen \
+               make openssl-devel protobuf-devel gnupg curl-devel patch \
+               json-c json-c-devel util-linux libcurl curl-devel xz diffutils \
+               libuuid-devel tpm2-tss-devel
+ENV PKGS zlib
+RUN eve-rhel-deploy.sh
 
 WORKDIR /
 ADD https://ftpmirror.gnu.org/autoconf-archive/autoconf-archive-2019.01.06.tar.xz /autoconf-archive-2019.01.06.tar.xz
@@ -51,13 +52,16 @@ WORKDIR /vtpm_server
 RUN make -j "$(getconf _NPROCESSORS_ONLN)" && cp vtpm_server /out/usr/bin/
 
 # install dependencies
-WORKDIR /usr/lib
-RUN cp libstdc++.so.6 libgcc_s.so.1 libprotobuf.so.29.0.1 /out/usr/lib/
-RUN ln -s libprotobuf.so.29.0.1 /out/usr/lib/libprotobuf.so.29
+WORKDIR /usr/lib64
+ENV PBUF_VER 25.0.0
+ENV PBUF_SHRT_VER 25
+RUN cp libstdc++.so.6 libgcc_s.so.1 libprotobuf.so.${PBUF_VER}  /out/usr/lib64/
+RUN ln -s libprotobuf.so.${PBUF_VER} \
+          /out/usr/lib64/libprotobuf.so.${PBUF_SHRT_VER}
 WORKDIR /usr/local/lib
 RUN cp libtss2-tctildr.so.0 libtss2-rc.so.0 libtss2-mu.so.0 libtss2-esys.so.0 \
        libtss2-sys.so.1 libtss2-tcti-device.so.0 libtss2-tcti-device.so.0.0.0 \
-       /out/usr/local/lib/
+       /out/usr/local/lib64/
 
 #Pull a selected set of artifacts into the final stage.
 FROM scratch

@@ -70,18 +70,18 @@ services:
 #    image: WLAN_TAG
 #    cgroupsPath: /eve/services/wlan
 #    oomScoreAdj: -999
-#  - name: guacd
-#    image: GUACD_TAG
-#    cgroupsPath: /eve/services/guacd
-#    oomScoreAdj: -999
+  - name: guacd
+    image: GUACD_TAG
+    cgroupsPath: /eve/services/guacd
+    oomScoreAdj: -999
   - name: pillar
     image: PILLAR_TAG
     cgroupsPath: /eve/services/pillar
     oomScoreAdj: -999
-#  - name: vtpm
-#    image: VTPM_TAG
-#    cgroupsPath: /eve/services/vtpm
-#    oomScoreAdj: -999
+  - name: vtpm
+    image: VTPM_TAG
+    cgroupsPath: /eve/services/vtpm
+    oomScoreAdj: -999
   - name: watchdog
     image: WATCHDOG_TAG
     cgroupsPath: /eve/services/watchdog

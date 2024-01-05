@@ -1,10 +1,10 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-alpine:9fb9b9cbf7d90066a70e4704d04a6fe248ff52bb as build
-ENV BUILD_PKGS automake autoconf gettext gettext-dev git pkgconfig \
-               libtool libc-dev linux-headers gcc make glib-dev \
-               autoconf-archive patch cmake gtk-doc go
-ENV PKGS alpine-baselayout musl-utils ppp jq glib
-RUN eve-alpine-deploy.sh
+FROM lfedge/eve-rhel:98c5f9394f3fdafbbf45671ff81b6e31058f64d1-dirty-8b4675c as build
+ENV BUILD_PKGS automake autoconf gettext gettext-devel git pkgconfig \
+               libtool glibc-devel kernel-headers gcc make glib2-devel \
+               autoconf-archive patch cmake gtk-doc go binutils
+ENV PKGS ppp jq glib2
+RUN eve-rhel-deploy.sh
 
 ENV LIBUBOX_COMMIT=7da66430de3fc235bfc6ebb0b85fb90ea246138d
 ENV JSONC_COMMIT=ed54353d8478ccdb8296c33c675662d16d68b40d
@@ -13,13 +13,16 @@ ENV PICOCOM_COMMIT=1acf1ddabaf3576b4023c4f6f09c5a3e4b086fb8
 ENV LIBQMI_COMMIT=1.30.8
 ENV LIBMBIM_COMMIT=1.26.4
 
+ENV PKG_CONFIG_PATH=/usr/lib/pkgconfig
+
 ADD --keep-git-dir=true https://github.com/json-c/json-c.git#${JSONC_COMMIT} /json-c
 WORKDIR /json-c
 RUN ./autogen.sh && ./configure && make install
 
 ADD --keep-git-dir=true https://git.openwrt.org/project/libubox.git#${LIBUBOX_COMMIT} /libubox
 WORKDIR /libubox
-RUN cmake . -DBUILD_LUA=OFF -DBUILD_EXAMPLES=OFF && make install
+RUN cmake . -DBUILD_LUA=OFF -DBUILD_EXAMPLES=OFF && \
+          CFLAGS+="-I/usr/local/include" make -v install
 
 ADD --keep-git-dir=true https://gitlab.freedesktop.org/mobile-broadband/libmbim.git#${LIBMBIM_COMMIT} /libmbim
 WORKDIR /libmbim
@@ -40,7 +43,7 @@ WORKDIR /picocom
 # Need this patch to build with musl: https://github.com/npat-efault/picocom/commit/1acf1ddabaf3576b4023c4f6f09c5a3e4b086fb8
 RUN make -j "$(getconf _NPROCESSORS_ONLN)" && strip picocom && cp picocom /usr/bin/
 
-RUN strip /usr/bin/*cli /usr/libexec/*proxy /usr/lib/libmbim*.so.* /usr/lib/libqmi*.so.* /usr/lib/libinotifytools*.so.*
+RUN strip /usr/bin/*cli /usr/libexec/*proxy /usr/lib64/libmbim*.so.* /usr/lib64/libqmi*.so.* /usr/lib64/libinotifytools*.so.*
 
 COPY decryptpasswd /decryptpasswd
 WORKDIR /decryptpasswd
