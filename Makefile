@@ -361,7 +361,7 @@ else
 	              pkg/edgeview pkg/gpt-tools pkg/dom0-ztools \
 	              pkg/debug pkg/kdump pkg/watchdog pkg/apparmor \
 	              pkg/fscrypt pkg/fw pkg/xen pkg/xen-tools \
-	              pkg/pillar pkg/kexec \
+	              pkg/pillar pkg/kexec pkg/guacd pkg/wlan pkg/wwan \
 	              pkg/mkconf \
 	              pkg/mkrootfs-squash pkg/mkrootfs-ext4 \
 	              pkg/mkimage-raw-efi pkg/mkimage-raw-efi

@@ -62,14 +62,14 @@ services:
     image: DEBUG_TAG
     cgroupsPath: /eve/services/debug
     oomScoreAdj: -999
-#  - name: wwan
-#    image: WWAN_TAG
-#    cgroupsPath: /eve/services/wwan
-#    oomScoreAdj: -999
-#  - name: wlan
-#    image: WLAN_TAG
-#    cgroupsPath: /eve/services/wlan
-#    oomScoreAdj: -999
+  - name: wwan
+    image: WWAN_TAG
+    cgroupsPath: /eve/services/wwan
+    oomScoreAdj: -999
+  - name: wlan
+    image: WLAN_TAG
+    cgroupsPath: /eve/services/wlan
+    oomScoreAdj: -999
   - name: guacd
     image: GUACD_TAG
     cgroupsPath: /eve/services/guacd
