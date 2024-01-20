@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
 
-FROM lfedge/eve-uefi:08e0ebf6f05e7886d4d65d166f8e461d7c8b162a as uefi-build
+FROM lfedge/eve-uefi:44c32bf9b56d8268c4f748b420d3a848c3a0e935 as uefi-build
 
-FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 as runx-build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba as runx-build
 #** mkinitfs not found in RHEL (or SuSE)
 ENV BUILD_PKGS make gcc patch glib2 e2fsprogs chrony kmod-libs libblkid-devel \
                kmod-devel cryptsetup-devel cpio binutils elfutils glibc-devel \
@@ -55,7 +55,7 @@ RUN cd /bin && rm sh && ln -s busybox sh
 RUN mkinitfs -n -F base -i /init-initrd -o /runx-initrd
 RUN cd /bin && rm sh && ln -s bash sh
 
-FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 as build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba as build
 #** removed dev86 for initial build, not found at all in RHEL9 (maybe 5)
 #**  liburing-devel shows up in the web page, but not available yet
 ENV BUILD_PKGS \

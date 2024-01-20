@@ -8,7 +8,7 @@
 #    and the server
 
 #Build TPM2-TSS and TPM2-TOOLS
-FROM lfedge/eve-rhel:98c5f9394f3fdafbbf45671ff81b6e31058f64d1-dirty-8b4675c as build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba as build
 ENV BUILD_PKGS kernel-headers git gcc g++ autoconf automake libtool doxygen \
                make openssl-devel protobuf-devel gnupg curl-devel patch \
                json-c json-c-devel util-linux libcurl curl-devel xz diffutils \

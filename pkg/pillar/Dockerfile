@@ -7,9 +7,9 @@ ARG BUILD_PKGS_BASE="git gcc kernel-headers glibc-devel make pam-devel m4 findut
                      libuuid libtirpc libblkid zlib tar"
 
 # we use the same image in several places
-ARG EVE_RHEL_IMAGE=lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2
+ARG EVE_RHEL_IMAGE=lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba
 
-FROM lfedge/eve-dom0-ztools:da7a40f83c7c012d8d4010989ffb4e89225758ec as zfs
+FROM lfedge/eve-dom0-ztools:32fc3fbc38c47dcc688d3ce63009f015aeff8a3f as zfs
 RUN mkdir /out
 # copy zfs-related files from dom0-ztools using prepared list of files
 RUN while read -r x; do \
@@ -106,9 +106,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build if [ ${DEV} = "y" ]; then \
     cp dlv /final/opt/ ; \
 fi
 
-FROM lfedge/eve-fscrypt:3c759b13e78cba2772bddf88c6904bfaf5fe9ce7 as fscrypt
-FROM lfedge/eve-dnsmasq:0613c64049e86605203fb43b7382a1e61f95d24c as dnsmasq
-FROM lfedge/eve-gpt-tools:e8521f4c8dbd43aa43ddcd20f1840006662d6783 as gpttools
+FROM lfedge/eve-fscrypt:e0356f0a9dca0e9824da6a19ee142961e9746d89 as fscrypt
+FROM lfedge/eve-dnsmasq:003b463b3fb10ba9aab55cb09546ed9d4e7124f0 as dnsmasq
+FROM lfedge/eve-gpt-tools:64230096d51839de40b3eac63bebfd44ba02e2f3 as gpttools
 
 # collector collects everything together and then does any processing like stripping binaries.
 # We use this interim "collector" so that we can do processing.

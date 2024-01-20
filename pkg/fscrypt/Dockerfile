@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 AS build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba AS build
 
 #** Alpine pam package is linux-pam-dev, SuSE pam-devel, RHEL pam-devel
 ENV BUILD_PKGS git gcc make glibc-devel pam-devel m4 findutils util-linux \

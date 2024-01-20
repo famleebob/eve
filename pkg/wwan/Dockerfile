@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-rhel:98c5f9394f3fdafbbf45671ff81b6e31058f64d1-dirty-8b4675c as build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba as build
 ENV BUILD_PKGS automake autoconf gettext gettext-devel git pkgconfig \
                libtool glibc-devel kernel-headers gcc make glib2-devel \
                autoconf-archive patch cmake gtk-doc go binutils

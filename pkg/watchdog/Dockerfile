@@ -1,6 +1,6 @@
 # Build watchdogd for RHEL EVE
 
-FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 AS watchdog-build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba AS watchdog-build
 ENV BUILD_PKGS file libtirpc-devel kernel-headers tar util-linux patch gcc
 ENV PKGS libsmartcols diffutils iputils
 RUN eve-rhel-deploy.sh

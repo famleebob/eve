@@ -5,7 +5,7 @@
 #   /EFI/BOOT/grub.cfg - Chainloads main bootloader
 #   /UsbInvocationScript.txt - Enables USB boot on Dell 3000 series
 #
-FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-aa26ab2 AS build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba AS build
 #** SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 #** lddtree not available, libarchive-tools => bsdtar

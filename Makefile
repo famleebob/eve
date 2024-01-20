@@ -360,7 +360,7 @@ else
 	              pkg/grub pkg/measure-config pkg/newlog pkg/dnsmasq \
 	              pkg/edgeview pkg/gpt-tools pkg/dom0-ztools \
 	              pkg/debug pkg/kdump pkg/watchdog pkg/apparmor \
-	              pkg/fscrypt pkg/fw pkg/xen pkg/xen-tools \
+	              pkg/fscrypt pkg/fw pkg/xen pkg/xen-tools pkg/vtpm \
 	              pkg/pillar pkg/kexec pkg/guacd pkg/wlan pkg/wwan \
 	              pkg/mkconf \
 	              pkg/mkrootfs-squash pkg/mkrootfs-ext4 \

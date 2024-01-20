@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile-upstream:1.5.0-rc2-labs
-FROM lfedge/eve-rhel:9ad685cd8abb440ce4c7101bf5f0a828f3a525dd-dirty-0409384 as build
+FROM lfedge/eve-rhel:c215632c87d22f89ab2d20aebe3d66462e793b20-dirty-aac5fba as build
 #** can't find libvncserver-devel in RHEL
 ENV BUILD_PKGS cairo-devel libpng-devel libpng-devel gcc make glibc-devel \
                openssl-devel file patch patch cpp info git cmake \
