@@ -333,6 +333,17 @@ func FormatTriState(state TriState) string {
 	return ""
 }
 
+// Identifies general health of certificates, expires within
+// one of two thresholds longest logs as Info, severe as Warning
+type certStatus uint8
+
+const (
+	AllCertsAreValid certStatus = iota
+	CertIsInfo
+	CertIsWarn
+	CertIsINVALID
+)
+
 // UEvent stores information about uevent comes from kernel
 type UEvent struct {
 	Action string

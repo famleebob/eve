@@ -15,6 +15,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -23,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	zauth "github.com/lf-edge/eve-api/go/auth"
 	zcert "github.com/lf-edge/eve-api/go/certs"
@@ -31,7 +33,8 @@ import (
 	etpm "github.com/lf-edge/eve/pkg/pillar/evetpm"
 	"github.com/lf-edge/eve/pkg/pillar/types"
 	fileutils "github.com/lf-edge/eve/pkg/pillar/utils/file"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -522,6 +525,20 @@ func VerifySigningCertChain(log *base.LogObject, certs []*zcert.ZCert) ([]byte, 
 	return sigCertBytes, nil
 }
 
+type certStatus uint8
+
+const (
+	allCertsAreValid certStatus = iota
+	aCertIsInfo
+	aCertIsWarn
+	aCertIsINVALID
+)
+
+var (
+	lastCertTimeCheck time.Time = time.Now()
+	CurCertStatus               = allCertsAreValid
+)
+
 func verifySignature(log *base.LogObject, certByte []byte, interm *x509.CertPool) error {
 
 	block, _ := pem.Decode(certByte)
@@ -563,7 +580,78 @@ func verifySignature(log *base.LogObject, certByte []byte, interm *x509.CertPool
 		log.Errorln("verifySignature: " + errStr)
 		return errors.New(errStr)
 	}
+
+	// verify cert validity dates against thresholds
+	now := time.Now()
+
+	logrus.Tracef("Verify Cert before, now %v, last %v", now, lastCertTimeCheck)
+	if now.After(lastCertTimeCheck.AddDate(0, 0, 1)) {
+		lastCertTimeCheck = now
+		notAfter := leafcert.NotAfter
+		logrus.Tracef("Verify Cert check notAfter %v, now %v", notAfter, now)
+
+		verifyCertThresholds(log, now, notAfter, opts, leafcert)
+	}
+
 	return nil
+}
+
+func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time, opts x509.VerifyOptions, leafcert *x509.Certificate) {
+	var cfgItem types.ConfigItemValueMap
+	retbytes, err := os.ReadFile("/persist/status/zedagent/ConfigItemValueMap/global.json")
+	if err != nil {
+		errStr := fmt.Sprintf("could not fetch threshold defaults, %v",
+			err)
+		log.Notice("Verify Cert " + errStr)
+		return
+	}
+	_ = json.Unmarshal(retbytes, &cfgItem)
+	certWarnThreshold := int(cfgItem.GlobalValueInt(types.CertExpireWarn))
+	certInfoThreshold := int(cfgItem.GlobalValueInt(types.CertExpireInfo))
+
+	warnT := now.AddDate(0, 0, (certWarnThreshold))
+	infoT := now.AddDate(0, 0, (certInfoThreshold))
+
+	logrus.Tracef("Verify Cert Info in %v days, Warn on %v days",
+		certInfoThreshold, certWarnThreshold)
+	logrus.Tracef("Verify Cert Info on %v, Warn on %v",
+		infoT, warnT)
+
+	errStr := ""
+	if warnT.After(notAfter) {
+		opts.CurrentTime = warnT
+		if _, err := leafcert.Verify(opts); err != nil {
+			errStr := fmt.Sprintf("Verify Cert EXPIRES, %v",
+				err)
+			log.Warnln("Warn : " + errStr)
+			if CurCertStatus < aCertIsWarn {
+				CurCertStatus = aCertIsWarn
+			}
+			errStr = fmt.Sprintf("Cert = %v", leafcert)
+			log.Warnln("Veirfy Cert " + errStr)
+		}
+	} else if infoT.After(notAfter) {
+		opts.CurrentTime = infoT
+		if _, err := leafcert.Verify(opts); err != nil {
+			errStr := fmt.Sprintf("Verify Cert expires, %v",
+				err)
+			logrus.Infoln("verifySignature: " + errStr)
+			if CurCertStatus < aCertIsInfo {
+				CurCertStatus = aCertIsInfo
+			}
+		}
+	} else if CurCertStatus != allCertsAreValid {
+
+		errStr := fmt.Sprintf("status = %v setting to %v",
+			CurCertStatus, allCertsAreValid)
+		logrus.Infoln("Verify Cert " + errStr)
+
+		CurCertStatus = allCertsAreValid
+	}
+	// TRACE to show activity -- debug
+	errStr = fmt.Sprintf("complete status = %v", CurCertStatus)
+	log.Traceln("Verify Cert " + errStr)
+	return
 }
 
 // SaveServerSigningCert saves server (i.e. controller) signing certificate into the persist
