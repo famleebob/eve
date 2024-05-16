@@ -3,9 +3,11 @@
 # uses last definition
 ALP_BASE_OS = lfedge/eve-alpine:5.20.0
 ALP_BASE_OS = alpine:3.13.0
+ALP_BASE_OS = alpine:3.19.1
 UBU_BASE_OS = cassandra:3.11.9
 UBU_BASE_OS = ubuntu:18.04
 UBU_BASE_OS = ubuntu:20.04
+UBU_BASE_OS = ubuntu:24.04
 
 # Alpine/apk
 OUT_ALP_VER_DIFF     = out-alp-ver-diff

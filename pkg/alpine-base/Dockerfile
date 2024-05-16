@@ -7,7 +7,7 @@ WORKDIR /rootfs
 # and replace with https for repo url
 RUN case $(uname -m) in \
     x86_64|aarch64) \
-        ROOTFS_URL="https://dl-cdn.alpinelinux.org/alpine/v3.16/releases/$(uname -m)/alpine-minirootfs-3.16.2-$(uname -m).tar.gz"; \
+        ROOTFS_URL="https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/$(uname -m)/alpine-minirootfs-3.19.1-$(uname -m).tar.gz"; \
         ;; \
     riscv64) \
         ROOT_URL=http://storage.googleapis.com/eve-alpine && \
@@ -22,8 +22,8 @@ RUN case $(uname -m) in \
         wget -q -P etc/apk/keys \
             "$ROOT_URL/keys/builder@projecteve.dev-62fe6660.rsa.pub" && \
         ROOT_URL=https://storage.googleapis.com/eve-alpine && \
-        echo "$ROOT_URL/v3.16/main" > etc/apk/repositories && \
-        echo "$ROOT_URL/v3.16/community" >> etc/apk/repositories && \
+        echo "$ROOT_URL/v3.19.1/main" > etc/apk/repositories && \
+        echo "$ROOT_URL/v3.19.1/community" >> etc/apk/repositories && \
         echo "$ROOT_URL" > etc/apk/cache.url; \
     fi
 
