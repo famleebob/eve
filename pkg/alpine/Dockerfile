@@ -1,8 +1,9 @@
-# image was bootstraped using FROM lfedge/eve-alpine-base:fad44e3702708a8d044663a20fd98d933dddb41e AS cache
+# image was bootstraped using FROM lfedge/eve-alpine-base:2c0e194c0812daa7176e693487ef62cf2f8f9696 AS cache
 # to update please see https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
-FROM lfedge/eve-alpine:57d6a8a768256bece2f03ae4fc0eedcb5bca41a6 AS cache
+# FROM lfedge/eve-alpine:57d6a8a768256bece2f03ae4fc0eedcb5bca41a6 AS cache
+FROM lfedge/eve-alpine-base:2c0e194c0812daa7176e693487ef62cf2f8f9696 as cache
 
-ARG ALPINE_VERSION=3.16
+ARG ALPINE_VERSION=3.19
 # this is only needed once, when this package
 # is rebased on the new version of Alpine and
 # you have to have FROM alpine:x.y.z above:
@@ -25,6 +26,8 @@ WORKDIR /tmp/mirrors
 RUN [ -f /etc/apk/repositories.upstream ] || mv /etc/apk/repositories /etc/apk/repositories.upstream
 # hadolint ignore=DL3059
 RUN [ -f /etc/apk/cache.url ] || echo https://dl-cdn.alpinelinux.org/alpine > /etc/apk/cache.url
+RUN echo "upstream = $(cat /etc/apk/repositories.upstream)"
+RUN echo "cache.url = $(cat /etc/apk/cache.url)"
 RUN for repo in main community testing; do \
       for p in */"$repo"; do \
         if [ ! -f "$p" ]; then echo "skipping $p"; continue; fi &&\
@@ -37,7 +40,7 @@ RUN for repo in main community testing; do \
 
 # set the default repository to use
 RUN cp /mirror/${ALPINE_VERSION}/rootfs/etc/apk/repositories /etc/apk
-RUN cat /mirror/edge/rootfs/etc/apk/repositories >> /etc/apk/repositories
+RUN cat /mirror/${ALPINE_VERSION}/rootfs/etc/apk/repositories >> /etc/apk/repositories
 RUN apk update
 
 FROM lfedge/eve-alpine:145f062a40639b6c65efa36bed1c5614b873be52 AS compactor
