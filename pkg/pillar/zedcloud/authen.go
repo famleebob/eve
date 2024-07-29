@@ -34,7 +34,6 @@ import (
 	"github.com/lf-edge/eve/pkg/pillar/types"
 	fileutils "github.com/lf-edge/eve/pkg/pillar/utils/file"
 	uuid "github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -584,11 +583,11 @@ func verifySignature(log *base.LogObject, certByte []byte, interm *x509.CertPool
 	// verify cert validity dates against thresholds
 	now := time.Now()
 
-	logrus.Tracef("Verify Cert before, now %v, last %v", now, lastCertTimeCheck)
+	log.Tracef("Verify Cert before, now %v, last %v", now, lastCertTimeCheck)
 	if now.After(lastCertTimeCheck.AddDate(0, 0, 1)) {
 		lastCertTimeCheck = now
 		notAfter := leafcert.NotAfter
-		logrus.Tracef("Verify Cert check notAfter %v, now %v", notAfter, now)
+		log.Metricf("Verify Cert check notAfter %v, now %v", notAfter, now)
 
 		verifyCertThresholds(log, now, notAfter, opts, leafcert)
 	}
@@ -612,9 +611,9 @@ func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time
 	warnT := now.AddDate(0, 0, (certWarnThreshold))
 	infoT := now.AddDate(0, 0, (certInfoThreshold))
 
-	logrus.Tracef("Verify Cert Info in %v days, Warn on %v days",
+	log.Tracef("Verify Cert Info in %v days, Warn on %v days",
 		certInfoThreshold, certWarnThreshold)
-	logrus.Tracef("Verify Cert Info on %v, Warn on %v",
+	log.Tracef("Verify Cert Info on %v, Warn on %v",
 		infoT, warnT)
 
 	errStr := ""
@@ -635,7 +634,7 @@ func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time
 		if _, err := leafcert.Verify(opts); err != nil {
 			errStr := fmt.Sprintf("Verify Cert expires, %v",
 				err)
-			logrus.Infoln("verifySignature: " + errStr)
+			log.Noticeln("verifySignature: " + errStr)
 			if CurCertStatus < aCertIsInfo {
 				CurCertStatus = aCertIsInfo
 			}
@@ -644,7 +643,7 @@ func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time
 
 		errStr := fmt.Sprintf("status = %v setting to %v",
 			CurCertStatus, allCertsAreValid)
-		logrus.Infoln("Verify Cert " + errStr)
+		log.Noticeln("Verify Cert " + errStr)
 
 		CurCertStatus = allCertsAreValid
 	}
