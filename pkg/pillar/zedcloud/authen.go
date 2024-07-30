@@ -604,14 +604,17 @@ func verifySignature(log *base.LogObject, certByte []byte, interm *x509.CertPool
 			warnT := now.AddDate(0, 0, (int(cfgItem.GlobalValueInt(types.CertExpireInfo))))
 			infoT := now.AddDate(0, 0, (int(cfgItem.GlobalValueInt(types.CertExpireInfo))))
 
-			verifyCertThresholds(log, now, notAfter, warnT, infoT, opts, leafcert)
+			// for now, only log no other notice for now
+			_, _ = verifyCertThresholds(log, now, notAfter, warnT, infoT, opts, leafcert)
 		}
 	}
 
 	return nil
 }
 
-func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time, warnT time.Time, infoT time.Time, opts x509.VerifyOptions, leafcert *x509.Certificate) {
+func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time,
+	warnT time.Time, infoT time.Time, opts x509.VerifyOptions,
+	leafcert *x509.Certificate) (certStatus, string) {
 
 	log.Tracef("Verify Cert Info on %v, Warn on %v", infoT, warnT)
 
@@ -619,24 +622,22 @@ func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time
 	if warnT.After(notAfter) {
 		opts.CurrentTime = warnT
 		if _, err := leafcert.Verify(opts); err != nil {
-			errStr := fmt.Sprintf("Verify Cert EXPIRES, %v",
-				err)
-			log.Warnln("Warn : " + errStr)
+			errStr := fmt.Sprintf("Verify Cert EXPIRES, %v", err)
+			log.Warnln(errStr)
 			if CurCertStatus < aCertIsWarn {
 				CurCertStatus = aCertIsWarn
 			}
-			errStr = fmt.Sprintf("Cert = %v", leafcert)
-			log.Warnln("Veirfy Cert " + errStr)
+			log.Tracef("Warn Cert %v", leafcert)
 		}
 	} else if infoT.After(notAfter) {
 		opts.CurrentTime = infoT
 		if _, err := leafcert.Verify(opts); err != nil {
-			errStr := fmt.Sprintf("Verify Cert expires, %v",
-				err)
-			log.Noticeln("verifySignature: " + errStr)
+			errStr := fmt.Sprintf("Verify Cert expires, %v", err)
+			log.Noticeln(errStr)
 			if CurCertStatus < aCertIsInfo {
 				CurCertStatus = aCertIsInfo
 			}
+			log.Tracef("info Cert %v", leafcert)
 		}
 	} else if CurCertStatus != allCertsAreValid {
 
@@ -647,9 +648,8 @@ func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time
 		CurCertStatus = allCertsAreValid
 	}
 	// TRACE to show activity -- debug
-	errStr = fmt.Sprintf("complete status = %v", CurCertStatus)
-	log.Traceln("Verify Cert " + errStr)
-	return
+	log.Tracef("Verify Cert complete status %v", CurCertStatus)
+	return CurCertStatus, errStr
 }
 
 // SaveServerSigningCert saves server (i.e. controller) signing certificate into the persist
