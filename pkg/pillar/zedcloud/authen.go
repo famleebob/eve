@@ -585,36 +585,35 @@ func verifySignature(log *base.LogObject, certByte []byte, interm *x509.CertPool
 
 	log.Tracef("Verify Cert before, now %v, last %v", now, lastCertTimeCheck)
 	if now.After(lastCertTimeCheck.AddDate(0, 0, 1)) {
-		lastCertTimeCheck = now
-		notAfter := leafcert.NotAfter
-		log.Metricf("Verify Cert check notAfter %v, now %v", notAfter, now)
 
-		verifyCertThresholds(log, now, notAfter, opts, leafcert)
+		var cfgItem types.ConfigItemValueMap
+
+		retbytes, err := os.ReadFile("/persist/status/zedagent/ConfigItemValueMap/global.json")
+		if err != nil {
+			errStr := fmt.Sprintf("could not fetch threshold defaults, %v",
+				err)
+			log.Notice("Verify Cert " + errStr)
+		} else {
+			notAfter := leafcert.NotAfter
+			lastCertTimeCheck = now
+
+			log.Metricf("Verify Cert check notAfter %v, now %v", notAfter, now)
+
+			_ = json.Unmarshal(retbytes, &cfgItem)
+
+			warnT := now.AddDate(0, 0, (int(cfgItem.GlobalValueInt(types.CertExpireInfo))))
+			infoT := now.AddDate(0, 0, (int(cfgItem.GlobalValueInt(types.CertExpireInfo))))
+
+			verifyCertThresholds(log, now, notAfter, warnT, infoT, opts, leafcert)
+		}
 	}
 
 	return nil
 }
 
-func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time, opts x509.VerifyOptions, leafcert *x509.Certificate) {
-	var cfgItem types.ConfigItemValueMap
-	retbytes, err := os.ReadFile("/persist/status/zedagent/ConfigItemValueMap/global.json")
-	if err != nil {
-		errStr := fmt.Sprintf("could not fetch threshold defaults, %v",
-			err)
-		log.Notice("Verify Cert " + errStr)
-		return
-	}
-	_ = json.Unmarshal(retbytes, &cfgItem)
-	certWarnThreshold := int(cfgItem.GlobalValueInt(types.CertExpireWarn))
-	certInfoThreshold := int(cfgItem.GlobalValueInt(types.CertExpireInfo))
+func verifyCertThresholds(log *base.LogObject, now time.Time, notAfter time.Time, warnT time.Time, infoT time.Time, opts x509.VerifyOptions, leafcert *x509.Certificate) {
 
-	warnT := now.AddDate(0, 0, (certWarnThreshold))
-	infoT := now.AddDate(0, 0, (certInfoThreshold))
-
-	log.Tracef("Verify Cert Info in %v days, Warn on %v days",
-		certInfoThreshold, certWarnThreshold)
-	log.Tracef("Verify Cert Info on %v, Warn on %v",
-		infoT, warnT)
+	log.Tracef("Verify Cert Info on %v, Warn on %v", infoT, warnT)
 
 	errStr := ""
 	if warnT.After(notAfter) {
