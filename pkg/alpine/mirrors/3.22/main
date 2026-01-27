@@ -217,6 +217,7 @@ gettext-asprintf
 gettext-dev
 gettext-envsubst
 gettext-libs
+gettext-static
 git
 glib
 glib-dev
