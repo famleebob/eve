@@ -1,7 +1,7 @@
 # Copyright (c) 2023 Zededa, Inc.
 # SPDX-License-Identifier: Apache-2.0
 
-FROM lfedge/eve-alpine:90238bcbf4bdac57b03df8b666a672784d5dfa61 AS build
+FROM lfedge/eve-alpine:040999cc66424ea46ad39e23337d7e6385be76c5 AS build
 
 # build the tpm-recovery tool
 WORKDIR /
