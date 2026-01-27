@@ -1,15 +1,18 @@
 # DON'T FORGET TO UPDATE THE HASH WHEN SOMETHING CHANGES!
 # please see https://github.com/lf-edge/eve/blob/master/docs/BUILD.md#how-to-update-eve-alpine-package
 #FROM lfedge/eve-alpine:e799def68af51dba83ec5a41f34bd0109704574f AS cache
-FROM lfedge/eve-alpine-base:17217d430af556ba0ddfb6a938c3b3ef93c9b512 AS cache
+FROM alpine:3.22.2 AS cache
+
+# set the defaults for docker run
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 FROM cache AS cache-riscv64
 FROM cache AS cache-amd64
 FROM cache AS cache-arm64
 # hadolint ignore=DL3006
 FROM cache-${TARGETARCH} AS cache-build
-
 ARG ALPINE_VERSION=3.22
+
 # this is only needed once, when this package
 # is rebased on the new version of Alpine and
 # you have to have FROM alpine:x.y.z above:
@@ -49,7 +52,7 @@ RUN for repo in main community testing; do \
 RUN cp /mirror/${ALPINE_VERSION}/rootfs/etc/apk/repositories /etc/apk
 RUN apk update
 
-FROM lfedge/eve-alpine-base:17217d430af556ba0ddfb6a938c3b3ef93c9b512 AS compactor
+FROM cache AS compactor
 ARG TARGETARCH
 ARG GO_VERSION=1.24.6
 
